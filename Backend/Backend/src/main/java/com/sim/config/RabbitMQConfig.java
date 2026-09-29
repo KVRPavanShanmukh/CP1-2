@@ -28,18 +28,23 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public org.springframework.amqp.rabbit.core.RabbitAdmin rabbitAdmin(org.springframework.amqp.rabbit.connection.ConnectionFactory connectionFactory) {
+        return new org.springframework.amqp.rabbit.core.RabbitAdmin(connectionFactory);
+    }
+
+    @Bean
     public Queue jobsQueue() {
-        return new Queue(JOBS_QUEUE, false);
+        return new Queue(JOBS_QUEUE, true);
     }
 
     @Bean
     public Queue ticksQueue() {
-        return new Queue(TICKS_QUEUE, false);
+        return new Queue(TICKS_QUEUE, true);
     }
 
     @Bean
     public Queue resultsQueue() {
-        return new Queue(RESULTS_QUEUE, false);
+        return new Queue(RESULTS_QUEUE, true);
     }
 
     @Bean

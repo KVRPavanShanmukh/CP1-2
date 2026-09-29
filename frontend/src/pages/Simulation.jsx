@@ -261,15 +261,7 @@ export default function Simulation() {
   const latestTick = liveTicks.length > 0 ? liveTicks[liveTicks.length - 1] : null;
   const progressPercent = latestTick ? (latestTick.currentTick / 10) * 100 : 0; 
 
-  const getAgentMessage = () => {
-    if (activeSection === 0) return "Ready for initialization...";
-    if (activeSection === 1) return "Nodes ready boss!";
-    if (activeSection === 2) return "Block broadcast chestunna!";
-    if (activeSection === 3) return "Ayyayyo... voting!";
-    if (activeSection === 4) return "Network ni analyze chestunna!";
-    if (activeSection === 5) return "Done boss! Results ready!";
-    return "";
-  };
+
 
   return (
     <div className="immersive-shell" style={{ '--dynamic-accent': currentAccent }}>
@@ -293,12 +285,12 @@ export default function Simulation() {
           <div className="monogram">S</div>
           <div>
             <div>SIMULATION LAB / DISTRIBUTED SYSTEMS</div>
-            <div style={{ opacity: 0.5, marginTop: '4px' }}>CHAIN55 NETWORK ENGINE</div>
+            <div style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>CHAIN55 NETWORK ENGINE</div>
           </div>
         </div>
         <div className="header-right">
-          <div>● WEBSOCKET / {activeSection > 0 && activeSection < 5 ? 'CONNECTED' : (activeSection === 5 ? 'COMPLETED' : 'STANDBY')}</div>
-          <div className="monogram" style={{ border: 'none', background: 'rgba(255,255,255,0.1)' }}>=</div>
+          <div>● WEBSOCKET / <span style={{ color: '#FFFFFF' }}>{activeSection > 0 && activeSection < 5 ? 'CONNECTED' : (activeSection === 5 ? 'COMPLETED' : 'STANDBY')}</span></div>
+          <div className="monogram" style={{ border: 'none', background: 'rgba(255,255,255,0.2)' }}>=</div>
         </div>
       </header>
 
@@ -326,7 +318,7 @@ export default function Simulation() {
                 {activeSection === 5 && <>SIMULATION<br/>COMPLETE.</>}
               </h1>
               
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.95)', marginBottom: '3rem', maxWidth: '350px', lineHeight: '1.8' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#D8D8D8', marginBottom: '3rem', maxWidth: '350px', lineHeight: '1.8' }}>
                 {sections[activeSection].desc}
               </p>
 
@@ -335,7 +327,7 @@ export default function Simulation() {
                 <form onSubmit={(e) => e.preventDefault()}>
                   <div className="form-group">
                     <span className="meta-label">Consensus Type</span>
-                    <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})} style={{ color: 'rgba(255,255,255,0.95)' }}>
+                    <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})} style={{ color: '#FFFFFF' }}>
                       <option value="PoW">Proof of Work (PoW)</option>
                       <option value="PoS">Proof of Stake (PoS)</option>
                     </select>
@@ -343,11 +335,11 @@ export default function Simulation() {
                   <div className="form-group" style={{ display: 'flex', gap: '2rem' }}>
                       <div style={{ flex: 1 }}>
                         <span className="meta-label">Nodes</span>
-                        <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={(e) => setFormData({...formData, nodeCount: parseInt(e.target.value)})} min="1" style={{ color: 'rgba(255,255,255,0.95)' }}/>
+                        <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={(e) => setFormData({...formData, nodeCount: parseInt(e.target.value)})} min="1" style={{ color: '#FFFFFF' }}/>
                       </div>
                       <div style={{ flex: 1 }}>
                         <span className="meta-label">Latency (s)</span>
-                        <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={(e) => setFormData({...formData, blockGossipLatency: parseFloat(e.target.value)})} step="0.1" style={{ color: 'rgba(255,255,255,0.95)' }}/>
+                        <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={(e) => setFormData({...formData, blockGossipLatency: parseFloat(e.target.value)})} step="0.1" style={{ color: '#FFFFFF' }}/>
                       </div>
                   </div>
                 </form>
@@ -456,7 +448,7 @@ export default function Simulation() {
           <button 
             onClick={handleStartSimulation} 
             style={{
-              background: 'rgba(0,0,0,0.75)',
+              background: '#0a0a0c',
               border: '1px solid #00ffff',
               color: '#00ffff',
               padding: '1.25rem 2.5rem',
@@ -488,28 +480,19 @@ export default function Simulation() {
         </div>
       )}
 
-      {/* COMEDY AGENT CHARACTER */}
-      <motion.div 
-        className="agent-companion"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        key={getAgentMessage()} 
-      >
-        <span style={{ fontSize: '1rem' }}>🤖</span>
-        <span>{getAgentMessage()}</span>
-      </motion.div>
+
 
       {/* BOTTOM TELEMETRY BAR */}
       <footer className="bottom-bar">
         <div className="bottom-stats">
           <div style={{ display: 'flex', gap: '2rem' }}>
-            <span>NODES: {formData.nodeCount}</span>
-            {latestTick && <span>BLOCKS: {latestTick.blockCount}</span>}
-            {latestTick && <span>FORKS: {latestTick.activeForks}</span>}
-            {latestTick && <span>LATENCY: {formData.blockGossipLatency}s</span>}
-            {latestTick && <span>MAINCHAIN RATE: {(1.0 - latestTick.instantGini).toFixed(2)}</span>}
+            <span>NODES: <span style={{ color: '#FFFFFF' }}>{formData.nodeCount}</span></span>
+            {latestTick && <span>BLOCKS: <span style={{ color: '#FFFFFF' }}>{latestTick.blockCount}</span></span>}
+            {latestTick && <span>FORKS: <span style={{ color: '#FFFFFF' }}>{latestTick.activeForks}</span></span>}
+            {latestTick && <span>LATENCY: <span style={{ color: '#FFFFFF' }}>{formData.blockGossipLatency}</span>s</span>}
+            {latestTick && <span>MAINCHAIN RATE: <span style={{ color: '#FFFFFF' }}>{(1.0 - latestTick.instantGini).toFixed(2)}</span></span>}
           </div>
-          <div>● ENGINE STATUS: {activeSection === 0 ? 'IDLE' : (activeSection === 5 ? 'COMPLETED' : 'RUNNING')}</div>
+          <div>● ENGINE STATUS: <span style={{ color: '#FFFFFF' }}>{activeSection === 0 ? 'IDLE' : (activeSection === 5 ? 'COMPLETED' : 'RUNNING')}</span></div>
         </div>
         <div className="progress-track">
           <div className="progress-fill" style={{ width: `${activeSection === 5 ? 100 : (activeSection > 0 ? progressPercent : 0)}%` }}></div>
