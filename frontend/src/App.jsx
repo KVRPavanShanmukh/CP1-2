@@ -7,6 +7,7 @@ import Learning from './pages/Learning';
 import Dashboard from './pages/Dashboard';
 import Abstract from './pages/Abstract';
 import Manual from './pages/Manual';
+import InteractiveShape from './components/InteractiveShape';
 
 function AppContent() {
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
@@ -73,6 +74,7 @@ function AppContent() {
         style={{ left: `${cursorPos.x}px`, top: `${cursorPos.y}px` }}
       ></div>
       <div className="grain-overlay"></div>
+      <InteractiveShape />
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navbar />
@@ -86,6 +88,10 @@ function AppContent() {
             <Route path="/manual" element={<Manual />} />
           </Routes>
         </main>
+      </div>
+      <div className="telemetry" aria-hidden="true">
+        <span>CHAIN55 NETWORK ENGINE / AGENT-BASED MODELLING</span>
+        <span>STATUS: LIVE</span>
       </div>
     </>
   );

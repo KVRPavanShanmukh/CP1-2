@@ -6,11 +6,11 @@ const Navbar = () => {
   const location = useLocation();
 
   const links = [
-    { path: '/simulation', label: 'Simulation' },
-    { path: '/learning', label: 'Learning' },
-    { path: '/dashboard', label: 'Dashboard' },
-    { path: '/abstract', label: 'Abstract' },
-    { path: '/manual', label: 'Manual' },
+    { path: '/simulation', label: 'Simulation', id: '01' },
+    { path: '/learning', label: 'Learning', id: '02' },
+    { path: '/dashboard', label: 'Dashboard', id: '03' },
+    { path: '/abstract', label: 'Abstract', id: '04' },
+    { path: '/manual', label: 'Manual', id: '05' },
   ];
 
   return (
@@ -21,7 +21,7 @@ const Navbar = () => {
       transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
     >
       <Link to="/" className="nav-logo">
-        Chain<span className="serif" style={{ fontStyle: 'italic', textTransform: 'lowercase', fontWeight: 400 }}>55</span>
+        CHAIN55 <span style={{ color: 'var(--text-secondary)' }}>/ 2026</span>
       </Link>
       
       <div className="nav-links">
@@ -33,6 +33,7 @@ const Navbar = () => {
               to={link.path}
               className={`nav-link ${isActive ? 'active' : ''}`}
             >
+              <span style={{ color: 'var(--text-secondary)', marginRight: '0.5rem' }}>//{link.id}</span>
               {link.label}
             </Link>
           );

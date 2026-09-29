@@ -22,12 +22,13 @@ public class SimulationOrchestratorService {
     private ObjectMapper objectMapper;
 
     public SimulationConfig startSimulation(SimulationConfig config) throws JsonProcessingException {
-        // Save to MongoDB
+        // Save to MongoDB with CREATED/RUNNING status
+        config.setStatus("RUNNING");
         SimulationConfig savedConfig = configRepository.save(config);
         
         // Publish job payload to RabbitMQ
         String payload = objectMapper.writeValueAsString(savedConfig);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "simulation.jobs.start", payload);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.JOBS_ROUTING_KEY, payload);
         
         return savedConfig;
     }

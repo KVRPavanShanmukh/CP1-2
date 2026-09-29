@@ -14,9 +14,11 @@ public class SimulationConfig {
     private String networkTopology; // Erdos-Renyi, Small-World, Scale-Free
     private double blockGossipLatency;
     private double slotDuration;
+    private String status; // CREATED, RUNNING, COMPLETED, FAILED
 
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
+        this.status = "CREATED";
     }
 
     public String getId() { return id; }
@@ -37,6 +39,9 @@ public class SimulationConfig {
     public double getSlotDuration() { return slotDuration; }
     public void setSlotDuration(double slotDuration) { this.slotDuration = slotDuration; }
 
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -47,12 +52,13 @@ public class SimulationConfig {
                Double.compare(that.slotDuration, slotDuration) == 0 &&
                Objects.equals(id, that.id) &&
                Objects.equals(consensusType, that.consensusType) &&
-               Objects.equals(networkTopology, that.networkTopology);
+               Objects.equals(networkTopology, that.networkTopology) &&
+               Objects.equals(status, that.status);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, nodeCount, consensusType, networkTopology, blockGossipLatency, slotDuration);
+        return Objects.hash(id, nodeCount, consensusType, networkTopology, blockGossipLatency, slotDuration, status);
     }
 
     @Override
@@ -64,6 +70,7 @@ public class SimulationConfig {
                 ", networkTopology='" + networkTopology + '\'' +
                 ", blockGossipLatency=" + blockGossipLatency +
                 ", slotDuration=" + slotDuration +
+                ", status='" + status + '\'' +
                 '}';
     }
 }

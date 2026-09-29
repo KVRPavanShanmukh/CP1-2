@@ -2,44 +2,63 @@ package com.sim.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sim.config.RabbitMQConfig;
+import com.sim.model.SimulationConfig;
 import com.sim.model.SimulationResult;
 import com.sim.model.TickUpdate;
+import com.sim.repository.SimulationConfigRepository;
 import com.sim.repository.SimulationResultRepository;
-import com.sim.service.WebSocketStreamService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class RabbitMQListener {
 
     @Autowired
-    private WebSocketStreamService webSocketStreamService;
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private SimulationResultRepository resultRepository;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private SimulationConfigRepository configRepository;
 
     @RabbitListener(queues = RabbitMQConfig.TICKS_QUEUE)
-    public void receiveTickUpdate(String message) {
+    public void handleTick(String payload) {
         try {
-            TickUpdate update = objectMapper.readValue(message, TickUpdate.class);
-            webSocketStreamService.streamTickUpdate(update);
+            TickUpdate tick = objectMapper.readValue(payload, TickUpdate.class);
+            // Forward directly to WebSocket
+            messagingTemplate.convertAndSend("/topic/simulation/" + tick.getSimulationId(), tick);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error processing tick: " + e.getMessage());
         }
     }
 
     @RabbitListener(queues = RabbitMQConfig.RESULTS_QUEUE)
-    public void receiveSimulationResult(String message) {
+    public void handleResult(String payload) {
         try {
-            SimulationResult result = objectMapper.readValue(message, SimulationResult.class);
+            SimulationResult result = objectMapper.readValue(payload, SimulationResult.class);
+            // Save result to MongoDB
             resultRepository.save(result);
-            System.out.println("Simulation session closed for config: " + result.getConfigId());
+            
+            // Mark config as completed
+            Optional<SimulationConfig> optConfig = configRepository.findById(result.getConfigId());
+            if (optConfig.isPresent()) {
+                SimulationConfig config = optConfig.get();
+                config.setStatus("COMPLETED");
+                configRepository.save(config);
+            }
+            
+            // Forward completion message to WS
+            messagingTemplate.convertAndSend("/topic/simulation/" + result.getConfigId() + "/result", result);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error processing result: " + e.getMessage());
         }
     }
 }
