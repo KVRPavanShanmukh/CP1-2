@@ -1,0 +1,55 @@
+# Global Ignores
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Ignore zip archives in the root
+*.zip
+*.tar.gz
+*.rar
+
+# Frontend (Node.js)
+node_modules/
+dist/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# Backend (Java / Spring Boot / Maven / Gradle)
+target/
+!.mvn/wrapper/maven-wrapper.jar
+log/
+[Bb]uild/
+.gradle/
+.nb-gradle/
+out/
+build/
+bin/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# OS specific files
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
