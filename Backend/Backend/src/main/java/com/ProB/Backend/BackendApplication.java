@@ -5,7 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+
 @SpringBootApplication(scanBasePackages = {"com.ProB.Backend", "com.sim"})
+@EnableMongoRepositories(basePackages = "com.sim.repository")
 public class BackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);

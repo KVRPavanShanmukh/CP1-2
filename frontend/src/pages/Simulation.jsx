@@ -3,70 +3,160 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Points, PointMaterial } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
 const API_BASE_URL = 'http://localhost:8080/api/simulations';
 const WS_URL = 'http://localhost:8080/ws-simulation';
 
-// --- WEBGL VISUALIZATION ---
-function NetworkVisualization({ state, progress }) {
-  const ref = useRef();
+// --- GENERATIVE WEBGL ENGINE ---
+function NetworkVisualization({ stateIndex }) {
+  const pointsRef = useRef();
+  const crystalRef = useRef();
+  const numParticles = 8000;
   
-  const particleCount = state === 'IDLE' ? 500 : (state === 'RESULTS' ? 100 : 2000);
-  
-  const positions = useMemo(() => {
-    const p = new Float32Array(3000 * 3);
-    for (let i = 0; i < 3000; i++) {
-      p[i * 3] = (Math.random() - 0.5) * 10;
-      p[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      p[i * 3 + 2] = (Math.random() - 0.5) * 10;
+  const shapes = useMemo(() => {
+    const s = {
+      idle: new Float32Array(numParticles * 3),    // 00: Subtle field
+      sphere1: new Float32Array(numParticles * 3), // 01: Purple Sphere
+      waves: new Float32Array(numParticles * 3),   // 02: Flowing White Waves
+      sphere2: new Float32Array(numParticles * 3), // 03: Cyan Sphere
+      blob: new Float32Array(numParticles * 3),    // 04: Cyan Blob
+    };
+    
+    for (let i = 0; i < numParticles; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
+      
+      // 00: Idle subtle particles
+      s.idle[i * 3] = (Math.random() - 0.5) * 20;
+      s.idle[i * 3 + 1] = (Math.random() - 0.5) * 20;
+      s.idle[i * 3 + 2] = (Math.random() - 0.5) * 20;
+
+      // 01: Purple Sphere (Huge)
+      const r = 5.0 + (Math.random() * 0.8);
+      s.sphere1[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      s.sphere1[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      s.sphere1[i * 3 + 2] = r * Math.cos(phi);
+
+      // 02: Flowing White Waves
+      const waveX = (Math.random() - 0.5) * 15;
+      const waveZ = (Math.random() - 0.5) * 6;
+      const waveY = Math.sin(waveX * 1.5) * 2.0 + Math.cos(waveZ * 2.5);
+      s.waves[i * 3] = waveX;
+      s.waves[i * 3 + 1] = waveY + (Math.random() * 1.5 - 0.75);
+      s.waves[i * 3 + 2] = waveZ;
+
+      // 03: Cyan Sphere (Dense)
+      const r2 = 4.5 + (Math.random() * 0.4);
+      s.sphere2[i * 3] = r2 * Math.sin(phi) * Math.cos(theta);
+      s.sphere2[i * 3 + 1] = r2 * Math.sin(phi) * Math.sin(theta);
+      s.sphere2[i * 3 + 2] = r2 * Math.cos(phi);
+
+      // 04: Cyan Blob (Topology cluster)
+      s.blob[i * 3] = (r2 * 2.0) * Math.sin(phi) * Math.cos(theta) + (Math.random() - 0.5)*2;
+      s.blob[i * 3 + 1] = (r2 * 1.0) * Math.sin(phi) * Math.sin(theta) + (Math.random() - 0.5)*2;
+      s.blob[i * 3 + 2] = (r2 * 1.5) * Math.cos(phi) + (Math.random() - 0.5)*2;
     }
-    return p;
+    return s;
   }, []);
 
+  const positions = useMemo(() => new Float32Array(shapes.idle), [shapes]);
+  const currentColors = useMemo(() => new Float32Array(numParticles * 3), []);
+
   useFrame((stateObj, delta) => {
-    if (!ref.current) return;
+    if (!pointsRef.current) return;
     
-    // Parallax effect with mouse
-    const mouseX = (stateObj.pointer.x * Math.PI) / 10;
-    const mouseY = (stateObj.pointer.y * Math.PI) / 10;
+    // Smooth Mouse Interaction
+    const targetRotX = (stateObj.pointer.y * Math.PI) / 10;
+    const targetRotY = (stateObj.pointer.x * Math.PI) / 10 + (stateObj.clock.elapsedTime * 0.05);
     
-    ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, mouseY, 0.05);
-    ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, mouseX + (stateObj.clock.elapsedTime * 0.1), 0.05);
+    pointsRef.current.rotation.x = THREE.MathUtils.lerp(pointsRef.current.rotation.x, targetRotX, 0.05);
+    pointsRef.current.rotation.y = THREE.MathUtils.lerp(pointsRef.current.rotation.y, targetRotY, 0.05);
+    if(crystalRef.current) {
+      crystalRef.current.rotation.x = THREE.MathUtils.lerp(crystalRef.current.rotation.x, targetRotX + (stateObj.clock.elapsedTime * 0.2), 0.05);
+      crystalRef.current.rotation.y = THREE.MathUtils.lerp(crystalRef.current.rotation.y, targetRotY + (stateObj.clock.elapsedTime * 0.3), 0.05);
+    }
+
+    const posAttr = pointsRef.current.geometry.attributes.position;
+    const colAttr = pointsRef.current.geometry.attributes.color;
     
-    // React to simulation state
-    if (state === 'RUNNING') {
-        const scale = 1 + (Math.sin(stateObj.clock.elapsedTime * 5) * 0.05);
-        ref.current.scale.set(scale, scale, scale);
-    } else if (state === 'RESULTS') {
-        ref.current.rotation.y += delta * 2;
-        ref.current.scale.set(0.5, 0.5, 0.5);
+    // State mapping
+    let targetShape = shapes.idle;
+    let targetColor = new THREE.Color("#222222"); // 00 Idle
+    let targetOpacity = 1.0;
+
+    if (stateIndex === 0) { targetShape = shapes.idle; targetColor = new THREE.Color("#444444"); }
+    else if (stateIndex === 1) { targetShape = shapes.sphere1; targetColor = new THREE.Color("#9b59b6"); } // Purple
+    else if (stateIndex === 2) { targetShape = shapes.waves; targetColor = new THREE.Color("#ffffff"); } // White
+    else if (stateIndex === 3) { targetShape = shapes.sphere2; targetColor = new THREE.Color("#00ffff"); } // Cyan
+    else if (stateIndex === 4) { targetShape = shapes.blob; targetColor = new THREE.Color("#00a8ff"); } // Turquoise
+    else if (stateIndex === 5) { targetShape = shapes.sphere1; targetColor = new THREE.Color("#ff00ff"); targetOpacity = 0.0; } // Fade out particles
+
+    // Interpolation (lerp)
+    for (let i = 0; i < numParticles; i++) {
+      const idx = i * 3;
+      const noise = stateIndex === 2 ? Math.sin(stateObj.clock.elapsedTime * 3 + i) * 0.1 : Math.sin(stateObj.clock.elapsedTime * 1.5 + i) * 0.05;
+      
+      posAttr.array[idx] = THREE.MathUtils.lerp(posAttr.array[idx], targetShape[idx] + noise, 0.04);
+      posAttr.array[idx+1] = THREE.MathUtils.lerp(posAttr.array[idx+1], targetShape[idx+1] + noise, 0.04);
+      posAttr.array[idx+2] = THREE.MathUtils.lerp(posAttr.array[idx+2], targetShape[idx+2], 0.04);
+      
+      currentColors[idx] = THREE.MathUtils.lerp(currentColors[idx], targetColor.r, 0.05);
+      currentColors[idx+1] = THREE.MathUtils.lerp(currentColors[idx+1], targetColor.g, 0.05);
+      currentColors[idx+2] = THREE.MathUtils.lerp(currentColors[idx+2], targetColor.b, 0.05);
+    }
+    
+    posAttr.needsUpdate = true;
+    if (!colAttr) {
+        pointsRef.current.geometry.setAttribute('color', new THREE.BufferAttribute(currentColors, 3));
     } else {
-        ref.current.scale.set(1, 1, 1);
+        colAttr.needsUpdate = true;
+    }
+
+    if (pointsRef.current.material) {
+        pointsRef.current.material.opacity = THREE.MathUtils.lerp(pointsRef.current.material.opacity, targetOpacity, 0.05);
+    }
+
+    if (crystalRef.current) {
+        // Grow the crystal ONLY in section 5
+        crystalRef.current.scale.setScalar(THREE.MathUtils.lerp(crystalRef.current.scale.x, stateIndex === 5 ? 1 : 0.001, 0.05));
     }
   });
 
   return (
-    <group rotation={[0, 0, Math.PI / 4]}>
-      <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
-        <PointMaterial 
-            transparent 
-            color={state === 'RUNNING' ? "#ff00ff" : (state === 'RESULTS' ? "#00ffff" : "#ffffff")} 
-            size={0.03} 
-            sizeAttenuation={true} 
-            depthWrite={false} 
-            opacity={0.6} 
-        />
-      </Points>
+    <group position={[4, 0, 0]}> {/* Shifted right to take up massive center-right area */}
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={numParticles} array={positions} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial size={0.035} vertexColors transparent depthWrite={false} blending={THREE.AdditiveBlending} opacity={0.8} />
+      </points>
+
+      {/* Pink Geometric Crystal (Section 5) */}
+      <mesh ref={crystalRef} scale={0.001}>
+        <octahedronGeometry args={[5, 1]} />
+        <meshStandardMaterial color="#ff00ff" wireframe emissive="#ff00ff" emissiveIntensity={2.5} />
+      </mesh>
     </group>
   );
 }
 
 // --- MAIN APPLICATION COMPONENT ---
 export default function Simulation() {
-  const [activeSection, setActiveSection] = useState(0); // 0: Config, 1: Running, 2: Results
+  const [activeSection, setActiveSection] = useState(0); 
+  const [scrollLocked, setScrollLocked] = useState(false);
+  const sections = [
+    { id: 0, title: "CONFIGURATION", desc: "Select network parameters to synthesize the engine." },
+    { id: 1, title: "NETWORK FORMATION", desc: "Instantiating peer-to-peer topology and allocating distributed nodes." },
+    { id: 2, title: "BLOCK PROPAGATION", desc: "Simulating high-frequency block gossip across the network fabric." },
+    { id: 3, title: "CONSENSUS FLOW", desc: "Nodes are converging on a singular canonical chain state." },
+    { id: 4, title: "NETWORK ANALYSIS", desc: "Processing topological entropy and branching ratios." },
+    { id: 5, title: "SIMULATION COMPLETE", desc: "Execution finalized. Review metrics below." }
+  ];
   
   const [formData, setFormData] = useState({
     nodeCount: 10,
@@ -81,28 +171,47 @@ export default function Simulation() {
   const [results, setResults] = useState(null);
   const stompClientRef = useRef(null);
 
+  // Wheel Scroll Navigation
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (scrollLocked) return;
+      if (e.deltaY > 50 && activeSection < 5) {
+        setScrollLocked(true);
+        setActiveSection(prev => prev + 1);
+        setTimeout(() => setScrollLocked(false), 1000);
+      } else if (e.deltaY < -50 && activeSection > 0) {
+        setScrollLocked(true);
+        setActiveSection(prev => prev - 1);
+        setTimeout(() => setScrollLocked(false), 1000);
+      }
+    };
+    window.addEventListener('wheel', handleWheel);
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [activeSection, scrollLocked]);
+
   const connectWebSocket = (simulationId) => {
     if (stompClientRef.current) stompClientRef.current.deactivate();
-    
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
       reconnectDelay: 5000,
     });
-
     client.onConnect = () => {
       client.subscribe(`/topic/simulation/${simulationId}`, (message) => {
         const tick = JSON.parse(message.body);
         setLiveTicks(prev => [...prev, tick]);
+        
+        // Auto-advance scenes if user hasn't manually overridden it
+        if (tick.currentTick === 2 && activeSection < 2) setActiveSection(2);
+        if (tick.currentTick === 5 && activeSection < 3) setActiveSection(3);
+        if (tick.currentTick === 8 && activeSection < 4) setActiveSection(4);
       });
-
       client.subscribe(`/topic/simulation/${simulationId}/result`, (message) => {
         const result = JSON.parse(message.body);
         setResults(result);
-        setActiveSection(2); // Auto-scroll to results
+        setActiveSection(5); 
         setLoading(false);
       });
     };
-
     client.activate();
     stompClientRef.current = client;
   };
@@ -113,20 +222,12 @@ export default function Simulation() {
     };
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
-    }));
-  };
-
   const handleStartSimulation = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
     setLiveTicks([]);
     setResults(null);
-    setActiveSection(1); // Move to running state view
+    setActiveSection(1); 
     
     try {
       const res = await axios.post(`${API_BASE_URL}/start`, formData);
@@ -138,30 +239,31 @@ export default function Simulation() {
     }
   };
 
-  const simState = activeSection === 0 ? 'IDLE' : (activeSection === 1 ? 'RUNNING' : 'RESULTS');
   const latestTick = liveTicks.length > 0 ? liveTicks[liveTicks.length - 1] : null;
-  const progressPercent = latestTick ? (latestTick.currentTick / 10) * 100 : 0; // Assuming 10 is max ticks for demo logic
+  const progressPercent = latestTick ? (latestTick.currentTick / 10) * 100 : 0; 
 
-  // Agent Message Logic
   const getAgentMessage = () => {
-    if (simState === 'IDLE') return "Ready for initialization...";
-    if (simState === 'RUNNING') {
-        if (!latestTick) return "Initializing network topology...";
-        if (latestTick.activeForks > 0) return "AYYO! FORK DETECTED!";
-        return `Propagating Block ${latestTick.blockCount}...`;
-    }
-    if (simState === 'RESULTS') return "Consensus achieved. Data stabilized.";
+    if (activeSection === 0) return "Ready for initialization...";
+    if (activeSection === 1) return "Nodes ready boss!";
+    if (activeSection === 2) return "Block broadcast chestunna!";
+    if (activeSection === 3) return "Ayyayyo... voting!";
+    if (activeSection === 4) return "Network ni analyze chestunna!";
+    if (activeSection === 5) return "Done boss! Results ready!";
     return "";
   };
 
   return (
     <div className="immersive-shell">
-      {/* 3D Background Canvas */}
+      {/* 3D WEBGL ENGINE */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
-        <Canvas camera={{ position: [0, 0, 5], fov: 60 }}>
-          <color attach="background" args={['#030304']} />
+        <Canvas camera={{ position: [0, 0, 15], fov: 50 }} dpr={[1, 2]}>
+          <color attach="background" args={['#020204']} />
           <ambientLight intensity={0.5} />
-          <NetworkVisualization state={simState} progress={progressPercent} />
+          <NetworkVisualization stateIndex={activeSection} />
+          <EffectComposer>
+            <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9} height={300} intensity={2.0} />
+            <Noise opacity={0.03} />
+          </EffectComposer>
         </Canvas>
       </div>
 
@@ -175,131 +277,121 @@ export default function Simulation() {
           </div>
         </div>
         <div className="header-right">
-          <div>● WEBSOCKET / {simState === 'RUNNING' ? 'REAL-TIME' : 'STANDBY'}</div>
+          <div>● WEBSOCKET / {activeSection > 0 && activeSection < 5 ? 'CONNECTED' : (activeSection === 5 ? 'COMPLETED' : 'STANDBY')}</div>
           <div className="monogram" style={{ border: 'none', background: 'rgba(255,255,255,0.1)' }}>=</div>
         </div>
       </header>
 
-      {/* MAIN CONTENT AREA */}
+      {/* MAIN LAYOUT */}
       <main className="main-content">
         
-        {/* LEFT PANEL */}
+        {/* LEFT COMPOSITION */}
         <div className="left-panel">
           <AnimatePresence mode="wait">
-            
-            {activeSection === 0 && (
-              <motion.div 
-                key="config"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <span className="meta-label">/00 CONFIGURATION</span>
-                <h1 className="huge-title">NETWORK<br/>DYNAMICS.</h1>
-                
-                <form onSubmit={handleStartSimulation} style={{ marginTop: '3rem' }}>
+            <motion.div 
+              key={activeSection}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <span className="meta-label">/0{activeSection} {sections[activeSection].title}</span>
+              
+              <h1 className="huge-title">
+                {activeSection === 0 && <>NETWORK<br/>DYNAMICS.</>}
+                {activeSection === 1 && <>TOPOLOGY<br/>MATRIX.</>}
+                {activeSection === 2 && <>BLOCK<br/>PROPAGATION.</>}
+                {activeSection === 3 && <>CONSENSUS<br/>FLOW.</>}
+                {activeSection === 4 && <>NETWORK<br/>ANALYSIS.</>}
+                {activeSection === 5 && <>SIMULATION<br/>COMPLETE.</>}
+              </h1>
+              
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '3rem', maxWidth: '350px', lineHeight: '1.8' }}>
+                {sections[activeSection].desc}
+              </p>
+
+              {/* SECTION CONTROLS / CONTENT */}
+              {activeSection === 0 && (
+                <form onSubmit={handleStartSimulation}>
                   <div className="form-group">
                     <span className="meta-label">Consensus Type</span>
-                    <select name="consensusType" className="form-control" value={formData.consensusType} onChange={handleInputChange}>
+                    <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})}>
                       <option value="PoW">Proof of Work (PoW)</option>
                       <option value="PoS">Proof of Stake (PoS)</option>
                     </select>
                   </div>
-                  <div className="form-group">
-                    <span className="meta-label">Network Topology</span>
-                    <select name="networkTopology" className="form-control" value={formData.networkTopology} onChange={handleInputChange}>
-                      <option value="Erdos-Renyi">Erdos-Renyi (Random)</option>
-                      <option value="Scale-Free">Scale-Free</option>
-                    </select>
-                  </div>
                   <div className="form-group" style={{ display: 'flex', gap: '2rem' }}>
                       <div style={{ flex: 1 }}>
-                        <span className="meta-label">Node Count</span>
-                        <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={handleInputChange} min="1"/>
+                        <span className="meta-label">Nodes</span>
+                        <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={(e) => setFormData({...formData, nodeCount: parseInt(e.target.value)})} min="1"/>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <span className="meta-label">Gossip Latency</span>
-                        <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={handleInputChange} step="0.1"/>
+                        <span className="meta-label">Latency (s)</span>
+                        <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={(e) => setFormData({...formData, blockGossipLatency: parseFloat(e.target.value)})} step="0.1"/>
                       </div>
                   </div>
-                  <button type="submit" className="primary-btn" style={{ marginTop: '2rem' }}>
+                  <button type="submit" className="primary-btn" style={{ marginTop: '1rem' }}>
                     START SIMULATION ↗
                   </button>
                 </form>
-              </motion.div>
-            )}
+              )}
 
-            {activeSection === 1 && (
-              <motion.div 
-                key="running"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <span className="meta-label">/01 SIMULATION</span>
-                <h1 className="huge-title">IN<br/>PROGRESS.</h1>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2rem', maxWidth: '300px', lineHeight: '1.8' }}>
-                  The core engine is currently synthesizing network interactions. Atmospheric disturbance indicates active block propagation across the topology.
-                </p>
-              </motion.div>
-            )}
-
-            {activeSection === 2 && results && (
-              <motion.div 
-                key="results"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <span className="meta-label">/02 RESULTS</span>
-                <h1 className="huge-title" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}>SIMULATION<br/>COMPLETE.</h1>
-                
-                <div className="results-grid">
-                  <div className="result-item">
-                    <span className="meta-label">MAINCHAIN RATE</span>
-                    <div className="value">{(results.mainchainRate * 100).toFixed(1)}%</div>
+              {activeSection === 5 && results && (
+                <div>
+                  <div className="results-grid">
+                    <div className="result-item">
+                      <span className="meta-label">MAINCHAIN RATE</span>
+                      <div className="value">{(results.mainchainRate * 100).toFixed(1)}%</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">BRANCHING RATIO</span>
+                      <div className="value">{results.branchingRatio.toFixed(3)}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">GINI COEFFICIENT</span>
+                      <div className="value">{results.finalGiniCoefficient.toFixed(3)}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">DURATION</span>
+                      <div className="value">{results.durationMillis} ms</div>
+                    </div>
                   </div>
-                  <div className="result-item">
-                    <span className="meta-label">BRANCHING RATIO</span>
-                    <div className="value">{results.branchingRatio.toFixed(3)}</div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">GINI COEFFICIENT</span>
-                    <div className="value">{results.finalGiniCoefficient.toFixed(3)}</div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">DURATION</span>
-                    <div className="value">{results.durationMillis}ms</div>
-                  </div>
+                  <button onClick={() => setActiveSection(0)} className="primary-btn" style={{ marginTop: '3rem' }}>
+                    NEW SEQUENCE ↺
+                  </button>
                 </div>
+              )}
 
-                <button onClick={() => setActiveSection(0)} className="primary-btn" style={{ marginTop: '4rem' }}>
-                  NEW SEQUENCE ↺
-                </button>
-              </motion.div>
-            )}
+              {activeSection > 0 && activeSection < 5 && (
+                <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-secondary)', fontSize: '0.8rem', letterSpacing: '0.1em' }}>
+                  AWAITING STABILIZATION...
+                </div>
+              )}
 
+            </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* RIGHT PANEL - NAVIGATION */}
+        {/* RIGHT NAVIGATION */}
         <div className="right-panel">
-          <div className={`nav-indicator ${activeSection === 0 ? 'active' : ''}`} data-label="/00 CFG" onClick={() => !loading && setActiveSection(0)}></div>
-          <div className={`nav-indicator ${activeSection === 1 ? 'active' : ''}`} data-label="/01 SIM"></div>
-          <div className={`nav-indicator ${activeSection === 2 ? 'active' : ''}`} data-label="/02 RES" onClick={() => results && setActiveSection(2)}></div>
+          {sections.map(sec => (
+            <div 
+              key={sec.id}
+              className={`nav-indicator ${activeSection === sec.id ? 'active' : ''}`} 
+              data-label={`/0${sec.id}`}
+              onClick={() => setActiveSection(sec.id)}
+              style={{ cursor: 'pointer' }}
+            ></div>
+          ))}
         </div>
-
       </main>
 
       {/* COMEDY AGENT CHARACTER */}
       <motion.div 
         className="agent-companion"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        key={getAgentMessage()} // re-animates slightly when message changes
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        key={getAgentMessage()} 
       >
         <span style={{ fontSize: '1rem' }}>🤖</span>
         <span>{getAgentMessage()}</span>
@@ -312,12 +404,13 @@ export default function Simulation() {
             <span>NODES: {formData.nodeCount}</span>
             {latestTick && <span>BLOCKS: {latestTick.blockCount}</span>}
             {latestTick && <span>FORKS: {latestTick.activeForks}</span>}
-            {latestTick && <span>GINI: {latestTick.instantGini.toFixed(3)}</span>}
+            {latestTick && <span>LATENCY: {formData.blockGossipLatency}s</span>}
+            {latestTick && <span>MAINCHAIN RATE: {(1.0 - latestTick.instantGini).toFixed(2)}</span>}
           </div>
-          <div>SIM-ID: {results ? results.configId.substring(0, 8) : (latestTick ? latestTick.simulationId.substring(0,8) : 'AWAITING')}</div>
+          <div>● ENGINE STATUS: {activeSection === 0 ? 'IDLE' : (activeSection === 5 ? 'COMPLETED' : 'RUNNING')}</div>
         </div>
         <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${activeSection === 2 ? 100 : (activeSection === 1 ? progressPercent : 0)}%` }}></div>
+          <div className="progress-fill" style={{ width: `${activeSection === 5 ? 100 : (activeSection > 0 ? progressPercent : 0)}%` }}></div>
         </div>
       </footer>
     </div>
