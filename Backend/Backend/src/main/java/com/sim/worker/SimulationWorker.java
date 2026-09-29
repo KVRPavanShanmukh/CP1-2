@@ -41,6 +41,9 @@ public class SimulationWorker {
         long startTime = System.currentTimeMillis();
         
         try {
+            // Give frontend time to establish WebSocket subscription
+            Thread.sleep(1500);
+            
             for (int i = 1; i <= ticks; i++) {
                 Thread.sleep(500); // 500ms per tick
                 
