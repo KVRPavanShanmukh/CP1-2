@@ -28,28 +28,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Cursor */
-.custom-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 8px;
-  height: 8px;
-  background-color: transparent;
-  border: 1px solid rgba(255,255,255,0.5);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s;
-}
 
-.custom-cursor.hovering {
-  width: 24px;
-  height: 24px;
-  background-color: transparent;
-  border-color: var(--accent-secondary);
-}
 
 /* Full Screen Shell */
 .immersive-shell {
@@ -233,8 +212,8 @@ body {
 }
 
 .nav-indicator.active {
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
+  background: var(--dynamic-accent, var(--accent));
+  box-shadow: 0 0 10px var(--dynamic-accent, var(--accent));
 }
 
 /* Bottom Bar */
@@ -267,9 +246,9 @@ body {
   top: 0;
   left: 0;
   height: 100%;
-  background: var(--accent-secondary);
-  transition: width 0.3s ease-out;
-  box-shadow: 0 0 10px var(--accent-secondary);
+  background: var(--dynamic-accent, var(--accent-secondary));
+  transition: width 0.3s ease-out, background 0.3s ease;
+  box-shadow: 0 0 10px var(--dynamic-accent, var(--accent-secondary));
 }
 
 /* Agent */
@@ -302,5 +281,6 @@ body {
   font-size: 3rem;
   font-weight: 200;
   line-height: 1;
-  color: var(--text-primary);
+  color: var(--dynamic-accent, var(--text-primary));
+  text-shadow: 0 0 15px rgba(255,255,255,0.2);
 }

@@ -6,6 +6,7 @@ import SockJS from 'sockjs-client/dist/sockjs';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import SimulationCursor from '../components/SimulationCursor';
 
 const API_BASE_URL = 'http://localhost:8080/api/simulations';
 const WS_URL = 'http://localhost:8080/ws-simulation';
@@ -86,14 +87,14 @@ function NetworkVisualization({ stateIndex }) {
     
     // State mapping
     let targetShape = shapes.idle;
-    let targetColor = new THREE.Color("#222222"); // 00 Idle
+    let targetColor = new THREE.Color("#444444"); // 00 Idle
     let targetOpacity = 1.0;
 
-    if (stateIndex === 0) { targetShape = shapes.idle; targetColor = new THREE.Color("#444444"); }
-    else if (stateIndex === 1) { targetShape = shapes.sphere1; targetColor = new THREE.Color("#9b59b6"); } // Purple
-    else if (stateIndex === 2) { targetShape = shapes.waves; targetColor = new THREE.Color("#ffffff"); } // White
-    else if (stateIndex === 3) { targetShape = shapes.sphere2; targetColor = new THREE.Color("#00ffff"); } // Cyan
-    else if (stateIndex === 4) { targetShape = shapes.blob; targetColor = new THREE.Color("#00a8ff"); } // Turquoise
+    if (stateIndex === 0) { targetShape = shapes.idle; targetColor = new THREE.Color("#00ffff"); targetColor.multiplyScalar(0.2); } // 00: Cyan dark tint
+    else if (stateIndex === 1) { targetShape = shapes.sphere1; targetColor = new THREE.Color("#9b59b6"); targetColor.multiplyScalar(1.5); } // 01: Purple glow
+    else if (stateIndex === 2) { targetShape = shapes.waves; targetColor = new THREE.Color("#e6e6fa"); } // 02: Lavender/White
+    else if (stateIndex === 3) { targetShape = shapes.sphere2; targetColor = new THREE.Color("#00ffff"); targetColor.multiplyScalar(1.2); } // 03: Cyan glow
+    else if (stateIndex === 4) { targetShape = shapes.blob; targetColor = new THREE.Color("#00a8ff"); targetColor.multiplyScalar(1.2); } // 04: Turquoise glow
     else if (stateIndex === 5) { targetShape = shapes.sphere1; targetColor = new THREE.Color("#ff00ff"); targetOpacity = 0.0; } // Fade out particles
 
     // Interpolation (lerp)
@@ -105,9 +106,14 @@ function NetworkVisualization({ stateIndex }) {
       posAttr.array[idx+1] = THREE.MathUtils.lerp(posAttr.array[idx+1], targetShape[idx+1] + noise, 0.04);
       posAttr.array[idx+2] = THREE.MathUtils.lerp(posAttr.array[idx+2], targetShape[idx+2], 0.04);
       
-      currentColors[idx] = THREE.MathUtils.lerp(currentColors[idx], targetColor.r, 0.05);
-      currentColors[idx+1] = THREE.MathUtils.lerp(currentColors[idx+1], targetColor.g, 0.05);
-      currentColors[idx+2] = THREE.MathUtils.lerp(currentColors[idx+2], targetColor.b, 0.05);
+      // Mix occasional secondary highlights
+      let finalColor = targetColor;
+      if (stateIndex === 1 && i % 10 === 0) finalColor = new THREE.Color("#00ffff"); // Cyan highlights on Purple
+      if (stateIndex === 2 && i % 5 === 0) finalColor = new THREE.Color("#9b59b6"); // Violet highlights on White
+
+      currentColors[idx] = THREE.MathUtils.lerp(currentColors[idx], finalColor.r, 0.05);
+      currentColors[idx+1] = THREE.MathUtils.lerp(currentColors[idx+1], finalColor.g, 0.05);
+      currentColors[idx+2] = THREE.MathUtils.lerp(currentColors[idx+2], finalColor.b, 0.05);
     }
     
     posAttr.needsUpdate = true;
@@ -133,13 +139,13 @@ function NetworkVisualization({ stateIndex }) {
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={numParticles} array={positions} itemSize={3} />
         </bufferGeometry>
-        <pointsMaterial size={0.035} vertexColors transparent depthWrite={false} blending={THREE.AdditiveBlending} opacity={0.8} />
+        <pointsMaterial size={0.04} vertexColors transparent depthWrite={false} blending={THREE.AdditiveBlending} opacity={0.9} />
       </points>
 
       {/* Pink Geometric Crystal (Section 5) */}
       <mesh ref={crystalRef} scale={0.001}>
         <octahedronGeometry args={[5, 1]} />
-        <meshStandardMaterial color="#ff00ff" wireframe emissive="#ff00ff" emissiveIntensity={2.5} />
+        <meshStandardMaterial color="#ff00ff" wireframe emissive="#ff00ff" emissiveIntensity={3.0} />
       </mesh>
     </group>
   );
@@ -157,6 +163,16 @@ export default function Simulation() {
     { id: 4, title: "NETWORK ANALYSIS", desc: "Processing topological entropy and branching ratios." },
     { id: 5, title: "SIMULATION COMPLETE", desc: "Execution finalized. Review metrics below." }
   ];
+
+  const accentColors = [
+    '#00ffff', // 00: Cyan
+    '#9b59b6', // 01: Violet
+    '#e6e6fa', // 02: Lavender
+    '#00ffff', // 03: Cyan
+    '#00a8ff', // 04: Turquoise
+    '#ff00ff'  // 05: Magenta
+  ];
+  const currentAccent = accentColors[activeSection];
   
   const [formData, setFormData] = useState({
     nodeCount: 10,
@@ -175,6 +191,9 @@ export default function Simulation() {
   useEffect(() => {
     const handleWheel = (e) => {
       if (scrollLocked) return;
+      // Block manual scroll during auto simulation
+      if (activeSection > 0 && activeSection < 5) return;
+      
       if (e.deltaY > 50 && activeSection < 5) {
         setScrollLocked(true);
         setActiveSection(prev => prev + 1);
@@ -253,7 +272,8 @@ export default function Simulation() {
   };
 
   return (
-    <div className="immersive-shell">
+    <div className="immersive-shell" style={{ '--dynamic-accent': currentAccent }}>
+      <SimulationCursor activeSection={activeSection} />
       {/* 3D WEBGL ENGINE */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
         <Canvas camera={{ position: [0, 0, 15], fov: 50 }} dpr={[1, 2]}>
@@ -261,7 +281,7 @@ export default function Simulation() {
           <ambientLight intensity={0.5} />
           <NetworkVisualization stateIndex={activeSection} />
           <EffectComposer>
-            <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.9} height={300} intensity={2.0} />
+            <Bloom luminanceThreshold={0.5} luminanceSmoothing={0.9} height={300} intensity={1.5} />
             <Noise opacity={0.03} />
           </EffectComposer>
         </Canvas>
@@ -306,16 +326,16 @@ export default function Simulation() {
                 {activeSection === 5 && <>SIMULATION<br/>COMPLETE.</>}
               </h1>
               
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '3rem', maxWidth: '350px', lineHeight: '1.8' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.95)', marginBottom: '3rem', maxWidth: '350px', lineHeight: '1.8' }}>
                 {sections[activeSection].desc}
               </p>
 
               {/* SECTION CONTROLS / CONTENT */}
               {activeSection === 0 && (
-                <form onSubmit={handleStartSimulation}>
+                <form onSubmit={(e) => e.preventDefault()}>
                   <div className="form-group">
                     <span className="meta-label">Consensus Type</span>
-                    <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})}>
+                    <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})} style={{ color: 'rgba(255,255,255,0.95)' }}>
                       <option value="PoW">Proof of Work (PoW)</option>
                       <option value="PoS">Proof of Stake (PoS)</option>
                     </select>
@@ -323,17 +343,67 @@ export default function Simulation() {
                   <div className="form-group" style={{ display: 'flex', gap: '2rem' }}>
                       <div style={{ flex: 1 }}>
                         <span className="meta-label">Nodes</span>
-                        <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={(e) => setFormData({...formData, nodeCount: parseInt(e.target.value)})} min="1"/>
+                        <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={(e) => setFormData({...formData, nodeCount: parseInt(e.target.value)})} min="1" style={{ color: 'rgba(255,255,255,0.95)' }}/>
                       </div>
                       <div style={{ flex: 1 }}>
                         <span className="meta-label">Latency (s)</span>
-                        <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={(e) => setFormData({...formData, blockGossipLatency: parseFloat(e.target.value)})} step="0.1"/>
+                        <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={(e) => setFormData({...formData, blockGossipLatency: parseFloat(e.target.value)})} step="0.1" style={{ color: 'rgba(255,255,255,0.95)' }}/>
                       </div>
                   </div>
-                  <button type="submit" className="primary-btn" style={{ marginTop: '1rem' }}>
-                    START SIMULATION ↗
-                  </button>
                 </form>
+              )}
+
+              {/* DYNAMIC SCENE RESULTS MAP */}
+              {activeSection === 1 && (
+                <div className="results-grid" style={{ marginTop: '2rem' }}>
+                  <div className="result-item">
+                    <span className="meta-label">REQUESTED NODES</span>
+                    <div className="value">{formData.nodeCount}</div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">NETWORK STATE</span>
+                    <div className="value">INITIALIZING...</div>
+                  </div>
+                </div>
+              )}
+
+              {activeSection === 2 && latestTick && (
+                <div className="results-grid" style={{ marginTop: '2rem' }}>
+                  <div className="result-item">
+                    <span className="meta-label">LIVE BLOCKS</span>
+                    <div className="value">{latestTick.blockCount}</div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">ACTIVE FORKS</span>
+                    <div className="value">{latestTick.activeForks}</div>
+                  </div>
+                </div>
+              )}
+
+              {activeSection === 3 && latestTick && (
+                <div className="results-grid" style={{ marginTop: '2rem' }}>
+                  <div className="result-item">
+                    <span className="meta-label">ACTIVE FORKS</span>
+                    <div className="value">{latestTick.activeForks}</div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">INSTANT GINI</span>
+                    <div className="value">{latestTick.instantGini.toFixed(3)}</div>
+                  </div>
+                </div>
+              )}
+
+              {activeSection === 4 && latestTick && (
+                <div className="results-grid" style={{ marginTop: '2rem' }}>
+                  <div className="result-item">
+                    <span className="meta-label">MAINCHAIN STABILITY</span>
+                    <div className="value">{((1.0 - latestTick.instantGini) * 100).toFixed(1)}%</div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">TOPOLOGY STATUS</span>
+                    <div className="value">COMPUTING...</div>
+                  </div>
+                </div>
               )}
 
               {activeSection === 5 && results && (
@@ -356,15 +426,9 @@ export default function Simulation() {
                       <div className="value">{results.durationMillis} ms</div>
                     </div>
                   </div>
-                  <button onClick={() => setActiveSection(0)} className="primary-btn" style={{ marginTop: '3rem' }}>
+                  <button onClick={() => { setActiveSection(0); setLiveTicks([]); setResults(null); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1 }}>
                     NEW SEQUENCE ↺
                   </button>
-                </div>
-              )}
-
-              {activeSection > 0 && activeSection < 5 && (
-                <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-secondary)', fontSize: '0.8rem', letterSpacing: '0.1em' }}>
-                  AWAITING STABILIZATION...
                 </div>
               )}
 
@@ -385,6 +449,44 @@ export default function Simulation() {
           ))}
         </div>
       </main>
+
+      {/* FLOATING START SIMULATION BUTTON (OVER WEBGL) */}
+      {activeSection === 0 && (
+        <div style={{ position: 'absolute', top: '50%', right: '25%', transform: 'translate(50%, -50%)', zIndex: 10 }}>
+          <button 
+            onClick={handleStartSimulation} 
+            style={{
+              background: 'rgba(0,0,0,0.75)',
+              border: '1px solid #00ffff',
+              color: '#00ffff',
+              padding: '1.25rem 2.5rem',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              boxShadow: '0 0 20px rgba(0,255,255,0.2), inset 0 0 10px rgba(0,255,255,0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              borderRadius: '4px',
+              fontFamily: 'var(--font-mono)'
+            }}
+            onMouseOver={(e) => { 
+              e.currentTarget.style.boxShadow = '0 0 30px rgba(0,255,255,0.4), inset 0 0 15px rgba(0,255,255,0.2)'; 
+              e.currentTarget.style.transform = 'scale(1.02) translateY(-2px)'; 
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.borderColor = '#ffffff';
+            }}
+            onMouseOut={(e) => { 
+              e.currentTarget.style.boxShadow = '0 0 20px rgba(0,255,255,0.2), inset 0 0 10px rgba(0,255,255,0.1)'; 
+              e.currentTarget.style.transform = 'scale(1) translateY(0)'; 
+              e.currentTarget.style.color = '#00ffff';
+              e.currentTarget.style.borderColor = '#00ffff';
+            }}
+          >
+            START SIMULATION ↗
+          </button>
+        </div>
+      )}
 
       {/* COMEDY AGENT CHARACTER */}
       <motion.div 
