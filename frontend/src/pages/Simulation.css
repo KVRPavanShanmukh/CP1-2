@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;300&display=swap');
+
+.immersive-shell {
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #020204;
+  position: relative;
+}
+
+/* Simulation Top Navbar */
+.sim-navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 30px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  pointer-events: auto;
+}
+
+.brand-circle {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.brand-text {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+  pointer-events: auto;
+}
+
+.nav-link {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #fff;
+}
+
+/* Main Layout */
+.main-content {
+  position: absolute;
+  top: 50%;
+  left: 50px;
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+  max-width: 500px;
+}
+
+.meta-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--dynamic-accent);
+  margin-bottom: 20px;
+  display: block;
+}
+
+.huge-title {
+  font-size: 5rem;
+  font-weight: 200;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+}
+
+.desc-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 40px;
+  max-width: 400px;
+  font-weight: 300;
+}
+
+.hollow-btn {
+  pointer-events: auto;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hollow-btn:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Right Navigation Index */
+.right-nav {
+  position: absolute;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.nav-dash {
+  width: 15px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-dash.active {
+  width: 30px;
+  background: var(--dynamic-accent);
+}
+
+.nav-dash:hover {
+  background: #fff;
+}
+
+/* Bottom elements */
+.bottom-left-meta {
+  position: absolute;
+  bottom: 30px;
+  left: 50px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--dynamic-accent);
+  text-transform: uppercase;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.privacy-bar {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  border-top-left-radius: 5px;
+  pointer-events: auto;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+}
+
+.privacy-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.privacy-text span {
+  color: var(--dynamic-accent);
+}
