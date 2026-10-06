@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Client } from '@stomp/stompjs';
@@ -289,7 +289,7 @@ export default function Simulation() {
           </div>
         </div>
         <div className="header-right">
-          <div>● WEBSOCKET / <span style={{ color: '#FFFFFF' }}>{activeSection > 0 && activeSection < 5 ? 'CONNECTED' : (activeSection === 5 ? 'COMPLETED' : 'STANDBY')}</span></div>
+          <div>ΓùÅ WEBSOCKET / <span style={{ color: '#FFFFFF' }}>{activeSection > 0 && activeSection < 5 ? 'CONNECTED' : (activeSection === 5 ? 'COMPLETED' : 'STANDBY')}</span></div>
           <div className="monogram" style={{ border: 'none', background: 'rgba(255,255,255,0.2)' }}>=</div>
         </div>
       </header>
@@ -419,7 +419,7 @@ export default function Simulation() {
                     </div>
                   </div>
                   <button onClick={() => { setActiveSection(0); setLiveTicks([]); setResults(null); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1 }}>
-                    NEW SEQUENCE ↺
+                    NEW SEQUENCE Γå║
                   </button>
                 </div>
               )}
@@ -475,7 +475,7 @@ export default function Simulation() {
               e.currentTarget.style.borderColor = '#00ffff';
             }}
           >
-            START SIMULATION ↗
+            START SIMULATION Γåù
           </button>
         </div>
       )}
@@ -492,7 +492,7 @@ export default function Simulation() {
             {latestTick && <span>LATENCY: <span style={{ color: '#FFFFFF' }}>{formData.blockGossipLatency}</span>s</span>}
             {latestTick && <span>MAINCHAIN RATE: <span style={{ color: '#FFFFFF' }}>{(1.0 - latestTick.instantGini).toFixed(2)}</span></span>}
           </div>
-          <div>● ENGINE STATUS: <span style={{ color: '#FFFFFF' }}>{activeSection === 0 ? 'IDLE' : (activeSection === 5 ? 'COMPLETED' : 'RUNNING')}</span></div>
+          <div>ΓùÅ ENGINE STATUS: <span style={{ color: '#FFFFFF' }}>{activeSection === 0 ? 'IDLE' : (activeSection === 5 ? 'COMPLETED' : 'RUNNING')}</span></div>
         </div>
         <div className="progress-track">
           <div className="progress-fill" style={{ width: `${activeSection === 5 ? 100 : (activeSection > 0 ? progressPercent : 0)}%` }}></div>
