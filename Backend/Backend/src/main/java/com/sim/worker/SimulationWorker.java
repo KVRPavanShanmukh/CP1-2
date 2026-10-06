@@ -36,23 +36,26 @@ public class SimulationWorker {
     }
     
     private void runSimulation(SimulationConfig config) {
-        Random rand = new Random();
-        int ticks = 10;
         long startTime = System.currentTimeMillis();
         
         try {
             // Give frontend time to establish WebSocket subscription
             Thread.sleep(1500);
             
+            com.sim.engine.SimulationEngine engine = new com.sim.engine.SimulationEngine(config);
+            int ticks = 10;
+            
             for (int i = 1; i <= ticks; i++) {
-                Thread.sleep(500); // 500ms per tick
+                Thread.sleep((long) config.getSlotDuration() > 0 ? (long) config.getSlotDuration() : 500); // Wait slot duration or 500ms
+                
+                com.sim.engine.SimulationTick simTick = engine.tick();
                 
                 TickUpdate tick = new TickUpdate();
                 tick.setSimulationId(config.getId());
                 tick.setCurrentTick(i);
-                tick.setActiveForks(rand.nextInt(3));
-                tick.setInstantGini(0.4 + (rand.nextDouble() * 0.1));
-                tick.setBlockCount(i * 5);
+                tick.setActiveForks(engine.getState().getBlockchainState().getActiveForks());
+                tick.setInstantGini(engine.getState().getBlockchainState().getAllBlocks().isEmpty() ? 0.0 : engine.getState().getBlockchainState().getMainchainRate()); // placeholder for UI
+                tick.setBlockCount(engine.getState().getBlockchainState().getTotalBlocks());
                 
                 rabbitTemplate.convertAndSend(
                     RabbitMQConfig.EXCHANGE_NAME, 
@@ -65,13 +68,18 @@ public class SimulationWorker {
             SimulationResult result = new SimulationResult();
             result.setConfigId(config.getId());
             
-            // Generate some actual metrics based on the config input to simulate real behavior
-            double baseMainchain = config.getConsensusType().equals("PoW") ? 0.90 : 0.95;
-            double penalty = (config.getBlockGossipLatency() / 10.0);
-            result.setMainchainRate(Math.max(0.4, baseMainchain - penalty));
+            double mainchainRate = engine.getState().getBlockchainState().getMainchainRate();
+            result.setMainchainRate(mainchainRate);
             
-            result.setBranchingRatio(0.01 + (rand.nextDouble() * 0.05) + penalty);
-            result.setFinalGiniCoefficient(0.4 + (rand.nextDouble() * 0.2));
+            // Simple branching ratio calculation
+            int total = engine.getState().getBlockchainState().getTotalBlocks();
+            result.setBranchingRatio(total > 0 ? (double)engine.getState().getBlockchainState().getActiveForks() / total : 0.0);
+            
+            // Gini
+            com.sim.metrics.MetricsCalculator metrics = new com.sim.metrics.MetricsCalculator();
+            metrics.calculateMetrics(engine.getState());
+            result.setFinalGiniCoefficient(metrics.getCurrentGini());
+            
             result.setDurationMillis(System.currentTimeMillis() - startTime);
             
             // Publish result

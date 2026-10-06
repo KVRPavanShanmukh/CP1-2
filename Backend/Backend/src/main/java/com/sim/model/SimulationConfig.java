@@ -15,6 +15,7 @@ public class SimulationConfig {
     private double blockGossipLatency;
     private double slotDuration;
     private String status; // CREATED, RUNNING, COMPLETED, FAILED
+    private Long randomSeed;
 
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
@@ -41,6 +42,9 @@ public class SimulationConfig {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public Long getRandomSeed() { return randomSeed; }
+    public void setRandomSeed(Long randomSeed) { this.randomSeed = randomSeed; }
 
     @Override
     public boolean equals(Object o) {
