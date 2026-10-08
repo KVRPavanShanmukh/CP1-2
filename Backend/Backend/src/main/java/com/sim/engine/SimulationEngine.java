@@ -20,6 +20,7 @@ public class SimulationEngine {
         Random rng = new Random(config.getRandomSeed() != null ? config.getRandomSeed() : System.currentTimeMillis());
         this.state = new SimulationState(config, rng);
         this.networkModel = new NetworkModel(this.state);
+        this.state.setNetworkModel(this.networkModel);
         this.consensusStrategy = ConsensusStrategy.create(config.getConsensusType());
         this.metricsCalculator = new MetricsCalculator();
         initializeAgents();
@@ -27,8 +28,15 @@ public class SimulationEngine {
 
     private void initializeAgents() {
         int nodeCount = state.getConfig().getNodeCount();
+        int byzantineCount = (int) (nodeCount * state.getConfig().getByzantineRatio());
+        
         for (int i = 0; i < nodeCount; i++) {
-            BlockchainAgent agent = new BlockchainAgent("Agent-" + i, state.getRng());
+            BlockchainAgent agent;
+            if (i < byzantineCount) {
+                agent = new com.sim.agent.ByzantineNodeAgent("Agent-" + i, state.getRng(), state);
+            } else {
+                agent = new BlockchainAgent("Agent-" + i, state.getRng(), state);
+            }
             state.addAgent(agent);
         }
         networkModel.initializeTopology();
@@ -39,6 +47,7 @@ public class SimulationEngine {
         networkModel.deliverMessages();
         
         for (BlockchainAgent agent : state.getAgents()) {
+            agent.processMessages();
             consensusStrategy.execute(agent, state);
         }
         

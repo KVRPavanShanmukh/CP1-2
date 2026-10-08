@@ -17,6 +17,8 @@ public class PowConsensus extends ConsensusStrategy {
             agent.incrementBlocksProduced();
             agent.receiveBlock(block);
             state.getBlockchainState().addBlock(block);
+            
+            state.getNetworkModel().broadcastMessage(agent.getId(), com.sim.network.NetworkMessage.MessageType.BLOCK, block);
         }
     }
 }

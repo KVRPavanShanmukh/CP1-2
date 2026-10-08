@@ -16,6 +16,7 @@ public class SimulationConfig {
     private double slotDuration;
     private String status; // CREATED, RUNNING, COMPLETED, FAILED
     private Long randomSeed;
+    private double byzantineRatio = 0.0; // Default no byzantine
 
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
@@ -45,6 +46,9 @@ public class SimulationConfig {
 
     public Long getRandomSeed() { return randomSeed; }
     public void setRandomSeed(Long randomSeed) { this.randomSeed = randomSeed; }
+
+    public double getByzantineRatio() { return byzantineRatio; }
+    public void setByzantineRatio(double byzantineRatio) { this.byzantineRatio = byzantineRatio; }
 
     @Override
     public boolean equals(Object o) {
