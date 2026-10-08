@@ -129,7 +129,7 @@ function NetworkVisualization({ stateIndex }) {
 
     if (crystalRef.current) {
         // Grow the crystal ONLY in section 5
-        crystalRef.current.scale.setScalar(THREE.MathUtils.lerp(crystalRef.current.scale.x, stateIndex === 5 ? 1 : 0.001, 0.05));
+        crystalRef.current.scale.setScalar(THREE.MathUtils.lerp(crystalRef.current.scale.x, stateIndex === 5 ? 1 : 0.0, 0.05));
     }
   });
 

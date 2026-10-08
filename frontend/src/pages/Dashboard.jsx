@@ -135,7 +135,7 @@ function DashboardVisualization({ stateIndex }) {
     }
 
     if (crystalRef.current) {
-        crystalRef.current.scale.setScalar(THREE.MathUtils.lerp(crystalRef.current.scale.x, stateIndex === 3 ? 1 : 0.001, 0.05));
+        crystalRef.current.scale.setScalar(THREE.MathUtils.lerp(crystalRef.current.scale.x, stateIndex === 3 ? 1 : 0.0, 0.05));
     }
   });
 
@@ -160,6 +160,7 @@ export default function Dashboard() {
   const [activeSection, setActiveSection] = useState(0); 
   const [scrollLocked, setScrollLocked] = useState(false);
   const navigate = useNavigate();
+  const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
 
   const transactions = [
     { id: 'tx-89a1', type: 'Received', amount: '+500', date: '2026-09-28', status: 'Completed' },
@@ -170,9 +171,9 @@ export default function Dashboard() {
   const sections = [
     { id: 0, title: "PROJECT\nINTRODUCTION.", desc: "We are building an agent-based modelling system for high-frequency distributed networks. The core engine simulates consensus environments in real-time.", btn: "DISCOVER THE ENGINE ↓" },
     { id: 1, title: "THE NEXUS", desc: "The core abstract concept. A densely connected peer-to-peer network acting as a unified entity. Representing the collective intelligence of the distributed system.", btn: "EXPLORE TOPOLOGY ↗" },
-    { id: 2, title: "SYSTEM\nARCHITECTURE", desc: "Underneath the nexus lies a scalable, highly concurrent worker architecture. RabbitMQ drives inter-process message propagation seamlessly.", btn: "VIEW ARCHITECTURE ↗", alignRight: true },
+    { id: 2, title: "SYSTEM\nARCHITECTURE", desc: "Underneath the nexus lies a scalable, highly concurrent worker architecture. RabbitMQ drives inter-process message propagation seamlessly.", btn: "VIEW ARCHITECTURE ↗" },
     { id: 3, title: "PROJECT\nVISION", desc: "Transforming ambitious ideas into shipped systems. The vision is to provide absolute clarity into decentralized consensus behaviors through flawless execution.", btn: "ENTER THE FIELD ↓" },
-    { id: 4, title: "FINAL SYSTEM\nOVERVIEW", desc: "Personal account and simulation metadata dashboard. Monitor your real-time CHN55 token holdings and network status here.", btn: "ACCESS SIMULATION ↗", alignRight: true }
+    { id: 4, title: "FINAL SYSTEM\nOVERVIEW", desc: "Personal account and simulation metadata dashboard. Monitor your real-time CHN55 token holdings and network status here.", btn: "ACCESS SIMULATION ↗" }
   ];
 
   const accentColors = [
@@ -316,15 +317,17 @@ export default function Dashboard() {
       </div>
 
       {/* PRIVACY CONSENT BANNER */}
-      <div className="privacy-bar">
-        <div className="privacy-text">
-          <span>// PRIVACY</span> Optional analytics help improve the dashboard. <u>Details</u>
+      {!privacyChoice && (
+        <div className="privacy-bar">
+          <div className="privacy-text">
+            <span>// PRIVACY</span> Optional analytics help improve the dashboard. <u>Details</u>
+          </div>
+          <div style={{ display: 'flex', gap: '15px' }}>
+            <button className="hollow-btn" onClick={() => { localStorage.setItem('privacy_choice', 'declined'); setPrivacyChoice('declined'); }} style={{ fontSize: '9px', padding: '8px 16px', border: 'none', color: 'rgba(255,255,255,0.5)' }}>DECLINE</button>
+            <button className="hollow-btn" onClick={() => { localStorage.setItem('privacy_choice', 'accepted'); setPrivacyChoice('accepted'); }} style={{ fontSize: '9px', padding: '8px 16px' }}>ACCEPT</button>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <button className="hollow-btn" style={{ fontSize: '9px', padding: '8px 16px', border: 'none', color: 'rgba(255,255,255,0.5)' }}>DECLINE</button>
-          <button className="hollow-btn" style={{ fontSize: '9px', padding: '8px 16px' }}>ACCEPT</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

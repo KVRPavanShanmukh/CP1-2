@@ -65,7 +65,7 @@ function HeroVisual({ active }) {
     }
     
     const scale = active ? 1 : 0.5;
-    const opacity = active ? 0.9 : 0.1;
+    const opacity = active ? 0.9 : 0.0;
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, scale, 0.03));
     if (linesRef.current?.material) linesRef.current.material.opacity = THREE.MathUtils.lerp(linesRef.current.material.opacity, opacity, 0.03);
     if (pointsRef.current?.material) pointsRef.current.material.opacity = THREE.MathUtils.lerp(pointsRef.current.material.opacity, opacity * 0.4, 0.03);
@@ -120,13 +120,13 @@ function NexusSphereVisual({ active }) {
     groupRef.current.rotation.x = Math.sin(t * 0.2) * 0.1 + state.pointer.y * 0.08;
     
     const scale = active ? 1.2 : 0.3;
-    const opacity = active ? 0.85 : 0.05;
+    const opacity = active ? 0.85 : 0.0;
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, scale, 0.03));
     if (pointsRef.current?.material) pointsRef.current.material.opacity = THREE.MathUtils.lerp(pointsRef.current.material.opacity, opacity, 0.03);
   });
 
   return (
-    <group ref={groupRef} position={[-1, 0.5, 0]}>
+    <group ref={groupRef} position={[3.5, 0.5, 0]}>
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={numParticles} array={positions} itemSize={3} />
@@ -184,7 +184,7 @@ function NetworkGraphVisual({ active }) {
     groupRef.current.rotation.x = state.pointer.y * 0.06;
     
     const scale = active ? 1 : 0.4;
-    const opacity = active ? 1 : 0.05;
+    const opacity = active ? 1 : 0.0;
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, scale, 0.03));
     if (nodesRef.current?.material) nodesRef.current.material.opacity = THREE.MathUtils.lerp(nodesRef.current.material.opacity, opacity, 0.03);
     if (edgesRef.current?.material) edgesRef.current.material.opacity = THREE.MathUtils.lerp(edgesRef.current.material.opacity, opacity * 0.3, 0.03);
@@ -254,13 +254,13 @@ function EnergyStreamVisual({ active }) {
     }
 
     const scale = active ? 1 : 0.4;
-    const opacity = active ? 0.85 : 0.05;
+    const opacity = active ? 0.85 : 0.0;
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, scale, 0.03));
     if (linesRef.current?.material) linesRef.current.material.opacity = THREE.MathUtils.lerp(linesRef.current.material.opacity, opacity, 0.03);
   });
 
   return (
-    <group ref={groupRef} position={[-2, 0, 0]}>
+    <group ref={groupRef} position={[-3, 0, 0]}>
       <lineSegments ref={linesRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={linePositions.length / 3} array={linePositions} itemSize={3} />
@@ -293,7 +293,7 @@ function TeamAmbientVisual({ active }) {
     if (!groupRef.current) return;
     groupRef.current.rotation.y = state.clock.elapsedTime * 0.02;
     
-    const opacity = active ? 0.4 : 0.02;
+    const opacity = active ? 0.4 : 0.0;
     if (pointsRef.current?.material) pointsRef.current.material.opacity = THREE.MathUtils.lerp(pointsRef.current.material.opacity, opacity, 0.03);
   });
 
@@ -339,7 +339,7 @@ function SimSphereVisual({ active }) {
     groupRef.current.rotation.x = state.pointer.y * 0.06;
 
     const scale = active ? 1 : 0.3;
-    const opacity = active ? 0.8 : 0.03;
+    const opacity = active ? 0.8 : 0.0;
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, scale, 0.03));
     if (pointsRef.current?.material) pointsRef.current.material.opacity = THREE.MathUtils.lerp(pointsRef.current.material.opacity, opacity, 0.03);
   });
@@ -385,7 +385,7 @@ function CrystalVisual({ active }) {
     groupRef.current.rotation.y = t * 0.15 + state.pointer.x * 0.15;
     groupRef.current.rotation.x = t * 0.08 + state.pointer.y * 0.1;
     
-    const scale = active ? 1 : 0.01;
+    const scale = active ? 1 : 0.0;
     const opacity = active ? 1 : 0;
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, scale, 0.04));
     if (meshRef.current?.material) meshRef.current.material.opacity = THREE.MathUtils.lerp(meshRef.current.material.opacity, opacity, 0.04);
@@ -393,7 +393,7 @@ function CrystalVisual({ active }) {
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]}>
+    <group ref={groupRef} position={[3, 0, 0]}>
       <mesh ref={meshRef}>
         <octahedronGeometry args={[4.5, 1]} />
         <meshStandardMaterial color="#ff00ff" wireframe transparent emissive="#ff00ff" emissiveIntensity={2.5} opacity={0.9} />
@@ -439,6 +439,7 @@ export default function Landing() {
   const [activeSection, setActiveSection] = useState(0);
   const [scrollLocked, setScrollLocked] = useState(false);
   const navigate = useNavigate();
+  const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
   const totalSections = 7;
 
   const sectionAccents = ['#ffffff', '#00e5ff', '#e6e6fa', '#ffaa00', '#00bfa5', '#ffffff', '#ff00ff'];
@@ -722,11 +723,13 @@ export default function Landing() {
             <span key={i} style={{ color: i === 0 ? currentAccent : 'var(--text-dimmer)' }}>{tag}</span>
           ))}
         </div>
-        <div className="bottom-privacy">
-          <div className="bottom-privacy-text"><span className="accent">// PRIVACY</span> Optional analytics help improve this platform. <u style={{ cursor: 'pointer' }}>Details</u></div>
-          <button className="privacy-btn">DECLINE</button>
-          <button className="privacy-btn filled">ACCEPT</button>
-        </div>
+        {!privacyChoice && (
+          <div className="bottom-privacy">
+            <div className="bottom-privacy-text"><span className="accent">// PRIVACY</span> Optional analytics help improve this platform. <u style={{ cursor: 'pointer' }}>Details</u></div>
+            <button className="privacy-btn" onClick={() => { localStorage.setItem('privacy_choice', 'declined'); setPrivacyChoice('declined'); }}>DECLINE</button>
+            <button className="privacy-btn filled" onClick={() => { localStorage.setItem('privacy_choice', 'accepted'); setPrivacyChoice('accepted'); }}>ACCEPT</button>
+          </div>
+        )}
       </div>
     </div>
   );
