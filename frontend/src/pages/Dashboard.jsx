@@ -261,7 +261,7 @@ export default function Dashboard() {
               <div style={{ marginTop: '2rem' }}>
                 <div style={{ marginBottom: '2rem' }}>
                   <span className="meta-label" style={{ marginBottom: '10px' }}>ACCOUNT OVERVIEW (CHN55)</span>
-                  <div style={{ fontSize: '3rem', fontWeight: 200, letterSpacing: '-1px' }}>
+                  <div style={{ fontSize: '3.5rem', fontWeight: 200, letterSpacing: '-1px', lineHeight: '1', color: '#fff' }}>
                     2,450<span style={{ fontSize: '0.4em', opacity: 0.5 }}>.00</span>
                   </div>
                 </div>

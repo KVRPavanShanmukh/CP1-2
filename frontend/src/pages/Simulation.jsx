@@ -6,6 +6,7 @@ import SockJS from 'sockjs-client/dist/sockjs';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import { useNavigate } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
 
 const API_BASE_URL = 'http://localhost:8080/api/simulations';
@@ -155,6 +156,9 @@ function NetworkVisualization({ stateIndex }) {
 export default function Simulation() {
   const [activeSection, setActiveSection] = useState(0); 
   const [scrollLocked, setScrollLocked] = useState(false);
+  const [simulationStarted, setSimulationStarted] = useState(false);
+  const navigate = useNavigate();
+  
   const sections = [
     { id: 0, title: "CONFIGURATION", desc: "Select network parameters to synthesize the engine." },
     { id: 1, title: "NETWORK FORMATION", desc: "Instantiating peer-to-peer topology and allocating distributed nodes." },
@@ -191,6 +195,17 @@ export default function Simulation() {
   useEffect(() => {
     const handleWheel = (e) => {
       if (scrollLocked) return;
+      
+      if (!simulationStarted) {
+        if (e.deltaY > 50) {
+          setScrollLocked(true);
+          // Return to Network Architecture
+          navigate('/dashboard'); 
+          setTimeout(() => setScrollLocked(false), 1000);
+        }
+        return;
+      }
+
       // Block manual scroll during auto simulation
       if (activeSection > 0 && activeSection < 5) return;
       
@@ -206,7 +221,7 @@ export default function Simulation() {
     };
     window.addEventListener('wheel', handleWheel);
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [activeSection, scrollLocked]);
+  }, [activeSection, scrollLocked, simulationStarted, navigate]);
 
   const connectWebSocket = (simulationId) => {
     if (stompClientRef.current) stompClientRef.current.deactivate();
@@ -243,6 +258,7 @@ export default function Simulation() {
 
   const handleStartSimulation = async (e) => {
     if (e) e.preventDefault();
+    setSimulationStarted(true);
     setLoading(true);
     setLiveTicks([]);
     setResults(null);
@@ -318,14 +334,14 @@ export default function Simulation() {
                 {activeSection === 5 && <>SIMULATION<br/>COMPLETE.</>}
               </h1>
               
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#D8D8D8', marginBottom: '3rem', maxWidth: '350px', lineHeight: '1.8' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#D8D8D8', marginBottom: '24px', maxWidth: '350px', lineHeight: '1.6' }}>
                 {sections[activeSection].desc}
               </p>
 
               {/* SECTION CONTROLS / CONTENT */}
               {activeSection === 0 && (
                 <form onSubmit={(e) => e.preventDefault()}>
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: '24px' }}>
                     <span className="meta-label">Consensus Type</span>
                     <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})} style={{ color: '#FFFFFF' }}>
                       <option value="PoW">Proof of Work (PoW)</option>
@@ -418,7 +434,7 @@ export default function Simulation() {
                       <div className="value">{results.durationMillis} ms</div>
                     </div>
                   </div>
-                  <button onClick={() => { setActiveSection(0); setLiveTicks([]); setResults(null); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1 }}>
+                  <button onClick={() => { setActiveSection(0); setSimulationStarted(false); setLiveTicks([]); setResults(null); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
                     NEW SEQUENCE ↺
                   </button>
                 </div>

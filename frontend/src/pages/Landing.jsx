@@ -615,7 +615,9 @@ export default function Landing() {
                     </div>
                   ))}
                 </div>
-                <button className="landing-btn" onClick={() => setActiveSection(4)}>MEET THE TEAM ↗</button>
+                <div style={{ position: 'relative', zIndex: 100, marginTop: '20px' }}>
+                  <button className="landing-btn" onClick={() => setActiveSection(4)} style={{ pointerEvents: 'auto' }}>MEET THE TEAM ↗</button>
+                </div>
               </div>
             </motion.div>
           )}
