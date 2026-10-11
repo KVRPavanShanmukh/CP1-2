@@ -2,6 +2,13 @@
   cursor: none !important;
 }
 
+/* Allow native text caret on login inputs so typing and selecting text is effortless */
+.login-experience input,
+.login-experience textarea,
+.login-experience select {
+  cursor: text !important;
+}
+
 .login-experience {
   position: relative;
   width: 100vw;
@@ -17,7 +24,7 @@
   top: 0; left: 0;
   width: 100vw; height: 100vh;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 2147483647;
 }
 
 .chain-link-wrapper {
@@ -29,14 +36,14 @@
   margin-left: -4px;
 }
 
-/* Black metallic chain links */
+/* High-contrast metallic chain links with dual-contour glow */
 .chain-link {
   width: 100%;
   height: 100%;
-  border: 2px solid #111;
+  border: 2px solid #000;
   border-radius: 4px;
-  box-shadow: inset 0 0 1px #000, 0 0 2px rgba(255, 100, 0, 0.8);
-  background: transparent;
+  box-shadow: 0 0 0 1px rgba(255, 180, 0, 0.95), inset 0 0 2px #000, 0 0 5px rgba(255, 100, 0, 0.9);
+  background: rgba(12, 12, 12, 0.7);
   position: relative;
   z-index: 3;
 }
@@ -46,8 +53,19 @@
   height: 10px;
   margin-top: 2px;
   margin-left: 2px;
-  border: 1.5px solid #222;
+  border: 1.5px solid #000;
+  box-shadow: 0 0 0 1px rgba(255, 220, 100, 0.9), inset 0 0 1px #000;
   background: #111;
+}
+
+/* Restore touch behavior on coarse devices */
+@media (pointer: coarse) {
+  .login-experience, .login-experience * {
+    cursor: auto !important;
+  }
+  .cursor-container {
+    display: none !important;
+  }
 }
 
 /* Realistic fire surrounding the links - reduced size to show chains */

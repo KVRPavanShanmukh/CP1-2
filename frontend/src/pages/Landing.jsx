@@ -451,6 +451,8 @@ export default function Landing() {
   const [teamData, setTeamData] = useState(null);
   const [nexusModalOpen, setNexusModalOpen] = useState(false);
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
+  const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false);
+  const [createTeamName, setCreateTeamName] = useState('');
   const [addMemberInput, setAddMemberInput] = useState('');
   const [validatedUser, setValidatedUser] = useState(null);
   const [validating, setValidating] = useState(false);
@@ -518,6 +520,19 @@ export default function Landing() {
       showActionAlert(err.message, 'error');
     }
   };
+
+  const handleCreateTeamDirect = async (name) => {
+    try {
+      const cleanName = (name || '').trim();
+      if (!cleanName) return;
+      await teamApi.createTeam(cleanName, 'Formed via Chain55 Team Portal');
+      showActionAlert(`Team "${cleanName}" created successfully! You are now Team Leader.`, 'success');
+      await loadTeamData();
+    } catch (err) {
+      showActionAlert(err.message, 'error');
+    }
+  };
+
 
   const handleUpdateMemberRole = (targetUserId, targetUsername, newRole) => {
     setConfirmDialog({
@@ -594,17 +609,25 @@ export default function Landing() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [activeSection]);
 
-  const navItems = [
-    { label: 'DASHBOARD', action: () => navigate('/dashboard') },
-    { label: 'SIMULATION', action: () => navigate('/simulation') },
-    { label: 'PROFILE', action: () => {} },
-  ];
+  // Global navbar section navigation sync
+  useEffect(() => {
+    const handleNavSection = (e) => {
+      if (typeof e.detail === 'number') {
+        setActiveSection(e.detail);
+      }
+    };
+    window.addEventListener('c55-navigate-section', handleNavSection);
+    return () => window.removeEventListener('c55-navigate-section', handleNavSection);
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('c55-section-changed', { detail: activeSection }));
+  }, [activeSection]);
 
   const sectionNavLabels = ['HERO', 'ABSTRACT', 'ARCH', 'PROCESS', 'TEAM', 'ENGINE', 'VISION'];
 
   return (
-    <div className="landing-shell" style={{ cursor: 'none' }}>
-      <SimulationCursor activeSection={activeSection} />
+    <div className="landing-shell">
 
       {/* WEBGL LAYER */}
       <div className="webgl-layer">
@@ -612,29 +635,6 @@ export default function Landing() {
           <CombinedScene activeSection={activeSection} />
         </Canvas>
       </div>
-
-      {/* TOP NAVBAR */}
-      <nav className="landing-navbar">
-        <div className="navbar-left">
-          <div className="navbar-logo">C55</div>
-          <div className="navbar-identity">
-            <strong>CHAIN55</strong> / DISTRIBUTED CONSENSUS SIMULATOR<br/>
-            AGENT-BASED MODELLING ENGINE
-          </div>
-        </div>
-        <div className="navbar-center">
-          {navItems.map(item => (
-            <div key={item.label} className="navbar-link" onClick={item.action}>{item.label}</div>
-          ))}
-        </div>
-        <div className="navbar-right">
-          <div className="navbar-status">
-            <div className="status-dot"></div>
-            <span>SYSTEM ONLINE</span>
-          </div>
-          <button className="navbar-menu-btn">☰</button>
-        </div>
-      </nav>
 
       {/* SECTION CONTENT */}
       <div className="landing-sections">
@@ -749,119 +749,175 @@ export default function Landing() {
                     </div>
                   )}
 
-                  {teamData?.hasTeam && (
+                  {teamData?.hasTeam ? (
                     <div style={{ marginTop: '16px', padding: '14px 18px', background: 'rgba(0, 229, 255, 0.05)', border: '1px solid rgba(0, 229, 255, 0.25)', maxWidth: '360px' }}>
                       <div style={{ fontSize: '12px', fontWeight: 700, color: '#00e5ff', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
                         AFFILIATED TEAM: {teamData.team.name}
                       </div>
                       <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                        LEADER: {teamData.team.leaderUsername} ({teamData.team.leaderUid || 'N/A'}) • {teamData.team.members.length} MEMBERS
+                        LEADER: {teamData.team.leaderUsername} ({teamData.team.leaderUid || 'N/A'}) • {teamData.team.members.length} / 4 MEMBERS
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: '16px', padding: '14px 18px', background: 'rgba(255, 170, 0, 0.05)', border: '1px solid rgba(255, 170, 0, 0.25)', maxWidth: '360px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffaa00', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+                        UNASSIGNED IDENTITY: {currentUser?.username || 'CURRENT USER'}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                        UID: {currentUser?.uid || 'N/A'} • Establish team or accept invitation to join
                       </div>
                     </div>
                   )}
+
                 </div>
 
                 <div className="team-right-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '72vh', overflowY: 'auto', paddingRight: '12px' }}>
                   <div className="team-grid">
-                    {/* ORIGINAL 4 CARDS PRESERVED INTACT */}
-                    {[
-                      { name: 'PAVAN SHANMUKH', role: 'FULL-STACK LEAD', desc: 'Architecture, Spring Boot backend, simulation engine, React frontend, WebGL visuals, authentication system.' },
-                      { name: 'TEAM MEMBER 2', role: 'BACKEND ENGINEER', desc: 'Database integration, API design, WebSocket infrastructure, consensus algorithm implementation.' },
-                      { name: 'TEAM MEMBER 3', role: 'FRONTEND ENGINEER', desc: 'React components, Three.js visualizations, responsive design, animation systems.' },
-                      { name: 'TEAM MEMBER 4', role: 'RESEARCH / QA', desc: 'Agent-based modelling research, simulation validation, testing, documentation.' },
-                    ].map((member, idx) => (
-                      <div key={idx} className="team-card">
-                        <div className="team-card-name">{member.name}</div>
-                        <div className="team-card-role" style={{ color: currentAccent }}>{member.role}</div>
-                        <div className="team-card-desc">{member.desc}</div>
-                      </div>
-                    ))}
+                    {(() => {
+                      const hasTeam = teamData?.hasTeam && teamData.team;
+                      const members = hasTeam ? (teamData.team.members || []) : [];
+                      const isLeader = hasTeam ? teamData.isLeader : true; // if no team, current user can be leader of their new team
+                      const canManage = isLeader;
 
-                    {/* DYNAMIC ADDITIONAL TEAM MEMBERS PRESERVING SAME DESIGN LANGUAGE */}
-                    {teamData?.hasTeam && teamData.team.members && teamData.team.members.filter(m => {
-                      const uname = m.username?.toUpperCase();
-                      return uname !== 'PAVAN SHANMUKH' && uname !== 'PAVAN' && uname !== 'TEAM MEMBER 2' && uname !== 'TEAM MEMBER 3' && uname !== 'TEAM MEMBER 4';
-                    }).map((member, idx) => {
+                      // Fill up to 4 card positions
+                      const cards = [];
+                      for (let i = 0; i < 4; i++) {
+                        if (i < members.length) {
+                          cards.push({ type: 'member', data: members[i], index: i });
+                        } else {
+                          cards.push({ type: 'empty', index: i });
+                        }
+                      }
+
                       const roleColors = {
                         LEADER: '#ffaa00',
                         ADMIN: '#e6e6fa',
                         COMMANDER: '#ff00ff',
                         MEMBER: currentAccent
                       };
-                      const roleColor = roleColors[member.role] || currentAccent;
-                      const isLeader = teamData.isLeader;
-                      const isMemberLeader = member.role === 'LEADER' || member.userId === teamData.team.leaderId;
 
-                      return (
-                        <div key={`dynamic-${idx}`} className="team-card" style={{ borderColor: 'rgba(0, 229, 255, 0.35)', background: 'rgba(0, 229, 255, 0.02)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                            <div className="team-card-name">{member.username}</div>
-                            <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 6px', border: `1px solid ${roleColor}`, color: roleColor, letterSpacing: '1px' }}>
-                              {member.role}
-                            </span>
-                          </div>
-                          <div className="team-card-role" style={{ color: roleColor }}>
-                            {member.title || member.role}
-                          </div>
-                          <div className="team-card-desc">
-                            UID: {member.uid || 'N/A'}<br/>
-                            Joined: {new Date(member.joinedAt || Date.now()).toLocaleDateString()}
-                          </div>
+                      return cards.map((card, idx) => {
+                        if (card.type === 'member') {
+                          const m = card.data;
+                          const roleColor = roleColors[m.role] || currentAccent;
+                          const isMemberLeader = m.role === 'LEADER' || (hasTeam && m.userId === teamData.team.leaderId);
 
-                          {/* ROLE CONTROLS (VISIBLE ONLY TO AUTHORIZED TEAM LEADER) */}
-                          {isLeader && !isMemberLeader && (
-                            <div style={{ display: 'flex', gap: '6px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
-                              {member.role !== 'ADMIN' && (
-                                <button
-                                  className="action-btn"
-                                  onClick={() => handleUpdateMemberRole(member.userId, member.username, 'ADMIN')}
-                                >
-                                  SET ADMIN
-                                </button>
+                          return (
+                            <div key={`member-${m.userId || idx}`} className="team-card" style={{ borderColor: isMemberLeader ? 'rgba(255, 170, 0, 0.4)' : 'rgba(0, 229, 255, 0.25)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                <div className="team-card-name">{m.username}</div>
+                                <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 6px', border: `1px solid ${roleColor}`, color: roleColor, letterSpacing: '1px' }}>
+                                  {m.role}
+                                </span>
+                              </div>
+                              <div className="team-card-role" style={{ color: roleColor }}>
+                                {m.title || m.role}
+                              </div>
+                              <div className="team-card-desc">
+                                UID: <strong style={{ color: '#fff' }}>{m.uid || 'N/A'}</strong><br/>
+                                Joined: {new Date(m.joinedAt || Date.now()).toLocaleDateString()}
+                              </div>
+
+                              {/* ROLE CONTROLS (VISIBLE ONLY TO AUTHORIZED TEAM LEADER FOR OTHER MEMBERS) */}
+                              {canManage && !isMemberLeader && hasTeam && (
+                                <div style={{ display: 'flex', gap: '6px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
+                                  {m.role !== 'ADMIN' && (
+                                    <button
+                                      className="action-btn"
+                                      onClick={() => handleUpdateMemberRole(m.userId, m.username, 'ADMIN')}
+                                    >
+                                      SET ADMIN
+                                    </button>
+                                  )}
+                                  {m.role !== 'COMMANDER' && (
+                                    <button
+                                      className="action-btn"
+                                      onClick={() => handleUpdateMemberRole(m.userId, m.username, 'COMMANDER')}
+                                    >
+                                      SET COMMANDER
+                                    </button>
+                                  )}
+                                  {m.role !== 'MEMBER' && (
+                                    <button
+                                      className="action-btn"
+                                      onClick={() => handleUpdateMemberRole(m.userId, m.username, 'MEMBER')}
+                                    >
+                                      DEMOTE
+                                    </button>
+                                  )}
+                                  <button
+                                    className="action-btn danger"
+                                    onClick={() => handleRemoveTeamMember(m.userId, m.username)}
+                                  >
+                                    REMOVE
+                                  </button>
+                                </div>
                               )}
-                              {member.role !== 'COMMANDER' && (
-                                <button
-                                  className="action-btn"
-                                  onClick={() => handleUpdateMemberRole(member.userId, member.username, 'COMMANDER')}
-                                >
-                                  SET COMMANDER
-                                </button>
-                              )}
-                              {member.role !== 'MEMBER' && (
-                                <button
-                                  className="action-btn"
-                                  onClick={() => handleUpdateMemberRole(member.userId, member.username, 'MEMBER')}
-                                >
-                                  DEMOTE
-                                </button>
-                              )}
-                              <button
-                                className="action-btn danger"
-                                onClick={() => handleRemoveTeamMember(member.userId, member.username)}
-                              >
-                                REMOVE
-                              </button>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        } else {
+                          // EMPTY SLOT (Positions 2-4 or 1-4)
+                          return (
+                            <div key={`empty-${idx}`} className="team-card empty-slot">
+                              {hasTeam ? (
+                                isLeader ? (
+                                  <div>
+                                    <button
+                                      className="empty-slot-btn"
+                                      onClick={() => { setAddMemberModalOpen(true); setValidatedUser(null); setAddMemberInput(''); }}
+                                    >
+                                      + ADD MEMBER
+                                    </button>
+                                    <div className="empty-slot-hint">Add a registered user by User ID</div>
+                                  </div>
+                                ) : (
+                                  <div style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1px' }}>
+                                    EMPTY POSITION {idx + 1}
+                                  </div>
+                                )
+                              ) : (
+                                <div>
+                                  {idx === 0 ? (
+                                    <div>
+                                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', marginBottom: '4px' }}>
+                                        {currentUser?.username || 'FOUNDER'}
+                                      </div>
+                                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#ffaa00', letterSpacing: '1.5px', marginBottom: '8px' }}>
+                                        ★ PROSPECTIVE TEAM LEADER
+                                      </div>
+                                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
+                                        UID: {currentUser?.uid || 'N/A'}
+                                      </div>
+                                      <button
+                                        className="empty-slot-btn"
+                                        style={{ color: '#ffaa00', borderColor: 'rgba(255,170,0,0.5)' }}
+                                        onClick={() => { setCreateTeamModalOpen(true); setCreateTeamName(''); }}
+                                      >
+                                        ESTABLISH TEAM ↗
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <button
+                                        className="empty-slot-btn"
+                                        onClick={() => { setCreateTeamModalOpen(true); setCreateTeamName(''); }}
+                                      >
+                                        + ADD MEMBER
+                                      </button>
+                                      <div className="empty-slot-hint">Establish team to recruit members</div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                      });
+                    })()}
                   </div>
 
                   {/* CONTROLS IMMEDIATELY BELOW THE CARDS */}
                   <div style={{ marginTop: '22px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    {/* ADD MEMBER BUTTON: Visible only to authorized Team Leader */}
-                    {teamData?.isLeader && (
-                      <button
-                        className="landing-btn accent-cyan"
-                        id="add-member-landing-btn"
-                        onClick={() => { setAddMemberModalOpen(true); setValidatedUser(null); setAddMemberInput(''); }}
-                        style={{ pointerEvents: 'auto' }}
-                      >
-                        + ADD MEMBER ↗
-                      </button>
-                    )}
-
                     {/* NEXUS TEAM PORTAL BUTTON */}
                     <button
                       className="landing-btn"
@@ -1021,6 +1077,56 @@ export default function Landing() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ESTABLISH TEAM MODAL (FOR USERS FOUNDING A TEAM) */}
+      {createTeamModalOpen && (
+        <div className="nexus-overlay" onClick={() => setCreateTeamModalOpen(false)}>
+          <div className="nexus-modal" style={{ maxWidth: '540px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="nexus-header">
+              <div className="nexus-header-left">
+                <span className="nexus-badge">FOUND TEAM</span>
+                <h3 className="nexus-title">ESTABLISH NEXUS TEAM</h3>
+              </div>
+              <button className="nexus-close-btn" onClick={() => setCreateTeamModalOpen(false)}>✕</button>
+            </div>
+            <div className="nexus-body" style={{ padding: '24px' }}>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', lineHeight: '1.6', marginBottom: '18px' }}>
+                As founder of this consensus team, you ({currentUser?.username || 'user'}) will be appointed <strong>TEAM LEADER</strong> with authority to recruit and manage team members.
+              </p>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!createTeamName.trim()) return;
+                await handleCreateTeamDirect(createTeamName.trim());
+                setCreateTeamModalOpen(false);
+              }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '10px', letterSpacing: '2px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px', fontFamily: 'var(--font-mono)' }}>
+                    TEAM DESIGNATION (NAME) *
+                  </label>
+                  <input
+                    type="text"
+                    className="cyber-search-input"
+                    style={{ width: '100%', boxSizing: 'border-box' }}
+                    placeholder="e.g. ALPHA CONSENSUS SQUAD"
+                    value={createTeamName}
+                    onChange={(e) => setCreateTeamName(e.target.value)}
+                    autoFocus
+                    required
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                  <button type="button" className="nexus-btn-secondary" onClick={() => setCreateTeamModalOpen(false)}>
+                    CANCEL
+                  </button>
+                  <button type="submit" className="nexus-btn-primary">
+                    ESTABLISH & BECOME LEADER ↗
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

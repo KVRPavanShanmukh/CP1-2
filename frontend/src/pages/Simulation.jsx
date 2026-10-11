@@ -281,7 +281,6 @@ export default function Simulation() {
 
   return (
     <div className="immersive-shell" style={{ '--dynamic-accent': currentAccent }}>
-      <SimulationCursor activeSection={activeSection} />
       {/* 3D WEBGL ENGINE */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
         <Canvas camera={{ position: [0, 0, 15], fov: 50 }} dpr={[1, 2]}>
@@ -294,21 +293,6 @@ export default function Simulation() {
           </EffectComposer>
         </Canvas>
       </div>
-
-      {/* HEADER */}
-      <header className="minimal-header">
-        <div className="header-left">
-          <div className="monogram">S</div>
-          <div>
-            <div>SIMULATION LAB / DISTRIBUTED SYSTEMS</div>
-            <div style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>CHAIN55 NETWORK ENGINE</div>
-          </div>
-        </div>
-        <div className="header-right">
-          <div>● WEBSOCKET / <span style={{ color: '#FFFFFF' }}>{activeSection > 0 && activeSection < 5 ? 'CONNECTED' : (activeSection === 5 ? 'COMPLETED' : 'STANDBY')}</span></div>
-          <div className="monogram" style={{ border: 'none', background: 'rgba(255,255,255,0.2)' }}>=</div>
-        </div>
-      </header>
 
       {/* MAIN LAYOUT */}
       <main className="main-content">

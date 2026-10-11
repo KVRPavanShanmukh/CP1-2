@@ -140,6 +140,11 @@ public class TeamService {
 
         User target = targetOpt.get();
 
+        // Enforce maximum team capacity of 4 members
+        if (team.getMembers().size() >= 4) {
+            throw new IllegalStateException("Team is already at maximum capacity (4/4 members).");
+        }
+
         // Check if already in this team
         boolean alreadyInThisTeam = team.getMembers().stream()
                 .anyMatch(m -> m.getUserId().equals(target.getId()) || (target.getUid() != null && target.getUid().equals(m.getUid())));
@@ -188,6 +193,11 @@ public class TeamService {
         if (!isAuthorized) {
             throw new SecurityException("You do not have permission to invite members.");
         }
+
+        if (team.getMembers().size() >= 4) {
+            throw new IllegalStateException("Team is already at maximum capacity (4/4 members).");
+        }
+
 
         Optional<User> targetOpt = userRepository.findByUid(targetIdentifier.trim());
         if (targetOpt.isEmpty()) targetOpt = userRepository.findByUsername(targetIdentifier.trim());
@@ -265,6 +275,11 @@ public class TeamService {
 
         Team team = teamRepository.findById(invitation.getTeamId())
                 .orElseThrow(() -> new IllegalArgumentException("Target team no longer exists."));
+
+        if (team.getMembers().size() >= 4) {
+            throw new IllegalStateException("Team is already at maximum capacity (4/4 members).");
+        }
+
 
         TeamMember member = new TeamMember(
                 user.getId(),

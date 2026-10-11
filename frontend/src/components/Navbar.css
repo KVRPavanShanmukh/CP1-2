@@ -1,0 +1,186 @@
+/* GLOBAL TRANSPARENT NAVBAR — CHAIN55 DESIGN SYSTEM */
+
+.global-c55-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 68px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 45px;
+  background: rgba(2, 2, 4, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-sizing: border-box;
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* BRAND / LOGO (LEFT) */
+.global-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.global-nav-logo {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.global-nav-left:hover .global-nav-logo {
+  border-color: #00e5ff;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.25);
+  color: #00e5ff;
+}
+
+.global-nav-identity {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
+.global-nav-identity strong {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* CENTER NAVIGATION ITEMS (1 TO 5) */
+.global-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.global-nav-link {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  position: relative;
+  padding: 6px 2px;
+  transition: color 0.25s ease;
+}
+
+.global-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #00e5ff;
+  transition: width 0.3s ease;
+}
+
+.global-nav-link:hover {
+  color: #ffffff;
+}
+
+.global-nav-link:hover::after {
+  width: 100%;
+}
+
+.global-nav-link.active {
+  color: #00e5ff;
+}
+
+.global-nav-link.active::after {
+  width: 100%;
+}
+
+/* AGENT ITEM (INERT) */
+.global-nav-link.inert-agent {
+  color: rgba(255, 255, 255, 0.35);
+  cursor: default;
+}
+
+.global-nav-link.inert-agent:hover {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.global-nav-link.inert-agent::after {
+  display: none;
+}
+
+/* LOGOUT BUTTON (EXTREME RIGHT END) */
+.global-nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.global-logout-btn {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 0, 85, 0.4);
+  background: rgba(255, 0, 85, 0.06);
+  color: #ff6b8b;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.global-logout-btn:hover {
+  background: rgba(255, 0, 85, 0.18);
+  border-color: #ff0055;
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+}
+
+/* RESPONSIVE BREAKPOINTS */
+@media (max-width: 900px) {
+  .global-c55-navbar {
+    padding: 0 24px;
+    height: 62px;
+  }
+  .global-nav-center {
+    gap: 18px;
+  }
+  .global-nav-identity {
+    display: none;
+  }
+}
+
+@media (max-width: 650px) {
+  .global-c55-navbar {
+    padding: 0 16px;
+    height: 58px;
+  }
+  .global-nav-center {
+    gap: 12px;
+  }
+  .global-nav-link {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+  }
+  .global-logout-btn {
+    padding: 6px 12px;
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+}

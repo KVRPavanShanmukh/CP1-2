@@ -221,8 +221,7 @@ export default function Dashboard() {
   }, [activeSection, scrollLocked]);
 
   return (
-    <div className="immersive-shell" style={{ '--dynamic-accent': currentAccent, cursor: 'none' }}>
-      <SimulationCursor activeSection={activeSection} />
+    <div className="immersive-shell" style={{ '--dynamic-accent': currentAccent }}>
       
       {/* 3D WEBGL ENGINE */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
@@ -236,20 +235,6 @@ export default function Dashboard() {
           </EffectComposer>
         </Canvas>
       </div>
-
-      {/* TOP NAVBAR */}
-      <nav className="sim-navbar">
-        <div className="nav-brand">
-          <div className="brand-circle">C55</div>
-          <div className="brand-text">CHAIN55 / LANDING<br/><span style={{opacity:0.5}}>DASHBOARD EXPERIENCE</span></div>
-        </div>
-        <div className="nav-links">
-          <div className="nav-link" onClick={() => setActiveSection(0)}>Project</div>
-          <div className="nav-link" onClick={() => setActiveSection(1)}>Network</div>
-          <div className="nav-link" onClick={() => setActiveSection(2)}>Architecture</div>
-          <div className="nav-link" style={{ color: 'var(--dynamic-accent)' }} onClick={() => navigate('/simulation')}>Simulation Tool</div>
-        </div>
-      </nav>
 
       {/* MAIN CONTENT COMPOSITION */}
       <main className="main-content" style={sections[activeSection].alignRight ? { left: 'auto', right: '100px' } : {}}>
