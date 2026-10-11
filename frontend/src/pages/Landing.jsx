@@ -456,6 +456,8 @@ export default function Landing() {
   const [addMemberInput, setAddMemberInput] = useState('');
   const [validatedUser, setValidatedUser] = useState(null);
   const [validating, setValidating] = useState(false);
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [addMemberModalError, setAddMemberModalError] = useState(null);
   const [actionAlert, setActionAlert] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
@@ -489,18 +491,23 @@ export default function Landing() {
 
   const handleValidateAddMember = async (e) => {
     e?.preventDefault();
-    if (!addMemberInput.trim()) return;
+    const query = addMemberInput.trim();
+    if (!query) {
+      setAddMemberModalError('User ID or username cannot be empty.');
+      return;
+    }
     setValidating(true);
     setValidatedUser(null);
+    setAddMemberModalError(null);
     try {
-      const res = await teamApi.validateUser(addMemberInput.trim());
+      const res = await teamApi.validateUser(query);
       if (res.exists) {
         setValidatedUser(res);
       } else {
-        showActionAlert(res.message || 'User not found in database.', 'error');
+        setAddMemberModalError(res.message || 'No registered user found with this User ID. Please check the ID and try again.');
       }
     } catch (err) {
-      showActionAlert(err.message, 'error');
+      setAddMemberModalError(err.message || 'Failed to query database for user validation.');
     } finally {
       setValidating(false);
     }
@@ -508,18 +515,25 @@ export default function Landing() {
 
   const handleConfirmAddMember = async () => {
     if (!validatedUser || !teamData?.team) return;
+    setIsAddingMember(true);
+    setAddMemberModalError(null);
     try {
       const targetIdentifier = validatedUser.user.uid || validatedUser.user.id;
       await teamApi.addMember(teamData.team.id, targetIdentifier);
-      showActionAlert(`Successfully added ${validatedUser.user.username} to team!`, 'success');
+      showActionAlert(`Team member ${validatedUser.user.username} added successfully.`, 'success');
       setAddMemberInput('');
       setValidatedUser(null);
+      setAddMemberModalError(null);
       setAddMemberModalOpen(false);
       await loadTeamData();
     } catch (err) {
+      setAddMemberModalError(err.message || 'Failed to add member to team.');
       showActionAlert(err.message, 'error');
+    } finally {
+      setIsAddingMember(false);
     }
   };
+
 
   const handleCreateTeamDirect = async (name) => {
     try {
@@ -814,9 +828,9 @@ export default function Landing() {
                                 {m.title || m.role}
                               </div>
                               <div className="team-card-desc">
-                                UID: <strong style={{ color: '#fff' }}>{m.uid || 'N/A'}</strong><br/>
-                                Joined: {new Date(m.joinedAt || Date.now()).toLocaleDateString()}
+                                UID: <strong style={{ color: '#fff' }}>{m.uid || 'N/A'}</strong>
                               </div>
+
 
                               {/* ROLE CONTROLS (VISIBLE ONLY TO AUTHORIZED TEAM LEADER FOR OTHER MEMBERS) */}
                               {canManage && !isMemberLeader && hasTeam && (
@@ -1033,16 +1047,26 @@ export default function Landing() {
                 Enter the user's UID (e.g. US000002, US000003) or registered username to validate their account before addition.
               </p>
               
+              {addMemberModalError && (
+                <div className="nexus-alert error" style={{ marginBottom: '16px' }}>
+                  <span>⚠️ {addMemberModalError}</span>
+                  <button type="button" style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }} onClick={() => setAddMemberModalError(null)}>✕</button>
+                </div>
+              )}
+
               <form onSubmit={handleValidateAddMember} className="cyber-search-box">
                 <input
                   type="text"
                   className="cyber-search-input"
                   placeholder="USER UID OR USERNAME"
                   value={addMemberInput}
-                  onChange={(e) => setAddMemberInput(e.target.value)}
+                  onChange={(e) => {
+                    setAddMemberInput(e.target.value);
+                    if (addMemberModalError) setAddMemberModalError(null);
+                  }}
                   autoFocus
                 />
-                <button type="submit" className="nexus-btn-primary" disabled={validating}>
+                <button type="submit" className="nexus-btn-primary" disabled={validating || isAddingMember}>
                   {validating ? 'CHECKING...' : 'VALIDATE ↗'}
                 </button>
               </form>
@@ -1069,14 +1093,15 @@ export default function Landing() {
                   <div>
                     <button
                       className="nexus-btn-primary"
-                      disabled={validatedUser.alreadyInTeam}
+                      disabled={validatedUser.alreadyInTeam || isAddingMember}
                       onClick={handleConfirmAddMember}
                     >
-                      CONFIRM ADDITION ↗
+                      {isAddingMember ? 'ADDING MEMBER...' : 'CONFIRM ADDITION ↗'}
                     </button>
                   </div>
                 </div>
               )}
+
             </div>
           </div>
         </div>

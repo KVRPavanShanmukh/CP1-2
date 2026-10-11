@@ -90,7 +90,7 @@ public class TeamService {
         }
 
         if (targetOpt.isEmpty()) {
-            return Map.of("exists", false, "message", "User not found with ID/UID: " + cleanQuery);
+            return Map.of("exists", false, "message", "No registered user found with this User ID. Please check the ID and try again.");
         }
 
         User target = targetOpt.get();
@@ -135,27 +135,27 @@ public class TeamService {
         if (targetOpt.isEmpty()) targetOpt = userRepository.findById(targetIdentifier.trim());
 
         if (targetOpt.isEmpty()) {
-            throw new IllegalArgumentException("Target user not found.");
+            throw new IllegalArgumentException("No registered user found with this User ID. Please check the ID and try again.");
         }
 
         User target = targetOpt.get();
 
         // Enforce maximum team capacity of 4 members
         if (team.getMembers().size() >= 4) {
-            throw new IllegalStateException("Team is already at maximum capacity (4/4 members).");
+            throw new IllegalStateException("Your team has reached its maximum capacity.");
         }
 
         // Check if already in this team
         boolean alreadyInThisTeam = team.getMembers().stream()
                 .anyMatch(m -> m.getUserId().equals(target.getId()) || (target.getUid() != null && target.getUid().equals(m.getUid())));
         if (alreadyInThisTeam) {
-            throw new IllegalStateException("User is already a member of this team.");
+            throw new IllegalStateException("This user is already a member of your team.");
         }
 
         // Check if in another team
         Optional<Team> otherTeam = teamRepository.findActiveTeamByUserId(target.getId());
         if (otherTeam.isPresent()) {
-            throw new IllegalStateException("User is already an active member of another team: " + otherTeam.get().getName());
+            throw new IllegalStateException("This user is already an active member of another team: " + otherTeam.get().getName());
         }
 
         TeamMember newMember = new TeamMember(

@@ -92,18 +92,22 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
   // Add Member validations
   const handleValidateMember = async (e) => {
     e?.preventDefault();
-    if (!addMemberQuery.trim()) return;
+    const query = addMemberQuery.trim();
+    if (!query) {
+      showAlert('User ID or username cannot be empty.', 'error');
+      return;
+    }
     setValidatingUser(true);
     setSearchTargetUser(null);
     try {
-      const res = await teamApi.validateUser(addMemberQuery.trim());
+      const res = await teamApi.validateUser(query);
       if (res.exists) {
         setSearchTargetUser(res);
       } else {
-        showAlert(res.message || 'User not found in database.', 'error');
+        showAlert(res.message || 'No registered user found with this User ID. Please check the ID and try again.', 'error');
       }
     } catch (err) {
-      showAlert(err.message, 'error');
+      showAlert(err.message || 'Failed to query database for user validation.', 'error');
     } finally {
       setValidatingUser(false);
     }
@@ -115,16 +119,17 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
     try {
       const targetIdentifier = searchTargetUser.user.uid || searchTargetUser.user.id;
       const res = await teamApi.addMember(teamData.team.id, targetIdentifier);
-      showAlert(`Added ${searchTargetUser.user.username} to team!`, 'success');
+      showAlert(`Team member ${searchTargetUser.user.username} added successfully.`, 'success');
       setAddMemberQuery('');
       setSearchTargetUser(null);
       await loadTeam();
     } catch (err) {
-      showAlert(err.message, 'error');
+      showAlert(err.message || 'Failed to add member to team.', 'error');
     } finally {
       setLoading(false);
     }
   };
+
 
   // Create Team
   const handleCreateTeam = async (e) => {
