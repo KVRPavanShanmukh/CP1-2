@@ -1,0 +1,475 @@
+/* NEXUS TEAM SYSTEM STYLES — CHAIN55 DESIGN SYSTEM */
+
+.nexus-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 3, 6, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.nexus-modal {
+  position: relative;
+  width: 100%;
+  max-width: 980px;
+  max-height: 90vh;
+  background: #08090f;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 229, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
+  color: #f0f0f5;
+}
+
+.nexus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 28px;
+  background: rgba(12, 14, 22, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nexus-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nexus-badge {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border: 1px solid #00e5ff;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.nexus-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+}
+
+.nexus-close-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.nexus-close-btn:hover {
+  border-color: #ff0055;
+  color: #ff0055;
+  background: rgba(255, 0, 85, 0.1);
+}
+
+/* TABS */
+.nexus-tabs {
+  display: flex;
+  background: rgba(8, 10, 16, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 28px;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.nexus-tab {
+  padding: 14px 20px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nexus-tab:hover {
+  color: #ffffff;
+}
+
+.nexus-tab.active {
+  color: #00e5ff;
+  border-bottom-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.05);
+}
+
+/* CONTENT BODY */
+.nexus-body {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 229, 255, 0.3) rgba(10, 12, 18, 0.5);
+}
+
+/* TEAM BANNER */
+.team-hero-banner {
+  background: linear-gradient(135deg, rgba(16, 20, 32, 0.8), rgba(8, 10, 18, 0.9));
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.team-hero-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.team-hero-sub {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+}
+
+.team-meta-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 10px;
+  font-family: "Courier New", Courier, monospace;
+  margin-right: 8px;
+  color: #00e5ff;
+}
+
+/* MEMBERS GRID */
+.team-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.member-box {
+  background: rgba(14, 18, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.member-box:hover {
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.1);
+}
+
+.member-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.member-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+}
+
+.member-uid {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 3px;
+}
+
+.role-badge {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.role-badge.leader {
+  background: rgba(255, 170, 0, 0.15);
+  border: 1px solid #ffaa00;
+  color: #ffaa00;
+}
+
+.role-badge.admin {
+  background: rgba(230, 230, 250, 0.15);
+  border: 1px solid #e6e6fa;
+  color: #e6e6fa;
+}
+
+.role-badge.commander {
+  background: rgba(255, 0, 255, 0.15);
+  border: 1px solid #ff00ff;
+  color: #ff00ff;
+}
+
+.role-badge.member {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.member-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.action-btn:hover {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: #00e5ff;
+  color: #00e5ff;
+}
+
+.action-btn.danger {
+  border-color: rgba(255, 0, 85, 0.35);
+  color: #ff4d6d;
+}
+
+.action-btn.danger:hover {
+  background: rgba(255, 0, 85, 0.2);
+  border-color: #ff0055;
+  color: #ff0055;
+}
+
+/* BUTTONS */
+.nexus-btn-primary {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 12px 24px;
+  background: #00e5ff;
+  color: #050508;
+  border: 1px solid #00e5ff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nexus-btn-primary:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.6);
+}
+
+.nexus-btn-secondary {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 12px 24px;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.nexus-btn-secondary:hover {
+  border-color: #00e5ff;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.08);
+}
+
+/* INPUTS & SEARCH */
+.cyber-search-box {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.cyber-search-input {
+  flex: 1;
+  background: rgba(12, 15, 24, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 16px;
+  color: #ffffff;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cyber-search-input:focus {
+  border-color: #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+}
+
+/* USER PREVIEW CARD */
+.user-preview-card {
+  background: rgba(16, 20, 32, 0.95);
+  border: 1px solid #00e5ff;
+  padding: 20px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* EMPTY STATES */
+.nexus-empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  margin: 16px 0;
+}
+
+.nexus-empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.nexus-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.nexus-empty-desc {
+  font-size: 11px;
+  font-family: "Courier New", Courier, monospace;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 420px;
+  margin: 0 auto 20px auto;
+}
+
+/* CONFIRMATION MODAL */
+.confirm-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.confirm-dialog {
+  background: #0d0f18;
+  border: 1px solid #ff0055;
+  box-shadow: 0 0 30px rgba(255, 0, 85, 0.3);
+  padding: 28px;
+  max-width: 450px;
+  width: 100%;
+}
+
+.confirm-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #ff0055;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.confirm-message {
+  font-size: 12px;
+  font-family: "Courier New", Courier, monospace;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 24px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* TOAST / ALERTS */
+.nexus-alert {
+  padding: 12px 18px;
+  margin-bottom: 18px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nexus-alert.error {
+  background: rgba(255, 0, 85, 0.12);
+  border: 1px solid #ff0055;
+  color: #ff6b8b;
+}
+
+.nexus-alert.success {
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid #00e5ff;
+  color: #00e5ff;
+}

@@ -3,8 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
+import NexusTeamModal from '../components/NexusTeamModal';
+import { teamApi, getStoredUser } from '../services/api';
+import '../components/NexusTeam.css';
 import './Landing.css';
 
 // ═══════════════════════════════════════════════════════════════
@@ -439,8 +442,116 @@ export default function Landing() {
   const [activeSection, setActiveSection] = useState(0);
   const [scrollLocked, setScrollLocked] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
   const totalSections = 7;
+
+  // Nexus Team Integration States
+  const [currentUser, setCurrentUser] = useState(getStoredUser());
+  const [teamData, setTeamData] = useState(null);
+  const [nexusModalOpen, setNexusModalOpen] = useState(false);
+  const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
+  const [addMemberInput, setAddMemberInput] = useState('');
+  const [validatedUser, setValidatedUser] = useState(null);
+  const [validating, setValidating] = useState(false);
+  const [actionAlert, setActionAlert] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState(null);
+
+  const showActionAlert = (msg, type = 'success') => {
+    setActionAlert({ msg, type });
+    setTimeout(() => setActionAlert(null), 4000);
+  };
+
+  const loadTeamData = async () => {
+    try {
+      const res = await teamApi.getMyTeam();
+      setTeamData(res);
+    } catch (e) {
+      // offline / unauthenticated
+    }
+  };
+
+  useEffect(() => {
+    setCurrentUser(getStoredUser());
+    loadTeamData();
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.section !== undefined) {
+      setActiveSection(location.state.section);
+    }
+    if (location.state?.openManage) {
+      setNexusModalOpen(true);
+    }
+  }, [location.state]);
+
+  const handleValidateAddMember = async (e) => {
+    e?.preventDefault();
+    if (!addMemberInput.trim()) return;
+    setValidating(true);
+    setValidatedUser(null);
+    try {
+      const res = await teamApi.validateUser(addMemberInput.trim());
+      if (res.exists) {
+        setValidatedUser(res);
+      } else {
+        showActionAlert(res.message || 'User not found in database.', 'error');
+      }
+    } catch (err) {
+      showActionAlert(err.message, 'error');
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleConfirmAddMember = async () => {
+    if (!validatedUser || !teamData?.team) return;
+    try {
+      const targetIdentifier = validatedUser.user.uid || validatedUser.user.id;
+      await teamApi.addMember(teamData.team.id, targetIdentifier);
+      showActionAlert(`Successfully added ${validatedUser.user.username} to team!`, 'success');
+      setAddMemberInput('');
+      setValidatedUser(null);
+      setAddMemberModalOpen(false);
+      await loadTeamData();
+    } catch (err) {
+      showActionAlert(err.message, 'error');
+    }
+  };
+
+  const handleUpdateMemberRole = (targetUserId, targetUsername, newRole) => {
+    setConfirmDialog({
+      title: 'CONFIRM ROLE CHANGE',
+      message: `Are you sure you want to change ${targetUsername}'s role to ${newRole}?`,
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          await teamApi.updateMemberRole(teamData.team.id, targetUserId, newRole);
+          showActionAlert(`Role updated to ${newRole} for ${targetUsername}.`, 'success');
+          await loadTeamData();
+        } catch (err) {
+          showActionAlert(err.message, 'error');
+        }
+      }
+    });
+  };
+
+  const handleRemoveTeamMember = (targetUserId, targetUsername) => {
+    setConfirmDialog({
+      title: 'CONFIRM MEMBER REMOVAL',
+      message: `Are you sure you want to remove ${targetUsername} from the team?`,
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          await teamApi.removeMember(teamData.team.id, targetUserId);
+          showActionAlert(`Removed ${targetUsername} from the team.`, 'success');
+          await loadTeamData();
+        } catch (err) {
+          showActionAlert(err.message, 'error');
+        }
+      }
+    });
+  };
 
   const sectionAccents = ['#ffffff', '#00e5ff', '#e6e6fa', '#ffaa00', '#00bfa5', '#ffffff', '#ff00ff'];
   const currentAccent = sectionAccents[activeSection];
@@ -631,20 +742,136 @@ export default function Landing() {
                   <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[4].cat}</span>
                   <h1 className="section-title size-medium">THE<br/>TEAM.</h1>
                   <p className="section-desc">The engineers behind the CHAIN55 distributed consensus simulation platform.</p>
-                </div>
-                <div className="team-grid">
-                  {[
-                    { name: 'PAVAN SHANMUKH', role: 'FULL-STACK LEAD', desc: 'Architecture, Spring Boot backend, simulation engine, React frontend, WebGL visuals, authentication system.' },
-                    { name: 'TEAM MEMBER 2', role: 'BACKEND ENGINEER', desc: 'Database integration, API design, WebSocket infrastructure, consensus algorithm implementation.' },
-                    { name: 'TEAM MEMBER 3', role: 'FRONTEND ENGINEER', desc: 'React components, Three.js visualizations, responsive design, animation systems.' },
-                    { name: 'TEAM MEMBER 4', role: 'RESEARCH / QA', desc: 'Agent-based modelling research, simulation validation, testing, documentation.' },
-                  ].map((member, idx) => (
-                    <div key={idx} className="team-card">
-                      <div className="team-card-name">{member.name}</div>
-                      <div className="team-card-role" style={{ color: currentAccent }}>{member.role}</div>
-                      <div className="team-card-desc">{member.desc}</div>
+                  
+                  {actionAlert && (
+                    <div className={`nexus-alert ${actionAlert.type}`} style={{ maxWidth: '340px' }}>
+                      <span>{actionAlert.type === 'error' ? '⚠️ ' : '✓ '}{actionAlert.msg}</span>
                     </div>
-                  ))}
+                  )}
+
+                  {teamData?.hasTeam && (
+                    <div style={{ marginTop: '16px', padding: '14px 18px', background: 'rgba(0, 229, 255, 0.05)', border: '1px solid rgba(0, 229, 255, 0.25)', maxWidth: '360px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#00e5ff', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+                        AFFILIATED TEAM: {teamData.team.name}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                        LEADER: {teamData.team.leaderUsername} ({teamData.team.leaderUid || 'N/A'}) • {teamData.team.members.length} MEMBERS
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="team-right-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '72vh', overflowY: 'auto', paddingRight: '12px' }}>
+                  <div className="team-grid">
+                    {/* ORIGINAL 4 CARDS PRESERVED INTACT */}
+                    {[
+                      { name: 'PAVAN SHANMUKH', role: 'FULL-STACK LEAD', desc: 'Architecture, Spring Boot backend, simulation engine, React frontend, WebGL visuals, authentication system.' },
+                      { name: 'TEAM MEMBER 2', role: 'BACKEND ENGINEER', desc: 'Database integration, API design, WebSocket infrastructure, consensus algorithm implementation.' },
+                      { name: 'TEAM MEMBER 3', role: 'FRONTEND ENGINEER', desc: 'React components, Three.js visualizations, responsive design, animation systems.' },
+                      { name: 'TEAM MEMBER 4', role: 'RESEARCH / QA', desc: 'Agent-based modelling research, simulation validation, testing, documentation.' },
+                    ].map((member, idx) => (
+                      <div key={idx} className="team-card">
+                        <div className="team-card-name">{member.name}</div>
+                        <div className="team-card-role" style={{ color: currentAccent }}>{member.role}</div>
+                        <div className="team-card-desc">{member.desc}</div>
+                      </div>
+                    ))}
+
+                    {/* DYNAMIC ADDITIONAL TEAM MEMBERS PRESERVING SAME DESIGN LANGUAGE */}
+                    {teamData?.hasTeam && teamData.team.members && teamData.team.members.filter(m => {
+                      const uname = m.username?.toUpperCase();
+                      return uname !== 'PAVAN SHANMUKH' && uname !== 'PAVAN' && uname !== 'TEAM MEMBER 2' && uname !== 'TEAM MEMBER 3' && uname !== 'TEAM MEMBER 4';
+                    }).map((member, idx) => {
+                      const roleColors = {
+                        LEADER: '#ffaa00',
+                        ADMIN: '#e6e6fa',
+                        COMMANDER: '#ff00ff',
+                        MEMBER: currentAccent
+                      };
+                      const roleColor = roleColors[member.role] || currentAccent;
+                      const isLeader = teamData.isLeader;
+                      const isMemberLeader = member.role === 'LEADER' || member.userId === teamData.team.leaderId;
+
+                      return (
+                        <div key={`dynamic-${idx}`} className="team-card" style={{ borderColor: 'rgba(0, 229, 255, 0.35)', background: 'rgba(0, 229, 255, 0.02)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                            <div className="team-card-name">{member.username}</div>
+                            <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 6px', border: `1px solid ${roleColor}`, color: roleColor, letterSpacing: '1px' }}>
+                              {member.role}
+                            </span>
+                          </div>
+                          <div className="team-card-role" style={{ color: roleColor }}>
+                            {member.title || member.role}
+                          </div>
+                          <div className="team-card-desc">
+                            UID: {member.uid || 'N/A'}<br/>
+                            Joined: {new Date(member.joinedAt || Date.now()).toLocaleDateString()}
+                          </div>
+
+                          {/* ROLE CONTROLS (VISIBLE ONLY TO AUTHORIZED TEAM LEADER) */}
+                          {isLeader && !isMemberLeader && (
+                            <div style={{ display: 'flex', gap: '6px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
+                              {member.role !== 'ADMIN' && (
+                                <button
+                                  className="action-btn"
+                                  onClick={() => handleUpdateMemberRole(member.userId, member.username, 'ADMIN')}
+                                >
+                                  SET ADMIN
+                                </button>
+                              )}
+                              {member.role !== 'COMMANDER' && (
+                                <button
+                                  className="action-btn"
+                                  onClick={() => handleUpdateMemberRole(member.userId, member.username, 'COMMANDER')}
+                                >
+                                  SET COMMANDER
+                                </button>
+                              )}
+                              {member.role !== 'MEMBER' && (
+                                <button
+                                  className="action-btn"
+                                  onClick={() => handleUpdateMemberRole(member.userId, member.username, 'MEMBER')}
+                                >
+                                  DEMOTE
+                                </button>
+                              )}
+                              <button
+                                className="action-btn danger"
+                                onClick={() => handleRemoveTeamMember(member.userId, member.username)}
+                              >
+                                REMOVE
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* CONTROLS IMMEDIATELY BELOW THE CARDS */}
+                  <div style={{ marginTop: '22px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* ADD MEMBER BUTTON: Visible only to authorized Team Leader */}
+                    {teamData?.isLeader && (
+                      <button
+                        className="landing-btn accent-cyan"
+                        id="add-member-landing-btn"
+                        onClick={() => { setAddMemberModalOpen(true); setValidatedUser(null); setAddMemberInput(''); }}
+                        style={{ pointerEvents: 'auto' }}
+                      >
+                        + ADD MEMBER ↗
+                      </button>
+                    )}
+
+                    {/* NEXUS TEAM PORTAL BUTTON */}
+                    <button
+                      className="landing-btn"
+                      id="nexus-portal-landing-btn"
+                      onClick={() => setNexusModalOpen(true)}
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      NEXUS TEAM PORTAL ↗
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -733,6 +960,96 @@ export default function Landing() {
           </div>
         )}
       </div>
+
+      {/* ADD MEMBER MODAL (LANDING TEAM SECTION) */}
+      {addMemberModalOpen && (
+        <div className="nexus-overlay" onClick={() => setAddMemberModalOpen(false)}>
+          <div className="nexus-modal" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="nexus-header">
+              <div className="nexus-header-left">
+                <span className="nexus-badge">TEAM RECRUITMENT</span>
+                <h3 className="nexus-title">ADD REGISTERED MEMBER</h3>
+              </div>
+              <button className="nexus-close-btn" onClick={() => setAddMemberModalOpen(false)}>✕</button>
+            </div>
+            <div className="nexus-body" style={{ padding: '24px' }}>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', lineHeight: '1.6', marginBottom: '18px' }}>
+                Enter the user's UID (e.g. US000002, US000003) or registered username to validate their account before addition.
+              </p>
+              
+              <form onSubmit={handleValidateAddMember} className="cyber-search-box">
+                <input
+                  type="text"
+                  className="cyber-search-input"
+                  placeholder="USER UID OR USERNAME"
+                  value={addMemberInput}
+                  onChange={(e) => setAddMemberInput(e.target.value)}
+                  autoFocus
+                />
+                <button type="submit" className="nexus-btn-primary" disabled={validating}>
+                  {validating ? 'CHECKING...' : 'VALIDATE ↗'}
+                </button>
+              </form>
+
+              {validatedUser && (
+                <div className="user-preview-card">
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>
+                      {validatedUser.user.username}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
+                      UID: <strong style={{ color: '#00e5ff' }}>{validatedUser.user.uid}</strong> • SYSTEM ROLE: {validatedUser.user.role}
+                    </div>
+                    {validatedUser.alreadyInTeam ? (
+                      <div style={{ color: '#ff0055', fontSize: '11px', marginTop: '6px' }}>
+                        ⚠️ User already affiliated with team: <strong>{validatedUser.currentTeamName}</strong>
+                      </div>
+                    ) : (
+                      <div style={{ color: '#00e5ff', fontSize: '11px', marginTop: '6px' }}>
+                        ✓ User verified and available to join
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <button
+                      className="nexus-btn-primary"
+                      disabled={validatedUser.alreadyInTeam}
+                      onClick={handleConfirmAddMember}
+                    >
+                      CONFIRM ADDITION ↗
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRMATION DIALOG (FOR DESTRUCTIVE ACTIONS) */}
+      {confirmDialog && (
+        <div className="confirm-backdrop" onClick={() => setConfirmDialog(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-title">{confirmDialog.title}</div>
+            <div className="confirm-message">{confirmDialog.message}</div>
+            <div className="confirm-actions">
+              <button className="nexus-btn-secondary" onClick={() => setConfirmDialog(null)}>
+                CANCEL
+              </button>
+              <button className="action-btn danger" style={{ padding: '10px 20px', fontSize: '11px' }} onClick={confirmDialog.onConfirm}>
+                CONFIRM ACTION ↗
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NEXUS TEAM PORTAL MODAL */}
+      <NexusTeamModal
+        isOpen={nexusModalOpen}
+        onClose={() => setNexusModalOpen(false)}
+        onTeamUpdated={(data) => setTeamData(data)}
+      />
     </div>
   );
 }

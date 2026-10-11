@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { Eye, EyeOff, Lock, User, Shield, Hash } from 'lucide-react';
+import { setStoredUser } from '../services/api';
 
 const Login = () => {
   const [videoState, setVideoState] = useState('playing'); // 'playing', 'transitioning', 'ended'
@@ -152,6 +153,7 @@ const Login = () => {
       const response = await fetch(`http://localhost:8080${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(formData)
       });
       
@@ -168,6 +170,9 @@ const Login = () => {
                 setFormData({ ...formData, password: '' });
             }, 5000);
         } else {
+            if (data.user) {
+              setStoredUser(data.user);
+            }
             setSuccessMessage('CREDENTIALS VERIFIED');
             setTimeout(() => {
                 setSuccessMessage('ACCESS GRANTED');

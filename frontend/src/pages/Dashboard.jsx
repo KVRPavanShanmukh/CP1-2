@@ -5,6 +5,8 @@ import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
+import NexusTeamModal from '../components/NexusTeamModal';
+import { teamApi } from '../services/api';
 import './Simulation.css'; // We will reuse the immersive-shell styles
 
 // --- GENERATIVE WEBGL ENGINE ---
@@ -161,6 +163,20 @@ export default function Dashboard() {
   const [scrollLocked, setScrollLocked] = useState(false);
   const navigate = useNavigate();
   const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
+  const [nexusModalOpen, setNexusModalOpen] = useState(false);
+
+  const handleNexusTeamClick = async () => {
+    try {
+      const res = await teamApi.getMyTeam();
+      if (res.hasTeam && res.isLeader) {
+        navigate('/landing', { state: { section: 4, openManage: true } });
+      } else {
+        setNexusModalOpen(true);
+      }
+    } catch (e) {
+      setNexusModalOpen(true);
+    }
+  };
 
   const transactions = [
     { id: 'tx-89a1', type: 'Received', amount: '+500', date: '2026-09-28', status: 'Completed' },
@@ -287,12 +303,24 @@ export default function Dashboard() {
                 </button>
               </div>
             ) : (
-              <button className="hollow-btn" onClick={() => {
-                if(activeSection === 3 || activeSection === 4) navigate('/simulation');
-                else setActiveSection(activeSection + 1);
-              }}>
-                {sections[activeSection].btn}
-              </button>
+              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button className="hollow-btn" onClick={() => {
+                  if(activeSection === 3 || activeSection === 4) navigate('/simulation');
+                  else setActiveSection(activeSection + 1);
+                }}>
+                  {sections[activeSection].btn}
+                </button>
+                {activeSection === 1 && (
+                  <button 
+                    className="hollow-btn nexus-team-btn" 
+                    id="nexus-team-dashboard-btn"
+                    onClick={handleNexusTeamClick}
+                    style={{ borderColor: '#00ffff', color: '#00ffff', background: 'rgba(0, 255, 255, 0.08)' }}
+                  >
+                    NEXUS TEAM ↗
+                  </button>
+                )}
+              </div>
             )}
             
           </motion.div>
@@ -328,6 +356,12 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* NEXUS TEAM PORTAL MODAL */}
+      <NexusTeamModal
+        isOpen={nexusModalOpen}
+        onClose={() => setNexusModalOpen(false)}
+      />
     </div>
   );
 }

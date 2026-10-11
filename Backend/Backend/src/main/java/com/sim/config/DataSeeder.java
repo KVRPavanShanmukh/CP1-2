@@ -56,5 +56,31 @@ public class DataSeeder implements CommandLineRunner {
         admin.setActive(true);
         userRepository.save(admin);
         System.out.println("Ensured development ADMIN user exists with correct UID (AD000001).");
+
+        if (userRepository.findByUsername("pavan").isEmpty()) {
+            User pavan = new User();
+            pavan.setUsername("pavan");
+            pavan.setPasswordHash(passwordEncoder.encode("pavan123"));
+            pavan.setUid("US000002");
+            pavan.setAccountType(AccountType.USER);
+            pavan.setRole(Role.USER);
+            pavan.setActive(true);
+            pavan.setCreatedAt(Instant.now());
+            userRepository.save(pavan);
+            System.out.println("Created test user pavan (UID: US000002).");
+        }
+
+        if (userRepository.findByUsername("sarah").isEmpty()) {
+            User sarah = new User();
+            sarah.setUsername("sarah");
+            sarah.setPasswordHash(passwordEncoder.encode("sarah123"));
+            sarah.setUid("US000003");
+            sarah.setAccountType(AccountType.USER);
+            sarah.setRole(Role.USER);
+            sarah.setActive(true);
+            sarah.setCreatedAt(Instant.now());
+            userRepository.save(sarah);
+            System.out.println("Created test user sarah (UID: US000003).");
+        }
     }
 }
