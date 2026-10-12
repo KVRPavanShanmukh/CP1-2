@@ -31,6 +31,11 @@ public class FriendService {
         String cleanQuery = query.trim();
         List<User> found = userRepository.findByUsernameContainingIgnoreCaseOrUidContainingIgnoreCase(cleanQuery, cleanQuery);
 
+        Optional<User> byId = userRepository.findById(cleanQuery);
+        if (byId.isPresent() && found.stream().noneMatch(u -> u.getId().equals(byId.get().getId()))) {
+            found.add(0, byId.get());
+        }
+
         List<Map<String, Object>> results = new ArrayList<>();
         for (User u : found) {
             if (u.getId().equals(caller.getId())) continue;
@@ -44,10 +49,14 @@ public class FriendService {
             }
 
             Optional<Team> userTeam = teamRepository.findActiveTeamByUserId(u.getId());
+            if (userTeam.isEmpty() && u.getUid() != null) {
+                userTeam = teamRepository.findActiveTeamByUserUid(u.getUid());
+            }
             String teamName = userTeam.map(Team::getName).orElse(null);
 
             Map<String, Object> item = new HashMap<>();
             item.put("id", u.getId());
+            item.put("userId", u.getId());
             item.put("username", u.getUsername());
             item.put("uid", u.getUid());
             item.put("role", u.getRole());
@@ -68,9 +77,9 @@ public class FriendService {
         }
         String cleanTarget = targetIdentifier.trim();
 
-        Optional<User> targetOpt = userRepository.findByUid(cleanTarget);
+        Optional<User> targetOpt = userRepository.findById(cleanTarget);
+        if (targetOpt.isEmpty()) targetOpt = userRepository.findByUid(cleanTarget);
         if (targetOpt.isEmpty()) targetOpt = userRepository.findByUsername(cleanTarget);
-        if (targetOpt.isEmpty()) targetOpt = userRepository.findById(cleanTarget);
 
         if (targetOpt.isEmpty()) {
             throw new IllegalArgumentException("User not found.");
@@ -166,6 +175,7 @@ public class FriendService {
 
                 Map<String, Object> friendData = new HashMap<>();
                 friendData.put("id", f.getId());
+                friendData.put("userId", f.getId());
                 friendData.put("username", f.getUsername());
                 friendData.put("uid", f.getUid());
                 friendData.put("role", f.getRole());

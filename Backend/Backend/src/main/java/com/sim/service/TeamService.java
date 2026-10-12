@@ -81,12 +81,12 @@ public class TeamService {
         }
         String cleanQuery = query.trim();
 
-        Optional<User> targetOpt = userRepository.findByUid(cleanQuery);
+        Optional<User> targetOpt = userRepository.findById(cleanQuery);
         if (targetOpt.isEmpty()) {
-            targetOpt = userRepository.findByUsername(cleanQuery);
+            targetOpt = userRepository.findByUid(cleanQuery);
         }
         if (targetOpt.isEmpty()) {
-            targetOpt = userRepository.findById(cleanQuery);
+            targetOpt = userRepository.findByUsername(cleanQuery);
         }
 
         if (targetOpt.isEmpty()) {
@@ -97,6 +97,9 @@ public class TeamService {
         boolean isSelf = target.getId().equals(caller.getId());
 
         Optional<Team> activeTeamOpt = teamRepository.findActiveTeamByUserId(target.getId());
+        if (activeTeamOpt.isEmpty() && target.getUid() != null) {
+            activeTeamOpt = teamRepository.findActiveTeamByUserUid(target.getUid());
+        }
         boolean alreadyInTeam = activeTeamOpt.isPresent();
         String currentTeamName = alreadyInTeam ? activeTeamOpt.get().getName() : null;
         String currentTeamId = alreadyInTeam ? activeTeamOpt.get().getId() : null;
@@ -105,6 +108,7 @@ public class TeamService {
         resp.put("exists", true);
         resp.put("user", Map.of(
                 "id", target.getId(),
+                "userId", target.getId(),
                 "username", target.getUsername(),
                 "uid", target.getUid(),
                 "role", target.getRole()
@@ -130,9 +134,10 @@ public class TeamService {
             throw new SecurityException("Only the Team Leader can add members directly.");
         }
 
-        Optional<User> targetOpt = userRepository.findByUid(targetIdentifier.trim());
-        if (targetOpt.isEmpty()) targetOpt = userRepository.findByUsername(targetIdentifier.trim());
-        if (targetOpt.isEmpty()) targetOpt = userRepository.findById(targetIdentifier.trim());
+        String cleanTarget = targetIdentifier.trim();
+        Optional<User> targetOpt = userRepository.findById(cleanTarget);
+        if (targetOpt.isEmpty()) targetOpt = userRepository.findByUid(cleanTarget);
+        if (targetOpt.isEmpty()) targetOpt = userRepository.findByUsername(cleanTarget);
 
         if (targetOpt.isEmpty()) {
             throw new IllegalArgumentException("No registered user found with this User ID. Please check the ID and try again.");
@@ -199,9 +204,10 @@ public class TeamService {
         }
 
 
-        Optional<User> targetOpt = userRepository.findByUid(targetIdentifier.trim());
-        if (targetOpt.isEmpty()) targetOpt = userRepository.findByUsername(targetIdentifier.trim());
-        if (targetOpt.isEmpty()) targetOpt = userRepository.findById(targetIdentifier.trim());
+        String cleanTarget = targetIdentifier.trim();
+        Optional<User> targetOpt = userRepository.findById(cleanTarget);
+        if (targetOpt.isEmpty()) targetOpt = userRepository.findByUid(cleanTarget);
+        if (targetOpt.isEmpty()) targetOpt = userRepository.findByUsername(cleanTarget);
 
         if (targetOpt.isEmpty()) {
             throw new IllegalArgumentException("Target user not found.");

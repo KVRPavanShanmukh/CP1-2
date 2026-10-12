@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
 import NexusTeamModal from '../components/NexusTeamModal';
-import { teamApi, getStoredUser } from '../services/api';
+import { teamApi, userApi, getStoredUser } from '../services/api';
 import '../components/NexusTeam.css';
 import './Landing.css';
 
@@ -461,6 +461,11 @@ export default function Landing() {
   const [actionAlert, setActionAlert] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
+  // Registered users state for member selection
+  const [registeredUsers, setRegisteredUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+
   const showActionAlert = (msg, type = 'success') => {
     setActionAlert({ msg, type });
     setTimeout(() => setActionAlert(null), 4000);
@@ -475,9 +480,22 @@ export default function Landing() {
     }
   };
 
+  const loadRegisteredUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const users = await userApi.getUsers();
+      setRegisteredUsers(users || []);
+    } catch (e) {
+      console.error('Failed to load registered users', e);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentUser(getStoredUser());
     loadTeamData();
+    loadRegisteredUsers();
   }, []);
 
   useEffect(() => {
@@ -518,7 +536,7 @@ export default function Landing() {
     setIsAddingMember(true);
     setAddMemberModalError(null);
     try {
-      const targetIdentifier = validatedUser.user.uid || validatedUser.user.id;
+      const targetIdentifier = validatedUser.user.id || validatedUser.user.userId || validatedUser.user.uid;
       await teamApi.addMember(teamData.team.id, targetIdentifier);
       showActionAlert(`Team member ${validatedUser.user.username} added successfully.`, 'success');
       setAddMemberInput('');
@@ -526,6 +544,26 @@ export default function Landing() {
       setAddMemberModalError(null);
       setAddMemberModalOpen(false);
       await loadTeamData();
+      await loadRegisteredUsers();
+    } catch (err) {
+      setAddMemberModalError(err.message || 'Failed to add member to team.');
+      showActionAlert(err.message, 'error');
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleDirectAddMember = async (targetUser) => {
+    if (!teamData?.team) return;
+    setIsAddingMember(true);
+    setAddMemberModalError(null);
+    try {
+      const targetIdentifier = targetUser.id || targetUser.userId || targetUser.uid;
+      await teamApi.addMember(teamData.team.id, targetIdentifier);
+      showActionAlert(`Team member ${targetUser.username} added successfully via persistent ID!`, 'success');
+      setAddMemberModalOpen(false);
+      await loadTeamData();
+      await loadRegisteredUsers();
     } catch (err) {
       setAddMemberModalError(err.message || 'Failed to add member to team.');
       showActionAlert(err.message, 'error');
@@ -1044,7 +1082,7 @@ export default function Landing() {
             </div>
             <div className="nexus-body" style={{ padding: '24px' }}>
               <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', lineHeight: '1.6', marginBottom: '18px' }}>
-                Enter the user's UID (e.g. US000002, US000003) or registered username to validate their account before addition.
+                Enter the user's persistent Database ID, UID (e.g. US000002), or username to validate and add them to your team.
               </p>
               
               {addMemberModalError && (
@@ -1058,7 +1096,7 @@ export default function Landing() {
                 <input
                   type="text"
                   className="cyber-search-input"
-                  placeholder="USER UID OR USERNAME"
+                  placeholder="DATABASE USER ID, UID, OR USERNAME"
                   value={addMemberInput}
                   onChange={(e) => {
                     setAddMemberInput(e.target.value);
@@ -1072,13 +1110,13 @@ export default function Landing() {
               </form>
 
               {validatedUser && (
-                <div className="user-preview-card">
+                <div className="user-preview-card" style={{ marginTop: '14px' }}>
                   <div>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>
                       {validatedUser.user.username}
                     </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
-                      UID: <strong style={{ color: '#00e5ff' }}>{validatedUser.user.uid}</strong> • SYSTEM ROLE: {validatedUser.user.role}
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>
+                      DATABASE ID: <strong style={{ color: '#00e5ff' }}>{validatedUser.user.id}</strong> • UID: <strong style={{ color: '#00e5ff' }}>{validatedUser.user.uid}</strong> • ROLE: {validatedUser.user.role}
                     </div>
                     {validatedUser.alreadyInTeam ? (
                       <div style={{ color: '#ff0055', fontSize: '11px', marginTop: '6px' }}>
@@ -1101,6 +1139,132 @@ export default function Landing() {
                   </div>
                 </div>
               )}
+
+              {/* REGISTERED USERS DIRECTORY (SHARED DATABASE) */}
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.7)' }}>
+                    REGISTERED USERS DIRECTORY ({registeredUsers.length})
+                  </span>
+                  <button
+                    type="button"
+                    className="action-btn"
+                    style={{ fontSize: '9px', padding: '3px 8px' }}
+                    onClick={loadRegisteredUsers}
+                    disabled={loadingUsers}
+                  >
+                    {loadingUsers ? 'LOADING...' : 'REFRESH ↻'}
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  className="cyber-search-input"
+                  style={{ width: '100%', boxSizing: 'border-box', marginBottom: '12px', fontSize: '11px' }}
+                  placeholder="Filter users by name, UID, or database ID..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                />
+
+                {loadingUsers ? (
+                  <div style={{ padding: '14px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                    FETCHING USERS FROM SHARED DATABASE...
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
+                    {(() => {
+                      const filtered = registeredUsers.filter(u => {
+                        if (!userSearchTerm.trim()) return true;
+                        const q = userSearchTerm.toLowerCase();
+                        return (
+                          (u.username && u.username.toLowerCase().includes(q)) ||
+                          (u.uid && u.uid.toLowerCase().includes(q)) ||
+                          (u.id && u.id.toLowerCase().includes(q))
+                        );
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div style={{ padding: '14px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                            No matching registered users found.
+                          </div>
+                        );
+                      }
+
+                      return filtered.map(u => {
+                        const isMember = teamData?.team?.members?.some(m => m.userId === u.id || (u.uid && m.uid === u.uid));
+                        const isSelf = u.id === currentUser?.id || u.uid === currentUser?.uid;
+                        const canAdd = !isMember && !u.alreadyInTeam && (teamData?.team?.members?.length || 0) < 4 && !isSelf;
+
+                        return (
+                          <div
+                            key={u.id}
+                            style={{
+                              background: 'rgba(15, 20, 32, 0.7)',
+                              border: `1px solid ${isMember ? 'rgba(0, 229, 255, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
+                              padding: '10px 14px',
+                              borderRadius: '2px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              gap: '12px'
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+                                {u.username} {isSelf && <span style={{ opacity: 0.6, fontSize: '9px' }}>(YOU)</span>}
+                              </div>
+                              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(255,255,255,0.6)', marginTop: '2px', wordBreak: 'break-all' }}>
+                                DB ID: <span style={{ color: '#00e5ff' }}>{u.id}</span> • UID: <span style={{ color: '#fff' }}>{u.uid}</span>
+                              </div>
+                              {isMember && (
+                                <div style={{ fontSize: '9px', color: '#00e5ff', marginTop: '2px' }}>
+                                  ✓ CURRENT TEAM MEMBER
+                                </div>
+                              )}
+                              {!isMember && u.alreadyInTeam && (
+                                <div style={{ fontSize: '9px', color: '#ffaa00', marginTop: '2px' }}>
+                                  IN TEAM: {u.currentTeamName}
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              {canAdd && (
+                                <button
+                                  type="button"
+                                  className="action-btn"
+                                  style={{ padding: '4px 8px', fontSize: '9px', background: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff', color: '#00e5ff' }}
+                                  onClick={() => handleDirectAddMember(u)}
+                                  disabled={isAddingMember}
+                                >
+                                  + ADD BY ID
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="action-btn"
+                                style={{ padding: '4px 8px', fontSize: '9px' }}
+                                onClick={() => {
+                                  setAddMemberInput(u.id);
+                                  setValidatedUser({
+                                    exists: true,
+                                    user: u,
+                                    alreadyInTeam: u.alreadyInTeam,
+                                    currentTeamName: u.currentTeamName
+                                  });
+                                }}
+                              >
+                                SELECT
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                )}
+              </div>
 
             </div>
           </div>

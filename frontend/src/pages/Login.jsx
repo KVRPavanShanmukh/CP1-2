@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { Eye, EyeOff, Lock, User, Shield, Hash } from 'lucide-react';
-import { setStoredUser } from '../services/api';
+import { setStoredUser, API_BASE } from '../services/api';
 
 const Login = () => {
   const [videoState, setVideoState] = useState('playing'); // 'playing', 'transitioning', 'ended'
@@ -26,6 +26,7 @@ const Login = () => {
   });
 
   const [assignedUid, setAssignedUid] = useState(null);
+  const [assignedId, setAssignedId] = useState(null);
 
   // Custom Chain Cursor Logic
   const NUM_LINKS = 6;
@@ -149,8 +150,8 @@ const Login = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      const endpoint = isSignupMode ? '/api/auth/signup' : '/api/auth/login';
-      const response = await fetch(`http://localhost:8080${endpoint}`, {
+      const endpoint = isSignupMode ? '/auth/signup' : '/auth/login';
+      const response = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -162,13 +163,14 @@ const Login = () => {
       if (response.ok) {
         setAuthStatus('success');
         if (isSignupMode) {
-            setAssignedUid(data.assignedUid);
+            setAssignedUid(data.assignedUid || data.uid);
+            setAssignedId(data.id || data.userId);
             setSuccessMessage('REGISTRATION SUCCESSFUL');
             setTimeout(() => {
                 setIsSignupMode(false);
                 setAuthStatus('idle');
-                setFormData({ ...formData, password: '' });
-            }, 5000);
+                setFormData({ ...formData, password: '', uid: data.assignedUid || data.uid || '' });
+            }, 6000);
         } else {
             if (data.user) {
               setStoredUser(data.user);
@@ -308,8 +310,14 @@ const Login = () => {
                 <div className="auth-message success" style={{ padding: '15px' }}>
                     REGISTRATION SUCCESSFUL<br/><br/>
                     <span style={{ color: '#fff' }}>YOUR ASSIGNED UID:</span><br/>
-                    <strong style={{ fontSize: '16px', letterSpacing: '3px' }}>{assignedUid}</strong><br/><br/>
-                    <span style={{ fontSize: '9px', opacity: 0.7 }}>Keep this UID safe. Required for login.</span>
+                    <strong style={{ fontSize: '16px', letterSpacing: '3px', color: '#00e5ff' }}>{assignedUid}</strong><br/><br/>
+                    {assignedId && (
+                      <>
+                        <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px' }}>DATABASE USER ID:</span><br/>
+                        <strong style={{ fontSize: '11px', fontFamily: '"Courier New", monospace', letterSpacing: '1px', color: '#fff', wordBreak: 'break-all' }}>{assignedId}</strong><br/><br/>
+                      </>
+                    )}
+                    <span style={{ fontSize: '9px', opacity: 0.7 }}>Saved to shared database. UID and password required for login.</span>
                 </div>
               )}
 

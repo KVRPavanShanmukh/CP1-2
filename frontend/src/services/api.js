@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8080/api';
+export const API_BASE = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 export function getStoredUser() {
   try {
@@ -11,7 +11,13 @@ export function getStoredUser() {
 
 export function setStoredUser(user) {
   if (user) {
-    localStorage.setItem('c55_user', JSON.stringify(user));
+    // Ensure both id and userId are populated for maximum compatibility
+    const normalized = {
+      ...user,
+      id: user.id || user.userId,
+      userId: user.userId || user.id
+    };
+    localStorage.setItem('c55_user', JSON.stringify(normalized));
   } else {
     localStorage.removeItem('c55_user');
   }
@@ -25,7 +31,8 @@ export async function request(path, options = {}) {
   };
 
   if (user) {
-    if (user.id) headers['X-User-Id'] = user.id;
+    const userId = user.id || user.userId;
+    if (userId) headers['X-User-Id'] = userId;
     if (user.uid) headers['X-User-Uid'] = user.uid;
   }
 
@@ -43,6 +50,18 @@ export async function request(path, options = {}) {
   }
   return data;
 }
+
+// User API
+export const userApi = {
+  getUsers: async (search = '') => {
+    const data = await request(`/users${search ? `?search=${encodeURIComponent(search)}` : ''}`);
+    return Array.isArray(data) ? data : (data.users || []);
+  },
+  getUserById: async (idOrUid) => {
+    const data = await request(`/users/${idOrUid}`);
+    return data.user || data;
+  }
+};
 
 // Auth API
 export const authApi = {

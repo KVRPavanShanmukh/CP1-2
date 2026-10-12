@@ -3,9 +3,13 @@ spring:
     name: Backend
   data:
     mongodb:
-      uri: mongodb://localhost:27017/simulation_db
+      uri: ${SPRING_DATA_MONGODB_URI:${MONGODB_URI:mongodb://localhost:27017/simulation_db}}
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+server:
+  port: ${PORT:8080}
+

@@ -84,7 +84,21 @@ public class AuthController {
         userRepository.save(newUser);
         auditLogRepository.save(new AuditLog("USER_REGISTERED", newUser.getId(), newUser.getId(), "Self registered"));
 
-        return ResponseEntity.ok(Map.of("success", true, "assignedUid", newUser.getUid()));
+        Map<String, Object> signupResp = new HashMap<>();
+        signupResp.put("success", true);
+        signupResp.put("id", newUser.getId());
+        signupResp.put("userId", newUser.getId());
+        signupResp.put("assignedUid", newUser.getUid());
+        signupResp.put("uid", newUser.getUid());
+        signupResp.put("user", Map.of(
+            "id", newUser.getId(),
+            "userId", newUser.getId(),
+            "username", newUser.getUsername(),
+            "uid", newUser.getUid(),
+            "role", newUser.getRole()
+        ));
+
+        return ResponseEntity.ok(signupResp);
     }
 
     @PostMapping("/login")
@@ -129,7 +143,16 @@ public class AuthController {
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
-        resp.put("user", Map.of("id", user.getId(), "username", user.getUsername(), "uid", user.getUid(), "role", user.getRole()));
+        resp.put("id", user.getId());
+        resp.put("userId", user.getId());
+        resp.put("uid", user.getUid());
+        resp.put("user", Map.of(
+            "id", user.getId(),
+            "userId", user.getId(),
+            "username", user.getUsername(),
+            "uid", user.getUid(),
+            "role", user.getRole()
+        ));
         
         return ResponseEntity.ok(resp);
     }
@@ -142,7 +165,16 @@ public class AuthController {
             Optional<User> userOpt = userRepository.findById(userId);
             if(userOpt.isPresent()) {
                 User user = userOpt.get();
-                return ResponseEntity.ok(Map.of("authenticated", true, "user", Map.of("id", user.getId(), "username", user.getUsername(), "uid", user.getUid(), "role", user.getRole())));
+                return ResponseEntity.ok(Map.of(
+                    "authenticated", true,
+                    "user", Map.of(
+                        "id", user.getId(),
+                        "userId", user.getId(),
+                        "username", user.getUsername(),
+                        "uid", user.getUid(),
+                        "role", user.getRole()
+                    )
+                ));
             }
         }
         return ResponseEntity.ok(Map.of("authenticated", false));

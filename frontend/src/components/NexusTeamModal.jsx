@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { teamApi, friendApi, getStoredUser } from '../services/api';
+import { teamApi, friendApi, userApi, getStoredUser } from '../services/api';
 import './NexusTeam.css';
 
 export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster', onTeamUpdated }) {
@@ -11,6 +11,12 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
   // Team state
   const [teamData, setTeamData] = useState(null); // { hasTeam: bool, team: object, isLeader: bool }
   const [currentUser, setCurrentUser] = useState(getStoredUser());
+
+  // Registered Users Directory state
+  const [allUsers, setAllUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userDirectorySearch, setUserDirectorySearch] = useState('');
+  const [showDirectory, setShowDirectory] = useState(true);
 
   // Add Member state
   const [addMemberQuery, setAddMemberQuery] = useState('');
@@ -40,6 +46,7 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
       loadInvitations();
       loadFriends();
       loadRequests();
+      loadAllUsers();
     }
   }, [isOpen]);
 
@@ -89,6 +96,38 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
     }
   };
 
+  const loadAllUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const users = await userApi.getUsers();
+      setAllUsers(users || []);
+    } catch (e) {
+      console.error('Failed to load registered users', e);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleAddUserDirectly = async (targetUser) => {
+    if (!teamData?.team) {
+      showAlert('You must have an active team to add members.', 'error');
+      return;
+    }
+    setLoading(true);
+    try {
+      // Use persistent database ID first, fallback to UID
+      const targetIdentifier = targetUser.id || targetUser.userId || targetUser.uid;
+      await teamApi.addMember(teamData.team.id, targetIdentifier);
+      showAlert(`Team member ${targetUser.username} added successfully using database ID!`, 'success');
+      await loadTeam();
+      await loadAllUsers();
+    } catch (err) {
+      showAlert(err.message || 'Failed to add member to team.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Add Member validations
   const handleValidateMember = async (e) => {
     e?.preventDefault();
@@ -117,12 +156,13 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
     if (!searchTargetUser || !teamData?.team) return;
     setLoading(true);
     try {
-      const targetIdentifier = searchTargetUser.user.uid || searchTargetUser.user.id;
+      const targetIdentifier = searchTargetUser.user.id || searchTargetUser.user.userId || searchTargetUser.user.uid;
       const res = await teamApi.addMember(teamData.team.id, targetIdentifier);
       showAlert(`Team member ${searchTargetUser.user.username} added successfully.`, 'success');
       setAddMemberQuery('');
       setSearchTargetUser(null);
       await loadTeam();
+      await loadAllUsers();
     } catch (err) {
       showAlert(err.message || 'Failed to add member to team.', 'error');
     } finally {
@@ -362,14 +402,25 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                   {/* ADD MEMBER SECTION (LEADER ONLY) */}
                   {isLeader && (
                     <div style={{ background: 'rgba(12, 16, 26, 0.9)', border: '1px solid rgba(0, 229, 255, 0.2)', padding: '20px', marginBottom: '24px' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '2px', color: '#00e5ff', marginBottom: '12px', textTransform: 'uppercase' }}>
-                        + ADD REGISTERED MEMBER TO TEAM
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '2px', color: '#00e5ff', textTransform: 'uppercase' }}>
+                          + ADD REGISTERED MEMBER TO TEAM
+                        </div>
+                        <button
+                          type="button"
+                          className="action-btn"
+                          style={{ fontSize: '10px' }}
+                          onClick={() => setShowDirectory(!showDirectory)}
+                        >
+                          {showDirectory ? 'HIDE USER DIRECTORY ▴' : `VIEW USER DIRECTORY (${allUsers.length}) ▾`}
+                        </button>
                       </div>
+
                       <form onSubmit={handleValidateMember} className="cyber-search-box">
                         <input
                           type="text"
                           className="cyber-search-input"
-                          placeholder="ENTER REGISTERED USER UID OR USERNAME (e.g. US000002, admin, sarah)"
+                          placeholder="ENTER DATABASE USER ID, UID, OR USERNAME (e.g. 6ac4860b..., US000002, sarah)"
                           value={addMemberQuery}
                           onChange={(e) => setAddMemberQuery(e.target.value)}
                         />
@@ -380,13 +431,13 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
 
                       {/* VALIDATED USER PREVIEW CARD */}
                       {searchTargetUser && (
-                        <div className="user-preview-card">
+                        <div className="user-preview-card" style={{ marginTop: '14px' }}>
                           <div>
                             <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', letterSpacing: '1px' }}>
                               {searchTargetUser.user.username}
                             </div>
-                            <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
-                              UID: <strong style={{ color: '#00e5ff' }}>{searchTargetUser.user.uid}</strong> • SYSTEM ROLE: {searchTargetUser.user.role}
+                            <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>
+                              DATABASE ID: <strong style={{ color: '#00e5ff' }}>{searchTargetUser.user.id}</strong> • UID: <strong style={{ color: '#00e5ff' }}>{searchTargetUser.user.uid}</strong> • ROLE: {searchTargetUser.user.role}
                             </div>
                             {searchTargetUser.alreadyInTeam ? (
                               <div style={{ color: '#ff0055', fontSize: '11px', marginTop: '6px' }}>
@@ -408,6 +459,138 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                               CONFIRM & ADD MEMBER ↗
                             </button>
                           </div>
+                        </div>
+                      )}
+
+                      {/* REGISTERED USERS DIRECTORY (FETCHED FROM GET /api/users) */}
+                      {showDirectory && (
+                        <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid rgba(0, 229, 255, 0.15)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '11px', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.7)', fontFamily: 'Courier New' }}>
+                              SHARED DATABASE USERS DIRECTORY ({allUsers.length})
+                            </span>
+                            <button
+                              type="button"
+                              className="action-btn"
+                              style={{ fontSize: '9px', padding: '4px 8px' }}
+                              onClick={loadAllUsers}
+                              disabled={loadingUsers}
+                            >
+                              {loadingUsers ? 'REFRESHING...' : 'REFRESH LIST ↻'}
+                            </button>
+                          </div>
+
+                          <input
+                            type="text"
+                            className="cyber-search-input"
+                            style={{ width: '100%', boxSizing: 'border-box', marginBottom: '12px', fontSize: '11px' }}
+                            placeholder="Filter registered users by name, UID, or database ID..."
+                            value={userDirectorySearch}
+                            onChange={(e) => setUserDirectorySearch(e.target.value)}
+                          />
+
+                          {loadingUsers ? (
+                            <div style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>
+                              LOADING REGISTERED USERS FROM SHARED DATABASE...
+                            </div>
+                          ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '6px' }}>
+                              {(() => {
+                                const filtered = allUsers.filter(u => {
+                                  if (!userDirectorySearch.trim()) return true;
+                                  const q = userDirectorySearch.toLowerCase();
+                                  return (
+                                    (u.username && u.username.toLowerCase().includes(q)) ||
+                                    (u.uid && u.uid.toLowerCase().includes(q)) ||
+                                    (u.id && u.id.toLowerCase().includes(q))
+                                  );
+                                });
+
+                                if (filtered.length === 0) {
+                                  return (
+                                    <div style={{ gridColumn: '1 / -1', padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>
+                                      No matching registered users found.
+                                    </div>
+                                  );
+                                }
+
+                                return filtered.map(u => {
+                                  const isMember = team.members.some(m => m.userId === u.id || (u.uid && m.uid === u.uid));
+                                  const isSelf = u.id === currentUser?.id || u.uid === currentUser?.uid;
+                                  const canAdd = !isMember && !u.alreadyInTeam && team.members.length < 4 && !isSelf;
+
+                                  return (
+                                    <div
+                                      key={u.id}
+                                      style={{
+                                        background: 'rgba(18, 24, 38, 0.8)',
+                                        border: `1px solid ${isMember ? 'rgba(0, 229, 255, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
+                                        padding: '12px',
+                                        borderRadius: '2px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        gap: '8px'
+                                      }}
+                                    >
+                                      <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                          <strong style={{ fontSize: '13px', color: '#fff' }}>{u.username}</strong>
+                                          <span style={{ fontSize: '9px', fontFamily: 'Courier New', color: '#ffaa00' }}>{u.role}</span>
+                                        </div>
+                                        <div style={{ fontFamily: 'Courier New', fontSize: '9px', color: 'rgba(255,255,255,0.6)', marginTop: '4px', wordBreak: 'break-all' }}>
+                                          DB ID: <span style={{ color: '#00e5ff' }}>{u.id}</span>
+                                        </div>
+                                        <div style={{ fontFamily: 'Courier New', fontSize: '9px', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>
+                                          UID: <span style={{ color: '#fff' }}>{u.uid}</span>
+                                        </div>
+                                        {isMember && (
+                                          <div style={{ fontSize: '9px', color: '#00e5ff', marginTop: '4px', fontWeight: 600 }}>
+                                            ✓ ALREADY IN YOUR TEAM
+                                          </div>
+                                        )}
+                                        {!isMember && u.alreadyInTeam && (
+                                          <div style={{ fontSize: '9px', color: '#ffaa00', marginTop: '4px' }}>
+                                            IN TEAM: {u.currentTeamName}
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      <div style={{ display: 'flex', gap: '6px' }}>
+                                        {canAdd && (
+                                          <button
+                                            type="button"
+                                            className="action-btn"
+                                            style={{ flex: 1, padding: '4px', fontSize: '9px', background: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff', color: '#00e5ff' }}
+                                            onClick={() => handleAddUserDirectly(u)}
+                                            disabled={loading}
+                                          >
+                                            + ADD BY ID
+                                          </button>
+                                        )}
+                                        <button
+                                          type="button"
+                                          className="action-btn"
+                                          style={{ padding: '4px 6px', fontSize: '9px' }}
+                                          onClick={() => {
+                                            setAddMemberQuery(u.id);
+                                            setSearchTargetUser({
+                                              exists: true,
+                                              user: u,
+                                              alreadyInTeam: u.alreadyInTeam,
+                                              currentTeamName: u.currentTeamName
+                                            });
+                                          }}
+                                        >
+                                          SELECT
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -639,11 +822,21 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                       <div key={usr.id} className="user-preview-card" style={{ padding: '14px 18px' }}>
                         <div>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{usr.username}</div>
-                          <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>
-                            UID: <strong>{usr.uid}</strong> {usr.teamName && `• TEAM: ${usr.teamName}`}
+                          <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: 'rgba(255,255,255,0.7)', marginTop: '2px', wordBreak: 'break-all' }}>
+                            DB ID: <strong style={{ color: '#00e5ff' }}>{usr.id}</strong> • UID: <strong>{usr.uid}</strong> {usr.teamName && `• TEAM: ${usr.teamName}`}
                           </div>
                         </div>
-                        <div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {isLeader && !usr.teamName && !usr.isFriend && (
+                            <button
+                              className="action-btn"
+                              style={{ background: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff', color: '#00e5ff' }}
+                              onClick={() => handleAddUserDirectly(usr)}
+                              disabled={loading}
+                            >
+                              + ADD TO TEAM
+                            </button>
+                          )}
                           {usr.isFriend ? (
                             <span style={{ fontSize: '10px', color: '#00e5ff', fontFamily: 'Courier New', letterSpacing: '1px' }}>
                               ✓ CONNECTED FRIEND
@@ -655,9 +848,9 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                           ) : (
                             <button
                               className="action-btn"
-                              onClick={() => handleSendFriendRequest(usr.uid || usr.id)}
+                              onClick={() => handleSendFriendRequest(usr.id || usr.uid)}
                             >
-                              + SEND FRIEND REQUEST
+                              + FRIEND REQUEST
                             </button>
                           )}
                         </div>
@@ -742,19 +935,30 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                       <div key={friend.id} className="member-box">
                         <div>
                           <div className="member-name">{friend.username}</div>
+                          <div className="member-uid" style={{ wordBreak: 'break-all' }}>
+                            DB ID: <span style={{ color: '#00e5ff' }}>{friend.id || friend.userId}</span>
+                          </div>
                           <div className="member-uid">UID: {friend.uid}</div>
                           <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: '#00e5ff', marginTop: '6px' }}>
                             TEAM: {friend.teamName || 'NO TEAM AFFILIATION'}
                           </div>
                         </div>
 
-                        {/* IF LOGGED IN USER IS LEADER AND FRIEND HAS NO TEAM, ALLOW INVITATION */}
+                        {/* IF LOGGED IN USER IS LEADER AND FRIEND HAS NO TEAM, ALLOW INVITATION OR DIRECT ADD */}
                         {isLeader && !friend.teamName && (
-                          <div style={{ marginTop: '12px' }}>
+                          <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <button
+                              className="nexus-btn-primary"
+                              style={{ width: '100%', fontSize: '10px', justifyContent: 'center' }}
+                              onClick={() => handleAddUserDirectly(friend)}
+                              disabled={loading}
+                            >
+                              + ADD TO TEAM BY ID ↗
+                            </button>
                             <button
                               className="action-btn"
                               style={{ width: '100%' }}
-                              onClick={() => handleInviteFriendToTeam(friend.uid || friend.id)}
+                              onClick={() => handleInviteFriendToTeam(friend.id || friend.uid)}
                             >
                               INVITE TO {team?.name} ↗
                             </button>
