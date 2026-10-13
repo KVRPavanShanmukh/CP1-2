@@ -3,6 +3,10 @@
 .idea/
 .vscode/
 *.log
+*.tmp
+*.temp
+*.swp
+*.swo
 *.suo
 *.ntvs*
 *.njsproj
@@ -13,6 +17,40 @@
 *.zip
 *.tar.gz
 *.rar
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+secrets/
+**/secrets/
+credentials/
+**/credentials/
+*.secret
+*.secrets
+*credentials*.json
+*service-account*.json
+
+# Private keys, certificates, and local keystores
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Local database exports and dumps
+*.sql
+*.dump
+*.bson
+*.archive
+
+# Local container overrides may contain passwords or host-specific mounts
+docker-compose.override.yml
 
 # Frontend (Node.js)
 node_modules/
