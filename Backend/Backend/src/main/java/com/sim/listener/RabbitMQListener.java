@@ -1,5 +1,12 @@
 package com.sim.listener;
 
+import java.util.Optional;
+
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sim.config.RabbitMQConfig;
 import com.sim.model.SimulationConfig;
@@ -7,12 +14,6 @@ import com.sim.model.SimulationResult;
 import com.sim.model.TickUpdate;
 import com.sim.repository.SimulationConfigRepository;
 import com.sim.repository.SimulationResultRepository;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class RabbitMQListener {
@@ -51,7 +52,7 @@ public class RabbitMQListener {
             Optional<SimulationConfig> optConfig = configRepository.findById(result.getConfigId());
             if (optConfig.isPresent()) {
                 SimulationConfig config = optConfig.get();
-                config.setStatus("COMPLETED");
+                config.setStatus("FAILED".equals(result.getStatus()) ? "FAILED" : "COMPLETED");
                 configRepository.save(config);
             }
             

@@ -5,6 +5,7 @@ import java.util.Random;
 import com.sim.agent.BlockchainAgent;
 import com.sim.consensus.ConsensusStrategy;
 import com.sim.metrics.MetricsCalculator;
+import com.sim.metrics.MetricsSnapshot;
 import com.sim.model.SimulationConfig;
 import com.sim.network.NetworkModel;
 
@@ -15,6 +16,7 @@ public class SimulationEngine {
     private MetricsCalculator metricsCalculator;
 
     public SimulationEngine(SimulationConfig config) {
+        config.validate();
         Random rng = new Random(config.getRandomSeed() != null ? config.getRandomSeed() : System.currentTimeMillis());
         this.state = new SimulationState(config, rng);
         this.networkModel = new NetworkModel(this.state);
@@ -22,6 +24,7 @@ public class SimulationEngine {
         this.consensusStrategy = ConsensusStrategy.create(config.getConsensusType());
         this.metricsCalculator = new MetricsCalculator();
         initializeAgents();
+        metricsCalculator.calculateMetrics(state);
     }
 
     private void initializeAgents() {
@@ -56,5 +59,9 @@ public class SimulationEngine {
     
     public SimulationState getState() {
         return state;
+    }
+
+    public MetricsSnapshot getMetricsSnapshot() {
+        return metricsCalculator.getCurrentSnapshot();
     }
 }

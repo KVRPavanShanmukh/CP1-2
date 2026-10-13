@@ -1,11 +1,11 @@
 package com.sim.consensus;
 
-import com.sim.agent.BlockchainAgent;
-import com.sim.engine.SimulationState;
-import com.sim.blockchain.Block;
-
 import java.util.Locale;
 import java.util.UUID;
+
+import com.sim.agent.BlockchainAgent;
+import com.sim.blockchain.Block;
+import com.sim.engine.SimulationState;
 
 public abstract class ConsensusStrategy {
     public abstract void execute(BlockchainAgent agent, SimulationState state);
@@ -30,6 +30,7 @@ public abstract class ConsensusStrategy {
         String parentId = parent == null ? Block.GENESIS_ID : parent.getBlockId();
         Block block = new Block(UUID.randomUUID().toString(), parentId, agent.getId(),
                 newHeight, state.getCurrentTick());
+        agent.incrementBlocksProposed();
         if (!agent.receiveBlock(block) || !state.getBlockchainState().addBlock(block)) {
             return false;
         }

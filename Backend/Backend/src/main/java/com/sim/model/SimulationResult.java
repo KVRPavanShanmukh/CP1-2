@@ -1,5 +1,6 @@
 package com.sim.model;
 
+import com.sim.metrics.MetricsSnapshot;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Objects;
@@ -14,6 +15,12 @@ public class SimulationResult {
     private double branchingRatio;
     private double finalGiniCoefficient;
     private long durationMillis;
+    private String status;
+    private String consensusType;
+    private Long randomSeed;
+    private int simulationTicks;
+    private String errorMessage;
+    private MetricsSnapshot metrics;
 
     public SimulationResult() {
         this.id = UUID.randomUUID().toString();
@@ -36,6 +43,18 @@ public class SimulationResult {
 
     public long getDurationMillis() { return durationMillis; }
     public void setDurationMillis(long durationMillis) { this.durationMillis = durationMillis; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getConsensusType() { return consensusType; }
+    public void setConsensusType(String consensusType) { this.consensusType = consensusType; }
+    public Long getRandomSeed() { return randomSeed; }
+    public void setRandomSeed(Long randomSeed) { this.randomSeed = randomSeed; }
+    public int getSimulationTicks() { return simulationTicks; }
+    public void setSimulationTicks(int simulationTicks) { this.simulationTicks = simulationTicks; }
+    public String getErrorMessage() { return errorMessage; }
+    public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+    public MetricsSnapshot getMetrics() { return metrics; }
+    public void setMetrics(MetricsSnapshot metrics) { this.metrics = metrics; }
 
     @Override
     public boolean equals(Object o) {

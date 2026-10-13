@@ -1,11 +1,12 @@
 package com.sim.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "simulation_configs")
 public class SimulationConfig {
@@ -21,6 +22,7 @@ public class SimulationConfig {
     private double byzantineRatio = 0.0; // Default no byzantine
     private boolean byzantineBehaviorEnabled = false;
     private List<String> authorityIds = new ArrayList<>();
+    private int simulationTicks = 10;
 
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
@@ -64,6 +66,32 @@ public class SimulationConfig {
         this.authorityIds = authorityIds == null ? new ArrayList<>() : new ArrayList<>(authorityIds);
     }
 
+    public int getSimulationTicks() { return simulationTicks; }
+    public void setSimulationTicks(int simulationTicks) { this.simulationTicks = simulationTicks; }
+
+    public void validate() {
+        if (nodeCount <= 0) throw new IllegalArgumentException("nodeCount must be greater than zero");
+        if (consensusType == null || consensusType.isBlank()
+                || !(consensusType.equalsIgnoreCase("PoW") || consensusType.equalsIgnoreCase("PoS")
+                || consensusType.equalsIgnoreCase("DPoS") || consensusType.equalsIgnoreCase("PoA")
+                || consensusType.equalsIgnoreCase("PoL"))) {
+            throw new IllegalArgumentException("consensusType must be PoW, PoS, DPoS, PoA, or PoL");
+        }
+        if (networkTopology == null || networkTopology.isBlank()) {
+            throw new IllegalArgumentException("networkTopology is required");
+        }
+        if (blockGossipLatency < 0 || slotDuration < 0) {
+            throw new IllegalArgumentException("latencies and slotDuration cannot be negative");
+        }
+        if (simulationTicks <= 0) throw new IllegalArgumentException("simulationTicks must be greater than zero");
+        if (byzantineRatio < 0 || byzantineRatio > 1) {
+            throw new IllegalArgumentException("byzantineRatio must be between 0 and 1");
+        }
+        if (authorityIds.stream().anyMatch(id -> id == null || id.isBlank())) {
+            throw new IllegalArgumentException("authorityIds cannot contain blank IDs");
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -72,15 +100,20 @@ public class SimulationConfig {
         return nodeCount == that.nodeCount &&
                Double.compare(that.blockGossipLatency, blockGossipLatency) == 0 &&
                Double.compare(that.slotDuration, slotDuration) == 0 &&
+               simulationTicks == that.simulationTicks &&
+               byzantineBehaviorEnabled == that.byzantineBehaviorEnabled &&
                Objects.equals(id, that.id) &&
                Objects.equals(consensusType, that.consensusType) &&
                Objects.equals(networkTopology, that.networkTopology) &&
-               Objects.equals(status, that.status);
+               Objects.equals(status, that.status) &&
+               Objects.equals(randomSeed, that.randomSeed) &&
+               Objects.equals(authorityIds, that.authorityIds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, nodeCount, consensusType, networkTopology, blockGossipLatency, slotDuration, status);
+        return Objects.hash(id, nodeCount, consensusType, networkTopology, blockGossipLatency, slotDuration,
+            status, randomSeed, byzantineBehaviorEnabled, authorityIds, simulationTicks);
     }
 
     @Override

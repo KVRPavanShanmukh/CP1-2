@@ -22,6 +22,7 @@ public class SimulationOrchestratorService {
     private ObjectMapper objectMapper;
 
     public SimulationConfig startSimulation(SimulationConfig config) throws JsonProcessingException {
+        config.validate();
         // Save to MongoDB with CREATED/RUNNING status
         config.setStatus("RUNNING");
         SimulationConfig savedConfig = configRepository.save(config);

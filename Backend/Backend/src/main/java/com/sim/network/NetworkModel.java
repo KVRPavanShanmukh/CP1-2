@@ -14,6 +14,9 @@ public class NetworkModel {
     // Metrics
     private int messagesSent = 0;
     private int messagesDelivered = 0;
+    private int messagesDropped = 0;
+    private int duplicateMessages = 0;
+    private long totalDeliveryDelayTicks = 0;
 
     public NetworkModel(SimulationState state) {
         this.state = state;
@@ -111,6 +114,7 @@ public class NetworkModel {
         BlockchainAgent sender = state.getAgent(senderId);
         BlockchainAgent receiver = state.getAgent(receiverId);
         if (sender == null || receiver == null || !sender.getPeers().contains(receiverId)) {
+            messagesDropped++;
             return;
         }
 
@@ -129,6 +133,7 @@ public class NetworkModel {
         );
         messageQueue.offer(msg);
         messagesSent++;
+        totalDeliveryDelayTicks += deliveryTick - state.getCurrentTick();
     }
 
     public void deliverMessages() {
@@ -137,12 +142,22 @@ public class NetworkModel {
             NetworkMessage msg = messageQueue.poll();
             BlockchainAgent receiver = state.getAgent(msg.getReceiverId());
             if (receiver != null) {
-                receiver.receiveMessage(msg);
+                if (!receiver.receiveMessage(msg)) {
+                    duplicateMessages++;
+                }
                 messagesDelivered++;
+            } else {
+                messagesDropped++;
             }
         }
     }
     
     public int getMessagesSent() { return messagesSent; }
     public int getMessagesDelivered() { return messagesDelivered; }
+    public int getMessagesDropped() { return messagesDropped; }
+    public int getDuplicateMessages() { return duplicateMessages; }
+    public int getQueuedMessages() { return messageQueue.size(); }
+    public double getAverageDeliveryDelayTicks() {
+        return messagesSent == 0 ? 0.0 : (double) totalDeliveryDelayTicks / messagesSent;
+    }
 }

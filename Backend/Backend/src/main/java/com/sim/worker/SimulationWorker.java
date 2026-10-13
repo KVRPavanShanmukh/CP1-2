@@ -1,16 +1,16 @@
 package com.sim.worker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sim.config.RabbitMQConfig;
-import com.sim.model.SimulationConfig;
-import com.sim.model.SimulationResult;
-import com.sim.model.TickUpdate;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Random;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sim.config.RabbitMQConfig;
+import com.sim.metrics.MetricsSnapshot;
+import com.sim.model.SimulationConfig;
+import com.sim.model.SimulationResult;
+import com.sim.model.TickUpdate;
 
 @Component
 public class SimulationWorker {
@@ -43,19 +43,21 @@ public class SimulationWorker {
             Thread.sleep(1500);
             
             com.sim.engine.SimulationEngine engine = new com.sim.engine.SimulationEngine(config);
-            int ticks = 10;
+            int ticks = config.getSimulationTicks();
             
             for (int i = 1; i <= ticks; i++) {
                 Thread.sleep((long) config.getSlotDuration() > 0 ? (long) config.getSlotDuration() : 500); // Wait slot duration or 500ms
                 
-                com.sim.engine.SimulationTick simTick = engine.tick();
+                engine.tick();
+                MetricsSnapshot snapshot = engine.getMetricsSnapshot();
                 
                 TickUpdate tick = new TickUpdate();
                 tick.setSimulationId(config.getId());
-                tick.setCurrentTick(i);
-                tick.setActiveForks(engine.getState().getBlockchainState().getActiveForks());
-                tick.setInstantGini(engine.getState().getBlockchainState().getAllBlocks().isEmpty() ? 0.0 : engine.getState().getBlockchainState().getMainchainRate()); // placeholder for UI
-                tick.setBlockCount(engine.getState().getBlockchainState().getTotalBlocks());
+                tick.setCurrentTick(snapshot.getTick());
+                tick.setActiveForks(snapshot.getActiveForks());
+                tick.setInstantGini(snapshot.getGiniCoefficient());
+                tick.setBlockCount(snapshot.getBlocksAccepted());
+                tick.setMetrics(snapshot);
                 
                 rabbitTemplate.convertAndSend(
                     RabbitMQConfig.EXCHANGE_NAME, 
@@ -67,6 +69,10 @@ public class SimulationWorker {
             // Calculate final results
             SimulationResult result = new SimulationResult();
             result.setConfigId(config.getId());
+            result.setStatus("COMPLETED");
+            result.setConsensusType(config.getConsensusType());
+            result.setRandomSeed(config.getRandomSeed());
+            result.setSimulationTicks(ticks);
             
             double mainchainRate = engine.getState().getBlockchainState().getMainchainRate();
             result.setMainchainRate(mainchainRate);
@@ -77,8 +83,9 @@ public class SimulationWorker {
             
             // Gini
             com.sim.metrics.MetricsCalculator metrics = new com.sim.metrics.MetricsCalculator();
-            metrics.calculateMetrics(engine.getState());
+            MetricsSnapshot snapshot = metrics.calculateMetrics(engine.getState());
             result.setFinalGiniCoefficient(metrics.getCurrentGini());
+            result.setMetrics(snapshot);
             
             result.setDurationMillis(System.currentTimeMillis() - startTime);
             
@@ -90,7 +97,22 @@ public class SimulationWorker {
             );
             
         } catch (Exception e) {
-            e.printStackTrace();
+            SimulationResult failed = new SimulationResult();
+            failed.setConfigId(config.getId());
+            failed.setStatus("FAILED");
+            failed.setConsensusType(config.getConsensusType());
+            failed.setRandomSeed(config.getRandomSeed());
+            failed.setSimulationTicks(config.getSimulationTicks());
+            failed.setErrorMessage(e.getMessage());
+            try {
+                rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE_NAME,
+                    "simulation.results." + config.getId(),
+                    objectMapper.writeValueAsString(failed)
+                );
+            } catch (Exception publishFailure) {
+                publishFailure.printStackTrace();
+            }
         }
     }
 }

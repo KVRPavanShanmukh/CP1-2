@@ -1,5 +1,6 @@
 package com.sim.model;
 
+import com.sim.metrics.MetricsSnapshot;
 import java.util.Objects;
 
 public class TickUpdate {
@@ -8,6 +9,7 @@ public class TickUpdate {
     private int activeForks;
     private double instantGini;
     private int blockCount;
+    private MetricsSnapshot metrics;
 
     public String getSimulationId() { return simulationId; }
     public void setSimulationId(String simulationId) { this.simulationId = simulationId; }
@@ -23,6 +25,8 @@ public class TickUpdate {
 
     public int getBlockCount() { return blockCount; }
     public void setBlockCount(int blockCount) { this.blockCount = blockCount; }
+    public MetricsSnapshot getMetrics() { return metrics; }
+    public void setMetrics(MetricsSnapshot metrics) { this.metrics = metrics; }
 
     @Override
     public boolean equals(Object o) {

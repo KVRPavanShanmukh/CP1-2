@@ -183,7 +183,9 @@ export default function Simulation() {
     consensusType: 'PoW',
     networkTopology: 'Erdos-Renyi',
     blockGossipLatency: 0.5,
-    slotDuration: 1.0
+    slotDuration: 1.0,
+    simulationTicks: 10,
+    randomSeed: 7
   });
 
   const [loading, setLoading] = useState(false);
@@ -330,9 +332,22 @@ export default function Simulation() {
                     <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})} style={{ color: '#FFFFFF' }}>
                       <option value="PoW">Proof of Work (PoW)</option>
                       <option value="PoS">Proof of Stake (PoS)</option>
+                      <option value="DPoS">Delegated Proof of Stake (DPoS)</option>
+                      <option value="PoA">Proof of Authority (PoA)</option>
+                      <option value="PoL">Proof of Location proxy (PoL)</option>
                     </select>
                   </div>
                   <div className="form-group" style={{ display: 'flex', gap: '2rem' }}>
+                                        <div className="form-group" style={{ display: 'flex', gap: '2rem', marginTop: '24px' }}>
+                                          <div style={{ flex: 1 }}>
+                                            <span className="meta-label">TICKS</span>
+                                            <input type="number" name="simulationTicks" className="form-control" value={formData.simulationTicks} onChange={(e) => setFormData({...formData, simulationTicks: parseInt(e.target.value)})} min="1" style={{ color: '#FFFFFF' }}/>
+                                          </div>
+                                          <div style={{ flex: 1 }}>
+                                            <span className="meta-label">SEED</span>
+                                            <input type="number" name="randomSeed" className="form-control" value={formData.randomSeed} onChange={(e) => setFormData({...formData, randomSeed: parseInt(e.target.value)})} style={{ color: '#FFFFFF' }}/>
+                                          </div>
+                                        </div>
                       <div style={{ flex: 1 }}>
                         <span className="meta-label">Nodes</span>
                         <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={(e) => setFormData({...formData, nodeCount: parseInt(e.target.value)})} min="1" style={{ color: '#FFFFFF' }}/>
@@ -369,6 +384,10 @@ export default function Simulation() {
                     <span className="meta-label">ACTIVE FORKS</span>
                     <div className="value">{latestTick.activeForks}</div>
                   </div>
+                  <div className="result-item">
+                    <span className="meta-label">MESSAGES</span>
+                    <div className="value">{latestTick.metrics?.messagesDelivered ?? 'N/A'}</div>
+                  </div>
                 </div>
               )}
 
@@ -380,7 +399,11 @@ export default function Simulation() {
                   </div>
                   <div className="result-item">
                     <span className="meta-label">INSTANT GINI</span>
-                    <div className="value">{latestTick.instantGini.toFixed(3)}</div>
+                    <div className="value">{Number(latestTick.metrics?.giniCoefficient ?? latestTick.instantGini).toFixed(3)}</div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">HEAD AGREEMENT</span>
+                    <div className="value">{latestTick.metrics ? `${(latestTick.metrics.canonicalHeadAgreement * 100).toFixed(1)}%` : 'N/A'}</div>
                   </div>
                 </div>
               )}
@@ -389,11 +412,11 @@ export default function Simulation() {
                 <div className="results-grid" style={{ marginTop: '2rem' }}>
                   <div className="result-item">
                     <span className="meta-label">MAINCHAIN STABILITY</span>
-                    <div className="value">{((1.0 - latestTick.instantGini) * 100).toFixed(1)}%</div>
+                    <div className="value">{latestTick.metrics ? `${(latestTick.metrics.canonicalHeadAgreement * 100).toFixed(1)}%` : 'N/A'}</div>
                   </div>
                   <div className="result-item">
-                    <span className="meta-label">TOPOLOGY STATUS</span>
-                    <div className="value">COMPUTING...</div>
+                    <span className="meta-label">PROPAGATION DELAY</span>
+                    <div className="value">{latestTick.metrics ? `${latestTick.metrics.averagePropagationDelayTicks.toFixed(1)} ticks` : 'N/A'}</div>
                   </div>
                 </div>
               )}
@@ -401,6 +424,14 @@ export default function Simulation() {
               {activeSection === 5 && results && (
                 <div>
                   <div className="results-grid">
+                    <div className="result-item">
+                      <span className="meta-label">STATUS / CONSENSUS</span>
+                      <div className="value">{results.status || 'COMPLETED'} / {results.consensusType || formData.consensusType}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">SEED / TICKS</span>
+                      <div className="value">{results.randomSeed ?? formData.randomSeed} / {results.simulationTicks ?? formData.simulationTicks}</div>
+                    </div>
                     <div className="result-item">
                       <span className="meta-label">MAINCHAIN RATE</span>
                       <div className="value">{(results.mainchainRate * 100).toFixed(1)}%</div>
@@ -417,6 +448,21 @@ export default function Simulation() {
                       <span className="meta-label">DURATION</span>
                       <div className="value">{results.durationMillis} ms</div>
                     </div>
+                    {results.metrics && <>
+                      <div className="result-item">
+                        <span className="meta-label">ACCEPTED / REJECTED</span>
+                        <div className="value">{results.metrics.blocksAccepted} / {results.metrics.blocksRejected}</div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">STALE / ORPHAN</span>
+                        <div className="value">{results.metrics.staleBlocks} / {results.metrics.orphanBlocks}</div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">CONVERGENCE</span>
+                        <div className="value">{(results.metrics.canonicalHeadAgreement * 100).toFixed(1)}%</div>
+                      </div>
+                    </>}
+                    const progressPercent = latestTick ? (latestTick.currentTick / Math.max(1, formData.simulationTicks)) * 100 : 0;
                   </div>
                   <button onClick={() => { setActiveSection(0); setSimulationStarted(false); setLiveTicks([]); setResults(null); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
                     NEW SEQUENCE ↺

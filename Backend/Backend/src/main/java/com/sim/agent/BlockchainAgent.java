@@ -46,7 +46,10 @@ public class BlockchainAgent {
 
     // Metrics
     private int blocksProduced = 0;
+    private int blocksProposed = 0;
     private int blocksAccepted = 0;
+    private int blocksRejected = 0;
+    private int duplicateMessages = 0;
     private int attestationsProduced = 0;
     private int attestationsReceived = 0;
 
@@ -69,19 +72,31 @@ public class BlockchainAgent {
 
     // --- PHASE 1: AGENT LIFECYCLE ---
 
-    public void receiveMessage(NetworkMessage msg) {
+    public boolean receiveMessage(NetworkMessage msg) {
         if (msg == null || msg.getMessageId() == null || !receivedMessageIds.add(msg.getMessageId())) {
-            return;
+            return false;
+        }
+        if (msg.getPayload() instanceof Block block && knownBlocks.containsKey(block.getBlockId())) {
+            return false;
+        }
+        if (msg.getPayload() instanceof Attestation attestation
+                && knownAttestations.containsKey(attestation.getAttestationId())) {
+            return false;
         }
         inbox.offer(msg);
+        return true;
     }
 
     public void processMessages() {
         while (!inbox.isEmpty()) {
             NetworkMessage msg = inbox.poll();
             if (msg.getType() == NetworkMessage.MessageType.BLOCK) {
-                if (receiveBlock((Block) msg.getPayload(), msg.getSenderId())) {
+                Block block = (Block) msg.getPayload();
+                boolean knownBefore = block != null && knownBlocks.containsKey(block.getBlockId());
+                if (receiveBlock(block, msg.getSenderId())) {
                     gossipBlock((Block) msg.getPayload(), msg.getSenderId());
+                } else if (knownBefore) {
+                    duplicateMessages++;
                 }
             } else if (msg.getType() == NetworkMessage.MessageType.ATTESTATION) {
                 if (receiveAttestation((Attestation) msg.getPayload())) {
@@ -90,8 +105,12 @@ public class BlockchainAgent {
             } else if (msg.getType() == NetworkMessage.MessageType.BLOCK_REQUEST) {
                 handleBlockRequest((String) msg.getPayload(), msg.getSenderId());
             } else if (msg.getType() == NetworkMessage.MessageType.BLOCK_RESPONSE) {
-                if (receiveBlock((Block) msg.getPayload(), msg.getSenderId())) {
+                Block block = (Block) msg.getPayload();
+                boolean knownBefore = block != null && knownBlocks.containsKey(block.getBlockId());
+                if (receiveBlock(block, msg.getSenderId())) {
                     gossipBlock((Block) msg.getPayload(), msg.getSenderId());
+                } else if (knownBefore) {
+                    duplicateMessages++;
                 }
             }
         }
@@ -111,6 +130,7 @@ public class BlockchainAgent {
 
         // Structural validation
         if (!validateBlock(block)) {
+            blocksRejected++;
             return false;
         }
 
@@ -352,7 +372,13 @@ public class BlockchainAgent {
 
     public void incrementBlocksProduced() { blocksProduced++; }
     public int getBlocksProduced() { return blocksProduced; }
+    public void incrementBlocksProposed() { blocksProposed++; }
+    public int getBlocksProposed() { return blocksProposed; }
     public int getBlocksAccepted() { return blocksAccepted; }
+    public int getBlocksRejected() { return blocksRejected; }
+    public int getDuplicateMessages() { return duplicateMessages; }
+    public int getAttestationsProduced() { return attestationsProduced; }
+    public int getAttestationsReceived() { return attestationsReceived; }
     
     public Map<String, Block> getKnownBlocks() { return knownBlocks; }
     public Map<String, List<String>> getChildrenByParent() { return childrenByParent; }
