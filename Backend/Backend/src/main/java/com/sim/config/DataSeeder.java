@@ -41,21 +41,22 @@ public class DataSeeder implements CommandLineRunner {
         if (adminOpt.isEmpty()) {
             admin = new User();
             admin.setUsername("admin");
-            admin.setPasswordHash(passwordEncoder.encode("admin")); // Requested by user
+            admin.setPasswordHash(passwordEncoder.encode("admin")); // Dev default
+            admin.setUid("AD000001");
+            admin.setAccountType(AccountType.ADMIN);
+            admin.setRole(Role.ADMIN);
+            admin.setActive(true);
             admin.setCreatedAt(Instant.now());
+            userRepository.save(admin);
+            System.out.println("Created development ADMIN user (UID: AD000001).");
         } else {
+            // Only refresh the password — do NOT overwrite UID, role, or accountType
+            // in case the owner has customized them via the API.
             admin = adminOpt.get();
-            // Force reset password in case it was changed
             admin.setPasswordHash(passwordEncoder.encode("admin"));
+            userRepository.save(admin);
+            System.out.println("Ensured development ADMIN user exists (UID: " + admin.getUid() + ").");
         }
-        
-        // Always force these properties to be correct for the dev admin account
-        admin.setUid("AD000001"); 
-        admin.setAccountType(AccountType.ADMIN);
-        admin.setRole(Role.ADMIN);
-        admin.setActive(true);
-        userRepository.save(admin);
-        System.out.println("Ensured development ADMIN user exists with correct UID (AD000001).");
 
         if (userRepository.findByUsername("pavan").isEmpty()) {
             User pavan = new User();

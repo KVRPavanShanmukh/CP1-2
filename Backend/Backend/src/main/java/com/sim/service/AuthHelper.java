@@ -15,37 +15,23 @@ public class AuthHelper {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Resolves the authenticated user exclusively from the server-side session.
+     * Client-supplied identity headers (X-User-Id, X-User-Uid) are intentionally
+     * NOT trusted here because they can be trivially spoofed by any HTTP client.
+     * Authentication is only established at login via POST /api/auth/login which
+     * stores USER_ID in the server session cookie.
+     */
     public Optional<User> getAuthenticatedUser(HttpServletRequest request) {
         if (request == null) return Optional.empty();
 
-        // 1. Session check
         HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("USER_ID") != null) {
-            String userId = (String) session.getAttribute("USER_ID");
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isPresent() && userOpt.get().isActive()) {
-                return userOpt;
-            }
+        if (session == null || session.getAttribute("USER_ID") == null) {
+            return Optional.empty();
         }
 
-        // 2. Header fallback check (X-User-Id)
-        String headerUserId = request.getHeader("X-User-Id");
-        if (headerUserId != null && !headerUserId.trim().isEmpty()) {
-            Optional<User> userOpt = userRepository.findById(headerUserId.trim());
-            if (userOpt.isPresent() && userOpt.get().isActive()) {
-                return userOpt;
-            }
-        }
-
-        // 3. Header fallback check (X-User-Uid)
-        String headerUid = request.getHeader("X-User-Uid");
-        if (headerUid != null && !headerUid.trim().isEmpty()) {
-            Optional<User> userOpt = userRepository.findByUid(headerUid.trim());
-            if (userOpt.isPresent() && userOpt.get().isActive()) {
-                return userOpt;
-            }
-        }
-
-        return Optional.empty();
+        String userId = (String) session.getAttribute("USER_ID");
+        return userRepository.findById(userId)
+                .filter(User::isActive);
     }
 }

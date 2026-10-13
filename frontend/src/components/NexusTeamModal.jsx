@@ -15,6 +15,7 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
   // Registered Users Directory state
   const [allUsers, setAllUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userDirectoryError, setUserDirectoryError] = useState(null);
   const [userDirectorySearch, setUserDirectorySearch] = useState('');
   const [showDirectory, setShowDirectory] = useState(true);
 
@@ -98,11 +99,14 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
 
   const loadAllUsers = async () => {
     setLoadingUsers(true);
+    setUserDirectoryError(null);
     try {
       const users = await userApi.getUsers();
       setAllUsers(users || []);
     } catch (e) {
       console.error('Failed to load registered users', e);
+      setUserDirectoryError(e.message || 'Failed to load registered users from database.');
+      setAllUsers([]);
     } finally {
       setLoadingUsers(false);
     }
@@ -492,6 +496,12 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                           {loadingUsers ? (
                             <div style={{ padding: '16px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>
                               LOADING REGISTERED USERS FROM SHARED DATABASE...
+                            </div>
+                          ) : userDirectoryError ? (
+                            <div style={{ padding: '16px', background: 'rgba(255,0,85,0.08)', border: '1px solid rgba(255,0,85,0.3)', borderRadius: '2px', color: '#ff4466', fontSize: '11px', fontFamily: 'Courier New' }}>
+                              <div style={{ fontWeight: 700, marginBottom: '6px' }}>⚠️ FAILED TO LOAD USER DIRECTORY</div>
+                              <div style={{ opacity: 0.85, marginBottom: '10px' }}>{userDirectoryError}</div>
+                              <button type="button" className="action-btn" style={{ fontSize: '10px' }} onClick={loadAllUsers}>RETRY ↻</button>
                             </div>
                           ) : (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '6px' }}>

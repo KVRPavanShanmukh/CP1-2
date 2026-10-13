@@ -24,22 +24,15 @@ export function setStoredUser(user) {
 }
 
 export async function request(path, options = {}) {
-  const user = getStoredUser();
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {})
   };
 
-  if (user) {
-    const userId = user.id || user.userId;
-    if (userId) headers['X-User-Id'] = userId;
-    if (user.uid) headers['X-User-Uid'] = user.uid;
-  }
-
   const config = {
     ...options,
     headers,
-    credentials: 'include'
+    credentials: 'include'  // Session cookie is the only auth mechanism
   };
 
   const res = await fetch(`${API_BASE}${path}`, config);
