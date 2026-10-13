@@ -277,7 +277,9 @@ export default function Simulation() {
   };
 
   const latestTick = liveTicks.length > 0 ? liveTicks[liveTicks.length - 1] : null;
-  const progressPercent = latestTick ? (latestTick.currentTick / 10) * 100 : 0; 
+  const progressPercent = latestTick
+    ? Math.min(100, (latestTick.currentTick / Math.max(1, formData.simulationTicks)) * 100)
+    : 0;
 
 
 
@@ -462,7 +464,6 @@ export default function Simulation() {
                         <div className="value">{(results.metrics.canonicalHeadAgreement * 100).toFixed(1)}%</div>
                       </div>
                     </>}
-                    const progressPercent = latestTick ? (latestTick.currentTick / Math.max(1, formData.simulationTicks)) * 100 : 0;
                   </div>
                   <button onClick={() => { setActiveSection(0); setSimulationStarted(false); setLiveTicks([]); setResults(null); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
                     NEW SEQUENCE ↺
@@ -536,7 +537,7 @@ export default function Simulation() {
             {latestTick && <span>BLOCKS: <span style={{ color: '#FFFFFF' }}>{latestTick.blockCount}</span></span>}
             {latestTick && <span>FORKS: <span style={{ color: '#FFFFFF' }}>{latestTick.activeForks}</span></span>}
             {latestTick && <span>LATENCY: <span style={{ color: '#FFFFFF' }}>{formData.blockGossipLatency}</span>s</span>}
-            {latestTick && <span>MAINCHAIN RATE: <span style={{ color: '#FFFFFF' }}>{(1.0 - latestTick.instantGini).toFixed(2)}</span></span>}
+            {latestTick && <span>MAINCHAIN RATE: <span style={{ color: '#FFFFFF' }}>{latestTick.mainchainRate != null ? (latestTick.mainchainRate * 100).toFixed(1) + '%' : 'N/A'}</span></span>}
           </div>
           <div>● ENGINE STATUS: <span style={{ color: '#FFFFFF' }}>{activeSection === 0 ? 'IDLE' : (activeSection === 5 ? 'COMPLETED' : 'RUNNING')}</span></div>
         </div>

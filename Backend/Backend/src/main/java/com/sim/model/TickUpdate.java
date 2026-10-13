@@ -10,6 +10,7 @@ public class TickUpdate {
     private double instantGini;
     private int blockCount;
     private MetricsSnapshot metrics;
+    private double mainchainRate;
 
     public String getSimulationId() { return simulationId; }
     public void setSimulationId(String simulationId) { this.simulationId = simulationId; }
@@ -27,6 +28,8 @@ public class TickUpdate {
     public void setBlockCount(int blockCount) { this.blockCount = blockCount; }
     public MetricsSnapshot getMetrics() { return metrics; }
     public void setMetrics(MetricsSnapshot metrics) { this.metrics = metrics; }
+    public double getMainchainRate() { return mainchainRate; }
+    public void setMainchainRate(double mainchainRate) { this.mainchainRate = mainchainRate; }
 
     @Override
     public boolean equals(Object o) {
@@ -36,13 +39,14 @@ public class TickUpdate {
         return Double.compare(that.currentTick, currentTick) == 0 &&
                activeForks == that.activeForks &&
                Double.compare(that.instantGini, instantGini) == 0 &&
+               Double.compare(that.mainchainRate, mainchainRate) == 0 &&
                blockCount == that.blockCount &&
                Objects.equals(simulationId, that.simulationId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(simulationId, currentTick, activeForks, instantGini, blockCount);
+        return Objects.hash(simulationId, currentTick, activeForks, instantGini, mainchainRate, blockCount);
     }
 
     @Override
@@ -52,6 +56,7 @@ public class TickUpdate {
                 ", currentTick=" + currentTick +
                 ", activeForks=" + activeForks +
                 ", instantGini=" + instantGini +
+                ", mainchainRate=" + mainchainRate +
                 ", blockCount=" + blockCount +
                 '}';
     }

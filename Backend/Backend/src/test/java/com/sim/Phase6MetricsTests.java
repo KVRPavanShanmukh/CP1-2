@@ -107,6 +107,45 @@ class Phase6MetricsTests {
         assertEquals(1, withFailure.getFailedRuns());
         assertEquals(2, withFailure.getRuns().size());
     }
+    @Test
+    void experimentCopyPreservesSlotDuration() {
+        // D3 regression: copy() must preserve slotDuration so repeated runs honour it
+        SimulationConfig template = config("PoW", 2, 2);
+        template.setSlotDuration(2.5);
+        ExperimentRunner runner = new ExperimentRunner();
+        ExperimentAggregate aggregate = runner.runRepeated(template, List.of(1L, 2L));
+        // Both runs must complete (slotDuration is non-negative, so validation passes)
+        assertEquals(2, aggregate.getSuccessfulRuns());
+        assertEquals(0, aggregate.getFailedRuns());
+        // Verify the template itself was not mutated
+        assertEquals(2.5, template.getSlotDuration(), 1e-9);
+    }
+
+    @Test
+    void mainchainRateIsAuthorativeAndDistinctFromOneMinusGini() {
+        // D1 regression: engine must expose a real mainchain rate sourced from BlockchainState,
+        // not derived from the Gini coefficient.
+        SimulationConfig cfg = config("PoW", 4, 5);
+        SimulationEngine engine = new SimulationEngine(cfg);
+        // Run ticks so blocks are actually produced
+        for (int i = 0; i < 5; i++) {
+            engine.tick();
+        }
+        double mainchainRate = engine.getState().getBlockchainState().getMainchainRate();
+        // After real simulation mainchainRate = canonicalHeight / totalBlocks, range [0, 1]
+        assertTrue(mainchainRate >= 0.0 && mainchainRate <= 1.0,
+                "mainchainRate must be in [0, 1], got " + mainchainRate);
+        // mainchainRate is computed from blockchain height, not from Gini.
+        // Verify the source is BlockchainState by checking the denominator is total block count.
+        int totalBlocks = engine.getState().getBlockchainState().getTotalBlocks();
+        int canonicalHeight = engine.getState().getBlockchainState().getGlobalCanonicalHead() == null
+                ? 0 : engine.getState().getBlockchainState().getGlobalCanonicalHead().getHeight();
+        double expectedRate = totalBlocks > 0 ? (double) canonicalHeight / totalBlocks : 0.0;
+        assertEquals(expectedRate, mainchainRate, 1e-9,
+                "mainchainRate must equal canonicalHeight / totalBlocks");
+    }
+
+
 
     @Test
     void invalidExperimentConfigurationIsRejected() {

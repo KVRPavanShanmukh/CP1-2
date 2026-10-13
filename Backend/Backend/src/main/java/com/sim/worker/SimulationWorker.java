@@ -57,6 +57,7 @@ public class SimulationWorker {
                 tick.setActiveForks(snapshot.getActiveForks());
                 tick.setInstantGini(snapshot.getGiniCoefficient());
                 tick.setBlockCount(snapshot.getBlocksAccepted());
+                tick.setMainchainRate(engine.getState().getBlockchainState().getMainchainRate());
                 tick.setMetrics(snapshot);
                 
                 rabbitTemplate.convertAndSend(

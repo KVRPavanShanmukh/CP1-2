@@ -52,10 +52,10 @@ public class ExperimentRunner {
         copy.setNetworkTopology(source.getNetworkTopology());
         copy.setBlockGossipLatency(source.getBlockGossipLatency());
         copy.setSlotDuration(source.getSlotDuration());
+        copy.setSimulationTicks(source.getSimulationTicks());
         copy.setByzantineRatio(source.getByzantineRatio());
         copy.setByzantineBehaviorEnabled(source.isByzantineBehaviorEnabled());
         copy.setAuthorityIds(source.getAuthorityIds());
-        copy.setSimulationTicks(source.getSimulationTicks());
         return copy;
     }
 }
