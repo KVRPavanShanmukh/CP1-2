@@ -13,6 +13,9 @@ import java.util.UUID;
 
 import com.sim.blockchain.Attestation;
 import com.sim.blockchain.Block;
+import com.sim.consensus.DposConsensus;
+import com.sim.consensus.PoaConsensus;
+import com.sim.consensus.PolConsensus;
 import com.sim.network.NetworkMessage;
 
 public class BlockchainAgent {
@@ -33,6 +36,7 @@ public class BlockchainAgent {
     private String canonicalHeadId = null;
 
     private Map<String, Attestation> knownAttestations = new HashMap<>();
+    private Map<String, Attestation> latestAttestationsByValidator = new HashMap<>();
     
     private Queue<NetworkMessage> inbox = new LinkedList<>();
     private Map<String, List<Block>> orphansPendingParent = new HashMap<>(); 
@@ -60,6 +64,8 @@ public class BlockchainAgent {
     public List<String> getPeers() { return peers; }
     public void addPeer(String peerId) { if (!peers.contains(peerId)) peers.add(peerId); }
     public Random getRng() { return rng; }
+    protected com.sim.engine.SimulationState getSimulationState() { return state; }
+    public boolean isByzantineBehaviorEnabled() { return false; }
 
     // --- PHASE 1: AGENT LIFECYCLE ---
 
@@ -78,7 +84,9 @@ public class BlockchainAgent {
                     gossipBlock((Block) msg.getPayload(), msg.getSenderId());
                 }
             } else if (msg.getType() == NetworkMessage.MessageType.ATTESTATION) {
-                receiveAttestation((Attestation) msg.getPayload());
+                if (receiveAttestation((Attestation) msg.getPayload())) {
+                    gossipAttestation((Attestation) msg.getPayload(), msg.getSenderId());
+                }
             } else if (msg.getType() == NetworkMessage.MessageType.BLOCK_REQUEST) {
                 handleBlockRequest((String) msg.getPayload(), msg.getSenderId());
             } else if (msg.getType() == NetworkMessage.MessageType.BLOCK_RESPONSE) {
@@ -185,7 +193,23 @@ public class BlockchainAgent {
             return "GENESIS".equals(block.getProducerAgentId())
                     && block.getPreviousBlockId() == null && block.getHeight() == 0;
         }
+        if (state.getAgent(block.getProducerAgentId()) == null) {
+            return false;
+        }
         if (block.getPreviousBlockId() == null || block.getPreviousBlockId().isBlank() || block.getHeight() <= 0) {
+            return false;
+        }
+        String consensusType = state.getConfig().getConsensusType();
+        if ("DPoS".equalsIgnoreCase(consensusType)
+                && !DposConsensus.isEligible(block.getProducerAgentId(), block.getTickProduced(), state)) {
+            return false;
+        }
+        if ("PoA".equalsIgnoreCase(consensusType)
+                && !PoaConsensus.isAuthorized(block.getProducerAgentId(), state)) {
+            return false;
+        }
+        if ("PoL".equalsIgnoreCase(consensusType)
+                && !PolConsensus.isEligible(block.getProducerAgentId(), state)) {
             return false;
         }
         if (wouldCreateCycle(block)) {
@@ -239,11 +263,43 @@ public class BlockchainAgent {
         state.getNetworkModel().broadcastMessage(id, NetworkMessage.MessageType.BLOCK, block, sourceAgentId);
     }
 
-    public void receiveAttestation(Attestation attestation) {
-        if (!knownAttestations.containsKey(attestation.getAttestationId())) {
-            knownAttestations.put(attestation.getAttestationId(), attestation);
-            attestationsReceived++;
+    private void gossipAttestation(Attestation attestation, String sourceAgentId) {
+        state.getNetworkModel().broadcastMessage(id, NetworkMessage.MessageType.ATTESTATION,
+                attestation, sourceAgentId);
+    }
+
+    public boolean receiveAttestation(Attestation attestation) {
+        if (!validateAttestation(attestation) || knownAttestations.containsKey(attestation.getAttestationId())) {
+            return false;
         }
+        knownAttestations.put(attestation.getAttestationId(), attestation);
+        Attestation latest = latestAttestationsByValidator.get(attestation.getValidatorId());
+        if (latest == null || isNewer(attestation, latest)) {
+            latestAttestationsByValidator.put(attestation.getValidatorId(), attestation);
+            updateCanonicalHead();
+        }
+        attestationsReceived++;
+        return true;
+    }
+
+    private boolean validateAttestation(Attestation attestation) {
+        if (attestation == null || attestation.getAttestationId() == null
+                || attestation.getAttestationId().isBlank()
+                || attestation.getValidatorId() == null || attestation.getValidatorId().isBlank()
+                || attestation.getBlockId() == null || attestation.getBlockId().isBlank()
+                || attestation.getSlot() < 0 || attestation.getTimestamp() < 0) {
+            return false;
+        }
+        if (state.getAgent(attestation.getValidatorId()) == null) {
+            return false;
+        }
+        return attachedBlockIds.contains(attestation.getBlockId());
+    }
+
+    private boolean isNewer(Attestation candidate, Attestation current) {
+        return candidate.getSlot() > current.getSlot()
+                || (candidate.getSlot() == current.getSlot()
+                && candidate.getTimestamp() > current.getTimestamp());
     }
 
     private void updateCanonicalHead() {
@@ -301,6 +357,9 @@ public class BlockchainAgent {
     public Map<String, Block> getKnownBlocks() { return knownBlocks; }
     public Map<String, List<String>> getChildrenByParent() { return childrenByParent; }
     public Map<String, Attestation> getKnownAttestations() { return knownAttestations; }
+    public Map<String, Attestation> getLatestAttestations() {
+        return new HashMap<>(latestAttestationsByValidator);
+    }
     public Map<String, Block> getOrphanBlocks() {
         Map<String, Block> orphans = new HashMap<>();
         for (String blockId : pendingOrphanIds) {
@@ -319,9 +378,9 @@ public class BlockchainAgent {
     public boolean isAttached(String blockId) { return attachedBlockIds.contains(blockId); }
 
     public Attestation createAttestation(int slot, int currentTick) {
-        if (canonicalHeadId == null) return null;
+        if (canonicalHeadId == null || !attachedBlockIds.contains(canonicalHeadId)) return null;
         Attestation att = new Attestation(UUID.randomUUID().toString(), this.id, canonicalHeadId, slot, currentTick);
-        knownAttestations.put(att.getAttestationId(), att);
+        if (!receiveAttestation(att)) return null;
         attestationsProduced++;
         return att;
     }

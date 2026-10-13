@@ -21,4 +21,5 @@ public class Block {
     public String getPreviousBlockId() { return previousBlockId; }
     public String getProducerAgentId() { return producerAgentId; }
     public int getHeight() { return height; }
+    public int getTickProduced() { return tickProduced; }
 }

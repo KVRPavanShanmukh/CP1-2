@@ -2,6 +2,8 @@ package com.sim.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -17,6 +19,8 @@ public class SimulationConfig {
     private String status; // CREATED, RUNNING, COMPLETED, FAILED
     private Long randomSeed;
     private double byzantineRatio = 0.0; // Default no byzantine
+    private boolean byzantineBehaviorEnabled = false;
+    private List<String> authorityIds = new ArrayList<>();
 
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
@@ -49,6 +53,16 @@ public class SimulationConfig {
 
     public double getByzantineRatio() { return byzantineRatio; }
     public void setByzantineRatio(double byzantineRatio) { this.byzantineRatio = byzantineRatio; }
+
+    public boolean isByzantineBehaviorEnabled() { return byzantineBehaviorEnabled; }
+    public void setByzantineBehaviorEnabled(boolean byzantineBehaviorEnabled) {
+        this.byzantineBehaviorEnabled = byzantineBehaviorEnabled;
+    }
+
+    public List<String> getAuthorityIds() { return new ArrayList<>(authorityIds); }
+    public void setAuthorityIds(List<String> authorityIds) {
+        this.authorityIds = authorityIds == null ? new ArrayList<>() : new ArrayList<>(authorityIds);
+    }
 
     @Override
     public boolean equals(Object o) {

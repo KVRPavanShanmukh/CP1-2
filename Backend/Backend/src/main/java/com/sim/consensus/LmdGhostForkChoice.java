@@ -16,7 +16,12 @@ public class LmdGhostForkChoice {
         
         Block root = null;
         for (Block b : blocks.values()) {
-            if (root == null || b.getHeight() < root.getHeight()) {
+            if (!agent.isAttached(b.getBlockId())) {
+                continue;
+            }
+            if (root == null || b.getHeight() < root.getHeight()
+                    || (b.getHeight() == root.getHeight()
+                    && b.getBlockId().compareTo(root.getBlockId()) < 0)) {
                 root = b;
             }
         }
@@ -26,13 +31,7 @@ public class LmdGhostForkChoice {
         
         // 1. Get the latest message (attestation) per validator
         Map<String, Attestation> latestPerValidator = new HashMap<>();
-        for (Attestation att : agent.getKnownAttestations().values()) {
-            Attestation existing = latestPerValidator.get(att.getValidatorId());
-            if (existing == null || att.getSlot() > existing.getSlot() || 
-                (att.getSlot() == existing.getSlot() && att.getTimestamp() > existing.getTimestamp())) {
-                latestPerValidator.put(att.getValidatorId(), att);
-            }
-        }
+        latestPerValidator.putAll(agent.getLatestAttestations());
         
         // 2. Pre-calculate stake mapping for fast lookup
         Map<String, Double> validatorStakes = new HashMap<>();
