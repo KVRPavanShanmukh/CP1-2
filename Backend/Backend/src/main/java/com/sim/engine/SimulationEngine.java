@@ -1,14 +1,12 @@
 package com.sim.engine;
 
+import java.util.Random;
+
 import com.sim.agent.BlockchainAgent;
-import com.sim.model.SimulationConfig;
-import com.sim.network.NetworkModel;
 import com.sim.consensus.ConsensusStrategy;
 import com.sim.metrics.MetricsCalculator;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import com.sim.model.SimulationConfig;
+import com.sim.network.NetworkModel;
 
 public class SimulationEngine {
     private SimulationState state;
@@ -38,6 +36,7 @@ public class SimulationEngine {
                 agent = new BlockchainAgent("Agent-" + i, state.getRng(), state);
             }
             state.addAgent(agent);
+            agent.receiveBlock(state.getBlockchainState().getGenesisBlock());
         }
         networkModel.initializeTopology();
     }

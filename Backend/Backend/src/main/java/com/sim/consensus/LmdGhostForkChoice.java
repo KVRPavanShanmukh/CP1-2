@@ -1,10 +1,12 @@
 package com.sim.consensus;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.sim.agent.BlockchainAgent;
 import com.sim.blockchain.Attestation;
 import com.sim.blockchain.Block;
-
-import java.util.*;
 
 public class LmdGhostForkChoice {
     
@@ -58,6 +60,9 @@ public class LmdGhostForkChoice {
             double bestWeight = -1;
             
             for (String childId : childrenIds) {
+                if (!agent.isAttached(childId)) {
+                    continue;
+                }
                 Block child = blocks.get(childId);
                 if (child == null) continue;
                 

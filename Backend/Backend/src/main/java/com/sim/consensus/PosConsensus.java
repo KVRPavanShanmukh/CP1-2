@@ -1,9 +1,10 @@
 package com.sim.consensus;
 
-import com.sim.agent.BlockchainAgent;
-import com.sim.engine.SimulationState;
-import com.sim.blockchain.Block;
 import java.util.UUID;
+
+import com.sim.agent.BlockchainAgent;
+import com.sim.blockchain.Block;
+import com.sim.engine.SimulationState;
 
 public class PosConsensus extends ConsensusStrategy {
     @Override
@@ -19,13 +20,12 @@ public class PosConsensus extends ConsensusStrategy {
         double prob = agent.getStake() / (totalStake + 0.1);
         if (state.getRng().nextDouble() < prob * 0.5) {
             int newHeight = agent.getHighestBlock() != null ? agent.getHighestBlock().getHeight() + 1 : 1;
-            String prevId = agent.getHighestBlock() != null ? agent.getHighestBlock().getBlockId() : "0";
+            String prevId = agent.getHighestBlock() != null ? agent.getHighestBlock().getBlockId() : Block.GENESIS_ID;
             Block block = new Block(UUID.randomUUID().toString(), prevId, agent.getId(), newHeight, state.getCurrentTick());
-            agent.incrementBlocksProduced();
-            agent.receiveBlock(block);
-            state.getBlockchainState().addBlock(block);
-            
-            state.getNetworkModel().broadcastMessage(agent.getId(), com.sim.network.NetworkMessage.MessageType.BLOCK, block);
+            if (agent.receiveBlock(block) && state.getBlockchainState().addBlock(block)) {
+                agent.incrementBlocksProduced();
+                state.getNetworkModel().broadcastMessage(agent.getId(), com.sim.network.NetworkMessage.MessageType.BLOCK, block);
+            }
         }
     }
 }

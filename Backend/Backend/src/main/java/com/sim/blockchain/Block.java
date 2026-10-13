@@ -1,6 +1,8 @@
 package com.sim.blockchain;
 
 public class Block {
+    public static final String GENESIS_ID = "GENESIS";
+
     private String blockId;
     private String previousBlockId;
     private String producerAgentId;

@@ -4,7 +4,8 @@ public class NetworkMessage {
     public enum MessageType {
         BLOCK,
         ATTESTATION,
-        BLOCK_REQUEST
+        BLOCK_REQUEST,
+        BLOCK_RESPONSE
     }
 
     private String messageId;

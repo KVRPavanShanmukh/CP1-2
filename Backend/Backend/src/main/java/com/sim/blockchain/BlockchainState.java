@@ -1,6 +1,10 @@
 package com.sim.blockchain;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BlockchainState {
     private Map<String, Block> allBlocks = new HashMap<>();
@@ -10,12 +14,23 @@ public class BlockchainState {
     private double mainchainRate = 1.0;
     private Block globalCanonicalHead = null;
 
-    public void addBlock(Block block) {
+    public BlockchainState() {
+        Block genesis = new Block(Block.GENESIS_ID, null, "GENESIS", 0, 0);
+        allBlocks.put(genesis.getBlockId(), genesis);
+        childrenByParent.computeIfAbsent(null, k -> new ArrayList<>()).add(genesis.getBlockId());
+        recalculateMetrics();
+    }
+
+    public boolean addBlock(Block block) {
+        if (block == null || block.getBlockId() == null || allBlocks.containsKey(block.getBlockId())) {
+            return false;
+        }
         allBlocks.put(block.getBlockId(), block);
         String parentId = block.getPreviousBlockId();
         childrenByParent.computeIfAbsent(parentId, k -> new ArrayList<>()).add(block.getBlockId());
         
         recalculateMetrics();
+        return true;
     }
 
     private void recalculateMetrics() {
@@ -48,4 +63,5 @@ public class BlockchainState {
     public int getTotalBlocks() { return allBlocks.size(); }
     public Collection<Block> getAllBlocks() { return allBlocks.values(); }
     public Block getGlobalCanonicalHead() { return globalCanonicalHead; }
+    public Block getGenesisBlock() { return allBlocks.get(Block.GENESIS_ID); }
 }
