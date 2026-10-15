@@ -23,6 +23,8 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("⚠ WARNING: DataSeeder uses hardcoded development passwords. Change passwords after first login in a shared or production environment.");
+
         if (userRepository.findByUsername("owner").isEmpty()) {
             User owner = new User();
             owner.setUsername("owner");
@@ -36,10 +38,8 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("Created development OWNER user (UID: AD000000).");
         }
 
-        Optional<User> adminOpt = userRepository.findByUsername("admin");
-        User admin;
-        if (adminOpt.isEmpty()) {
-            admin = new User();
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            User admin = new User();
             admin.setUsername("admin");
             admin.setPasswordHash(passwordEncoder.encode("admin")); // Dev default
             admin.setUid("AD000001");
@@ -50,12 +50,9 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(admin);
             System.out.println("Created development ADMIN user (UID: AD000001).");
         } else {
-            // Only refresh the password — do NOT overwrite UID, role, or accountType
-            // in case the owner has customized them via the API.
-            admin = adminOpt.get();
-            admin.setPasswordHash(passwordEncoder.encode("admin"));
-            userRepository.save(admin);
-            System.out.println("Ensured development ADMIN user exists (UID: " + admin.getUid() + ").");
+            // Do NOT reset the admin password on restart — this would revert any
+            // manual password change and leave the account permanently compromised.
+            System.out.println("Development ADMIN user already exists — password NOT reset.");
         }
 
         if (userRepository.findByUsername("pavan").isEmpty()) {

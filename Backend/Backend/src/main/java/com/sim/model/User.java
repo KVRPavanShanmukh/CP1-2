@@ -1,5 +1,6 @@
 package com.sim.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,6 +14,7 @@ public class User {
     @Indexed(unique = true)
     private String username;
     
+    @JsonIgnore
     private String passwordHash;
     
     @Indexed(unique = true)
