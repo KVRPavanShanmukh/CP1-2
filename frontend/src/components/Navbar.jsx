@@ -54,6 +54,10 @@ export default function Navbar() {
     navigate('/profile');
   };
 
+  const handleBlogClick = () => {
+    navigate('/blog');
+  };
+
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -69,6 +73,7 @@ export default function Navbar() {
   const isDashboardActive = location.pathname === '/dashboard';
   const isSimulationActive = location.pathname === '/simulation';
   const isProfileActive = location.pathname === '/profile';
+  const isBlogActive = location.pathname === '/blog';
 
   return (
     <nav className="global-c55-navbar" id="global-c55-navbar">
@@ -119,7 +124,16 @@ export default function Navbar() {
           AGENT
         </div>
 
-        {/* 5. PROFILE */}
+        {/* 5. BLOG */}
+        <div
+          id="nav-item-blog"
+          className={`global-nav-link ${isBlogActive ? 'active' : ''}`}
+          onClick={handleBlogClick}
+        >
+          BLOG
+        </div>
+
+        {/* 6. PROFILE */}
         <div
           id="nav-item-profile"
           className={`global-nav-link ${isProfileActive ? 'active' : ''}`}

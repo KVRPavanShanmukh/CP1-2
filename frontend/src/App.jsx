@@ -7,6 +7,7 @@ import Landing from './pages/Landing';
 import Simulation from './pages/Simulation';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Blog from './pages/Blog';
 
 function AppContent() {
   return (
@@ -20,6 +21,7 @@ function AppContent() {
         <Route path="/simulation" element={<Simulation />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/blog" element={<Blog />} />
         <Route path="*" element={<Landing />} />
       </Routes>
     </>

@@ -117,3 +117,20 @@ export const friendApi = {
     method: 'DELETE'
   })
 };
+
+// Blog API
+export const blogApi = {
+  getPosts: (category, search) => {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (search) params.set('search', search);
+    const qs = params.toString();
+    return request(`/blog/posts${qs ? `?${qs}` : ''}`);
+  },
+  getPost: (id) => request(`/blog/posts/${id}`),
+  createPost: (title, content, category, tags) => request('/blog/posts', {
+    method: 'POST',
+    body: JSON.stringify({ title, content, category, tags })
+  }),
+  getCategories: () => request('/blog/categories')
+};
