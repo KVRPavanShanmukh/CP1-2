@@ -27,6 +27,12 @@ public abstract class ConsensusStrategy {
     }
 
     protected boolean produceBlock(BlockchainAgent agent, SimulationState state) {
+        if (agent.isInactive()) {
+            return false;
+        }
+        if (agent.shouldProposeInvalidBlock()) {
+            return agent.proposeInvalidBlock(state);
+        }
         Block parent = agent.getHighestBlock();
         int newHeight = parent == null ? 1 : parent.getHeight() + 1;
         String parentId = parent == null ? Block.GENESIS_ID : parent.getBlockId();
@@ -40,8 +46,13 @@ public abstract class ConsensusStrategy {
         }
         agent.removeIncludedTransactions(transactions);
         agent.incrementBlocksProduced();
-        state.getNetworkModel().broadcastMessage(agent.getId(),
-                com.sim.network.NetworkMessage.MessageType.BLOCK, block);
+
+        if (agent.shouldWithholdBlock(block)) {
+            agent.onBlockWithheld(block);
+        } else {
+            state.getNetworkModel().broadcastMessage(agent.getId(),
+                    com.sim.network.NetworkMessage.MessageType.BLOCK, block);
+        }
         return true;
     }
 }

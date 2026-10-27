@@ -2,6 +2,7 @@ package com.sim.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -21,6 +22,17 @@ public class SimulationConfig {
     private Long randomSeed;
     private double byzantineRatio = 0.0; // Default no byzantine
     private boolean byzantineBehaviorEnabled = false;
+    /**
+     * Attack mode for Byzantine agents when byzantineBehaviorEnabled is true.
+     * Supported values:
+     * - "EQUIVOCATION": Produces conflicting/divergent attestations in PoS targeting non-canonical attached blocks.
+     * - "BLOCK_WITHHOLDING": Produces blocks locally but suppresses network broadcast, withholding them from peers.
+     * - "INVALID_BLOCK": Broadcasts structurally invalid blocks to test peer rejection and validation metrics.
+     * - "ALL": Combines attestation equivocation and block withholding.
+     * - "NONE": Behaves honestly (same as byzantineBehaviorEnabled=false).
+     * Default: "EQUIVOCATION".
+     */
+    private String byzantineAttackMode = "EQUIVOCATION";
     private List<String> authorityIds = new ArrayList<>();
     private int simulationTicks = 10;
     private int transactionsPerAgentPerTick = 0;
@@ -72,6 +84,11 @@ public class SimulationConfig {
         this.byzantineBehaviorEnabled = byzantineBehaviorEnabled;
     }
 
+    public String getByzantineAttackMode() { return byzantineAttackMode; }
+    public void setByzantineAttackMode(String byzantineAttackMode) {
+        this.byzantineAttackMode = byzantineAttackMode;
+    }
+
     public List<String> getAuthorityIds() { return new ArrayList<>(authorityIds); }
     public void setAuthorityIds(List<String> authorityIds) {
         this.authorityIds = authorityIds == null ? new ArrayList<>() : new ArrayList<>(authorityIds);
@@ -115,8 +132,17 @@ public class SimulationConfig {
         if (inactiveAgentRatio < 0 || inactiveAgentRatio > 1) {
             throw new IllegalArgumentException("inactiveAgentRatio must be between 0 and 1");
         }
-        if (byzantineRatio + inactiveAgentRatio > 1.0) {
+        if (byzantineRatio + inactiveAgentRatio > 1.0 + 1e-9) {
             throw new IllegalArgumentException("byzantineRatio + inactiveAgentRatio must not exceed 1");
+        }
+        if (byzantineAttackMode == null || byzantineAttackMode.isBlank()) {
+            throw new IllegalArgumentException("byzantineAttackMode is required");
+        }
+        String attackModeUpper = byzantineAttackMode.trim().toUpperCase(Locale.ROOT);
+        if (!attackModeUpper.equals("EQUIVOCATION") && !attackModeUpper.equals("BLOCK_WITHHOLDING")
+                && !attackModeUpper.equals("INVALID_BLOCK") && !attackModeUpper.equals("ALL")
+                && !attackModeUpper.equals("NONE")) {
+            throw new IllegalArgumentException("Unsupported byzantineAttackMode: " + byzantineAttackMode);
         }
         if (authorityIds.stream().anyMatch(id -> id == null || id.isBlank())) {
             throw new IllegalArgumentException("authorityIds cannot contain blank IDs");
@@ -133,9 +159,12 @@ public class SimulationConfig {
                Double.compare(that.slotDuration, slotDuration) == 0 &&
                simulationTicks == that.simulationTicks &&
                byzantineBehaviorEnabled == that.byzantineBehaviorEnabled &&
+               Double.compare(that.byzantineRatio, byzantineRatio) == 0 &&
+               Double.compare(that.inactiveAgentRatio, inactiveAgentRatio) == 0 &&
                Objects.equals(id, that.id) &&
                Objects.equals(consensusType, that.consensusType) &&
                Objects.equals(networkTopology, that.networkTopology) &&
+               Objects.equals(byzantineAttackMode, that.byzantineAttackMode) &&
                Objects.equals(status, that.status) &&
                Objects.equals(randomSeed, that.randomSeed) &&
                Objects.equals(authorityIds, that.authorityIds);
@@ -144,7 +173,8 @@ public class SimulationConfig {
     @Override
     public int hashCode() {
         return Objects.hash(id, nodeCount, consensusType, networkTopology, blockGossipLatency, slotDuration,
-            status, randomSeed, byzantineBehaviorEnabled, authorityIds, simulationTicks);
+            status, randomSeed, byzantineBehaviorEnabled, byzantineRatio, inactiveAgentRatio, byzantineAttackMode,
+            authorityIds, simulationTicks);
     }
 
     @Override

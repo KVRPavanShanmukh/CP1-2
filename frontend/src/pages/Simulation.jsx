@@ -185,7 +185,10 @@ export default function Simulation() {
     blockGossipLatency: 0.5,
     slotDuration: 1.0,
     simulationTicks: 10,
-    randomSeed: 7
+    randomSeed: 7,
+    byzantineRatio: 0.0,
+    byzantineBehaviorEnabled: false,
+    byzantineAttackMode: 'EQUIVOCATION'
   });
 
   const [loading, setLoading] = useState(false);
@@ -359,6 +362,51 @@ export default function Simulation() {
                         <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={(e) => setFormData({...formData, blockGossipLatency: parseFloat(e.target.value)})} step="0.1" style={{ color: '#FFFFFF' }}/>
                       </div>
                   </div>
+                  <div className="form-group" style={{ marginTop: '20px', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input
+                        type="checkbox"
+                        id="byzantineBehaviorEnabled"
+                        name="byzantineBehaviorEnabled"
+                        checked={formData.byzantineBehaviorEnabled}
+                        onChange={(e) => setFormData({ ...formData, byzantineBehaviorEnabled: e.target.checked })}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <label htmlFor="byzantineBehaviorEnabled" className="meta-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
+                        ENABLE BYZANTINE
+                      </label>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '120px' }}>
+                      <span className="meta-label">BYZANTINE RATIO</span>
+                      <input
+                        type="number"
+                        name="byzantineRatio"
+                        className="form-control"
+                        value={formData.byzantineRatio}
+                        onChange={(e) => setFormData({ ...formData, byzantineRatio: parseFloat(e.target.value) || 0 })}
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        style={{ color: '#FFFFFF' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '180px' }}>
+                      <span className="meta-label">ATTACK MODE</span>
+                      <select
+                        name="byzantineAttackMode"
+                        className="form-control"
+                        value={formData.byzantineAttackMode}
+                        onChange={(e) => setFormData({ ...formData, byzantineAttackMode: e.target.value })}
+                        style={{ color: '#FFFFFF' }}
+                      >
+                        <option value="EQUIVOCATION">Equivocation (PoS)</option>
+                        <option value="BLOCK_WITHHOLDING">Block Withholding</option>
+                        <option value="INVALID_BLOCK">Invalid Block Proposal</option>
+                        <option value="ALL">All Attacks</option>
+                        <option value="NONE">None (Honest)</option>
+                      </select>
+                    </div>
+                  </div>
                 </form>
               )}
 
@@ -421,13 +469,17 @@ export default function Simulation() {
                     <div className="value">{latestTick.metrics ? `${latestTick.metrics.averagePropagationDelayTicks.toFixed(1)} ticks` : 'N/A'}</div>
                   </div>
                   <div className="result-item">
-                    <span className="meta-label">ACTIVE AGENTS</span>
-                    <div className="value">{latestTick.metrics?.activeAgents ?? 'N/A'}</div>
+                    <span className="meta-label">ACTIVE / INACT / BYZ</span>
+                    <div className="value">
+                      {latestTick.metrics?.activeAgents ?? 'N/A'} / {latestTick.metrics?.inactiveAgents ?? 0} / {latestTick.metrics?.byzantineAgents ?? 0}
+                    </div>
                   </div>
-                  <div className="result-item">
-                    <span className="meta-label">INACTIVE AGENTS</span>
-                    <div className="value">{latestTick.metrics?.inactiveAgents ?? 0}</div>
-                  </div>
+                  {(latestTick.metrics?.maliciousActionsAttempted ?? 0) > 0 && (
+                    <div className="result-item">
+                      <span className="meta-label">MALICIOUS ACTIONS</span>
+                      <div className="value">{latestTick.metrics.maliciousActionsAttempted}</div>
+                    </div>
+                  )}
                   <div className="result-item">
                     <span className="meta-label">TXS CREATED / INCLUDED</span>
                     <div className="value">
@@ -492,9 +544,17 @@ export default function Simulation() {
                         <div className="value">{(results.metrics.canonicalHeadAgreement * 100).toFixed(1)}%</div>
                       </div>
                       <div className="result-item">
-                        <span className="meta-label">ACTIVE / INACTIVE</span>
-                        <div className="value">{results.metrics.activeAgents} / {results.metrics.inactiveAgents}</div>
+                        <span className="meta-label">AGENTS (ACT/INACT/BYZ)</span>
+                        <div className="value">
+                          {results.metrics.activeAgents} / {results.metrics.inactiveAgents} / {results.metrics.byzantineAgents}
+                        </div>
                       </div>
+                      {(results.metrics.maliciousActionsAttempted ?? 0) > 0 && (
+                        <div className="result-item">
+                          <span className="meta-label">MALICIOUS ACTIONS</span>
+                          <div className="value">{results.metrics.maliciousActionsAttempted}</div>
+                        </div>
+                      )}
                       <div className="result-item">
                         <span className="meta-label">TXS CREATED / INCLUDED</span>
                         <div className="value">

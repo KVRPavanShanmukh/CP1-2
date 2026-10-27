@@ -36,6 +36,19 @@ public class MetricsCalculator {
         // activeAgents = all agents that are neither Byzantine nor inactive
         snapshot.setActiveAgents(state.getAgents().size() - snapshot.getByzantineAgents() - inactiveCount);
 
+        int maliciousActions = state.getAgents().stream()
+                .mapToInt(BlockchainAgent::getMaliciousActionsAttempted)
+                .sum();
+        int blocksWithheld = state.getAgents().stream()
+                .mapToInt(BlockchainAgent::getBlocksWithheld)
+                .sum();
+        int conflictingAttestations = state.getAgents().stream()
+                .mapToInt(BlockchainAgent::getConflictingAttestations)
+                .sum();
+        snapshot.setMaliciousActionsAttempted(maliciousActions);
+        snapshot.setBlocksWithheld(blocksWithheld);
+        snapshot.setConflictingAttestations(conflictingAttestations);
+
         int canonicalBlocks = 0;
         int staleBlocks = 0;
         int orphanBlocks = 0;

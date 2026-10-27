@@ -55,6 +55,7 @@ public class ExperimentRunner {
         copy.setSimulationTicks(source.getSimulationTicks());
         copy.setByzantineRatio(source.getByzantineRatio());
         copy.setByzantineBehaviorEnabled(source.isByzantineBehaviorEnabled());
+        copy.setByzantineAttackMode(source.getByzantineAttackMode());
         copy.setAuthorityIds(source.getAuthorityIds());
         copy.setRandomSeed(source.getRandomSeed());
         copy.setTransactionsPerAgentPerTick(source.getTransactionsPerAgentPerTick());

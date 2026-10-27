@@ -10,12 +10,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import com.sim.agent.BlockchainAgent;
+import com.sim.blockchain.Block;
 import com.sim.engine.SimulationEngine;
 import com.sim.experiment.ExperimentAggregate;
 import com.sim.experiment.ExperimentRunner;
 import com.sim.metrics.MetricsCalculator;
 import com.sim.metrics.MetricsSnapshot;
 import com.sim.model.SimulationConfig;
+import com.sim.network.NetworkMessage;
 import com.sim.network.NetworkModel;
 
 /**
@@ -214,30 +216,90 @@ class Phase8InactiveAgentTests {
 
     @Test
     void inactiveAgentsStillReceiveAndProcessIncomingBlocks() {
-        // Use a fully-connected "Star" topology with enough nodes and ticks so that
-        // the active agents definitely produce and gossip blocks that reach the inactive agent.
-        // 1 inactive out of 6 agents; run for 20 ticks.
-        SimulationConfig c = baseConfig("PoW", 6, 20);
-        c.setRandomSeed(22L);
-        c.setInactiveAgentRatio(1.0 / 6.0); // exactly 1 inactive (floor of 6 * 0.1666 = 1)
-        c.setNetworkTopology("Star"); // ensures central node reaches every peer
+        // Deterministic test following Phase2NetworkTests conventions:
+        // Configures 2 agents with 0.5 ratio -> exactly 1 active and 1 inactive.
+        // Explicitly connects the peers and broadcasts a valid block from the active agent.
+        SimulationConfig c = baseConfig("PoW", 2, 5);
+        c.setBlockGossipLatency(0.1);
+        c.setInactiveAgentRatio(0.5);
 
         SimulationEngine engine = new SimulationEngine(c);
-        List<BlockchainAgent> inactiveAgents = engine.getState().getAgents().stream()
-                .filter(BlockchainAgent::isInactive).toList();
-        assertFalse(inactiveAgents.isEmpty(), "Test requires at least one inactive agent");
+        BlockchainAgent activeAgent = engine.getState().getAgents().stream()
+                .filter(a -> !a.isInactive()).findFirst().orElseThrow();
+        BlockchainAgent inactiveAgent = engine.getState().getAgents().stream()
+                .filter(BlockchainAgent::isInactive).findFirst().orElseThrow();
 
-        for (int i = 0; i < 20; i++) engine.tick();
+        // Connect active sender and inactive receiver directly
+        activeAgent.getPeers().clear();
+        inactiveAgent.getPeers().clear();
+        activeAgent.addPeer(inactiveAgent.getId());
+        inactiveAgent.addPeer(activeAgent.getId());
 
-        // The inactive agent should have received block messages and processed them.
-        // knownBlocks.size() > 1 means it received at least one gossiped block beyond genesis.
-        // Active agents produce blocks every tick with high probability over 20 ticks.
-        for (BlockchainAgent inactiveAgent : inactiveAgents) {
-            assertTrue(inactiveAgent.getKnownBlocks().size() > 1,
-                    "Inactive agent " + inactiveAgent.getId() +
-                    " should receive and process incoming block messages (knownBlocks=" +
-                    inactiveAgent.getKnownBlocks().size() + " after 20 ticks with Star topology)");
+        Block block = new Block("test-block-1", Block.GENESIS_ID, activeAgent.getId(), 1, 1);
+        assertTrue(activeAgent.receiveBlock(block));
+
+        int msgsSentBefore = engine.getState().getNetworkModel().getMessagesSent();
+        engine.getState().getNetworkModel().broadcastMessage(activeAgent.getId(), NetworkMessage.MessageType.BLOCK, block);
+        int msgsSentAfterBroadcast = engine.getState().getNetworkModel().getMessagesSent();
+        assertEquals(msgsSentBefore + 1, msgsSentAfterBroadcast, "Broadcast should enqueue 1 message to inactive peer");
+
+        assertFalse(inactiveAgent.getKnownBlocks().containsKey(block.getBlockId()),
+                "Inactive agent must not have block before delivery");
+
+        // Advance ticks deterministically to deliver and process the queued message
+        for (int i = 0; i < 5; i++) {
+            engine.getState().incrementTick();
+            engine.getState().getNetworkModel().deliverMessages();
+            inactiveAgent.processMessages();
         }
+
+        assertTrue(inactiveAgent.getKnownBlocks().containsKey(block.getBlockId()),
+                "Inactive agent must receive and store the incoming block");
+        assertTrue(inactiveAgent.isAttached(block.getBlockId()),
+                "Inactive agent must attach the valid incoming block");
+        assertEquals(block.getBlockId(), inactiveAgent.getCanonicalHeadId(),
+                "Inactive agent must update its canonical head to the incoming block");
+
+        // Inactive agent must NOT have gossiped the block out to any peer
+        assertEquals(msgsSentAfterBroadcast, engine.getState().getNetworkModel().getMessagesSent(),
+                "Inactive agent must not gossip or produce outbound messages when receiving a block");
+    }
+
+    @Test
+    void inactiveAgentsDoNotSendBlockRequestsForMissingParent() {
+        SimulationConfig c = baseConfig("PoW", 2, 5);
+        c.setBlockGossipLatency(0.1);
+        c.setInactiveAgentRatio(0.5);
+
+        SimulationEngine engine = new SimulationEngine(c);
+        BlockchainAgent activeAgent = engine.getState().getAgents().stream()
+                .filter(a -> !a.isInactive()).findFirst().orElseThrow();
+        BlockchainAgent inactiveAgent = engine.getState().getAgents().stream()
+                .filter(BlockchainAgent::isInactive).findFirst().orElseThrow();
+
+        activeAgent.getPeers().clear();
+        inactiveAgent.getPeers().clear();
+        activeAgent.addPeer(inactiveAgent.getId());
+        inactiveAgent.addPeer(activeAgent.getId());
+
+        // Child block whose parent is missing on the inactive agent
+        Block orphanChild = new Block("orphan-child", "non-existent-parent", activeAgent.getId(), 2, 1);
+
+        int msgsSentBefore = engine.getState().getNetworkModel().getMessagesSent();
+        engine.getState().getNetworkModel().broadcastMessage(activeAgent.getId(), NetworkMessage.MessageType.BLOCK, orphanChild);
+        int msgsSentAfterBroadcast = engine.getState().getNetworkModel().getMessagesSent();
+
+        for (int i = 0; i < 5; i++) {
+            engine.getState().incrementTick();
+            engine.getState().getNetworkModel().deliverMessages();
+            inactiveAgent.processMessages();
+        }
+
+        // The inactive agent has the orphan in knownBlocks but should NOT have issued a BLOCK_REQUEST
+        assertTrue(inactiveAgent.getKnownBlocks().containsKey(orphanChild.getBlockId()));
+        assertFalse(inactiveAgent.isAttached(orphanChild.getBlockId()));
+        assertEquals(msgsSentAfterBroadcast, engine.getState().getNetworkModel().getMessagesSent(),
+                "Inactive agent must not send BLOCK_REQUEST messages when an orphan block is received");
     }
 
     // -------------------------------------------------------------------------

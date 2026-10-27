@@ -75,6 +75,7 @@ public class BlockchainAgent {
     public String getId() { return id; }
     public double getHashPower() { return hashPower; }
     public double getStake() { return stake; }
+    public void setStake(double stake) { this.stake = stake; }
     public List<String> getPeers() { return peers; }
     public void addPeer(String peerId) { if (!peers.contains(peerId)) peers.add(peerId); }
     public Random getRng() { return rng; }
@@ -82,8 +83,15 @@ public class BlockchainAgent {
     public boolean isInactive() { return inactive; }
     public void setInactive(boolean inactive) { this.inactive = inactive; }
     public boolean isByzantineBehaviorEnabled() { return false; }
+    public int getMaliciousActionsAttempted() { return 0; }
+    public int getBlocksWithheld() { return 0; }
+    public int getConflictingAttestations() { return 0; }
+    public boolean shouldWithholdBlock(Block block) { return false; }
+    public void onBlockWithheld(Block block) {}
+    public boolean shouldProposeInvalidBlock() { return false; }
+    public boolean proposeInvalidBlock(com.sim.engine.SimulationState state) { return false; }
     public boolean addTransaction(Transaction transaction) {
-        if (transaction == null || !id.equals(transaction.getSenderId())
+        if (inactive || transaction == null || !id.equals(transaction.getSenderId())
                 || state.getAgent(transaction.getReceiverId()) == null) return false;
         return mempool.add(transaction);
     }
@@ -289,6 +297,9 @@ public class BlockchainAgent {
     }
 
     private void requestBlock(String missingBlockId, String preferredPeerId) {
+        if (inactive) {
+            return;
+        }
         if (!requestedBlockIds.add(missingBlockId)) {
             return;
         }
@@ -302,6 +313,9 @@ public class BlockchainAgent {
     }
 
     private void handleBlockRequest(String requestedBlockId, String requesterId) {
+        if (inactive) {
+            return;
+        }
         Block requestedBlock = knownBlocks.get(requestedBlockId);
         if (requestedBlock != null) {
             state.getNetworkModel().sendMessage(id, requesterId,
@@ -310,10 +324,16 @@ public class BlockchainAgent {
     }
 
     private void gossipBlock(Block block, String sourceAgentId) {
+        if (inactive) {
+            return;
+        }
         state.getNetworkModel().broadcastMessage(id, NetworkMessage.MessageType.BLOCK, block, sourceAgentId);
     }
 
     private void gossipAttestation(Attestation attestation, String sourceAgentId) {
+        if (inactive) {
+            return;
+        }
         state.getNetworkModel().broadcastMessage(id, NetworkMessage.MessageType.ATTESTATION,
                 attestation, sourceAgentId);
     }
@@ -434,7 +454,7 @@ public class BlockchainAgent {
     public boolean isAttached(String blockId) { return attachedBlockIds.contains(blockId); }
 
     public Attestation createAttestation(int slot, int currentTick) {
-        if (canonicalHeadId == null || !attachedBlockIds.contains(canonicalHeadId)) return null;
+        if (inactive || canonicalHeadId == null || !attachedBlockIds.contains(canonicalHeadId)) return null;
         Attestation att = new Attestation(UUID.randomUUID().toString(), this.id, canonicalHeadId, slot, currentTick);
         if (!receiveAttestation(att)) return null;
         attestationsProduced++;
