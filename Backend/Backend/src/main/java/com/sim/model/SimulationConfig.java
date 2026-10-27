@@ -27,6 +27,13 @@ public class SimulationConfig {
     private int mempoolCapacity = 100;
     private int maxTransactionsPerBlock = 100;
     private double transactionAmount = 1.0;
+    /**
+     * Fraction of agents to mark as inactive at simulation start.
+     * Inactive agents receive incoming messages but do not produce blocks,
+     * create attestations, generate transactions, or initiate gossip.
+     * Default 0.0 = all agents active. Must satisfy: byzantineRatio + inactiveAgentRatio <= 1.
+     */
+    private double inactiveAgentRatio = 0.0;
 
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
@@ -80,6 +87,8 @@ public class SimulationConfig {
     public void setMaxTransactionsPerBlock(int value) { this.maxTransactionsPerBlock = value; }
     public double getTransactionAmount() { return transactionAmount; }
     public void setTransactionAmount(double value) { this.transactionAmount = value; }
+    public double getInactiveAgentRatio() { return inactiveAgentRatio; }
+    public void setInactiveAgentRatio(double value) { this.inactiveAgentRatio = value; }
 
     public void validate() {
         if (nodeCount <= 0) throw new IllegalArgumentException("nodeCount must be greater than zero");
@@ -102,6 +111,12 @@ public class SimulationConfig {
         }
         if (byzantineRatio < 0 || byzantineRatio > 1) {
             throw new IllegalArgumentException("byzantineRatio must be between 0 and 1");
+        }
+        if (inactiveAgentRatio < 0 || inactiveAgentRatio > 1) {
+            throw new IllegalArgumentException("inactiveAgentRatio must be between 0 and 1");
+        }
+        if (byzantineRatio + inactiveAgentRatio > 1.0) {
+            throw new IllegalArgumentException("byzantineRatio + inactiveAgentRatio must not exceed 1");
         }
         if (authorityIds.stream().anyMatch(id -> id == null || id.isBlank())) {
             throw new IllegalArgumentException("authorityIds cannot contain blank IDs");

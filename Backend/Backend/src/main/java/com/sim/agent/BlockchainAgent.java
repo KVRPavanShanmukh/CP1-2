@@ -55,6 +55,14 @@ public class BlockchainAgent {
     private int attestationsProduced = 0;
     private int attestationsReceived = 0;
 
+    /**
+     * When true this agent receives and processes incoming messages but does not
+     * initiate any outbound activity: no gossip, no block requests, no block
+     * production, no attestation creation, no transaction generation.
+     * Set via {@link #setInactive(boolean)} after construction.
+     */
+    private boolean inactive = false;
+
     public BlockchainAgent(String id, Random rng, com.sim.engine.SimulationState state) {
         this.id = id;
         this.rng = rng;
@@ -71,6 +79,8 @@ public class BlockchainAgent {
     public void addPeer(String peerId) { if (!peers.contains(peerId)) peers.add(peerId); }
     public Random getRng() { return rng; }
     protected com.sim.engine.SimulationState getSimulationState() { return state; }
+    public boolean isInactive() { return inactive; }
+    public void setInactive(boolean inactive) { this.inactive = inactive; }
     public boolean isByzantineBehaviorEnabled() { return false; }
     public boolean addTransaction(Transaction transaction) {
         if (transaction == null || !id.equals(transaction.getSenderId())
@@ -107,21 +117,22 @@ public class BlockchainAgent {
                 Block block = (Block) msg.getPayload();
                 boolean knownBefore = block != null && knownBlocks.containsKey(block.getBlockId());
                 if (receiveBlock(block, msg.getSenderId())) {
-                    gossipBlock((Block) msg.getPayload(), msg.getSenderId());
+                    if (!inactive) gossipBlock((Block) msg.getPayload(), msg.getSenderId());
                 } else if (knownBefore) {
                     duplicateMessages++;
                 }
             } else if (msg.getType() == NetworkMessage.MessageType.ATTESTATION) {
                 if (receiveAttestation((Attestation) msg.getPayload())) {
-                    gossipAttestation((Attestation) msg.getPayload(), msg.getSenderId());
+                    if (!inactive) gossipAttestation((Attestation) msg.getPayload(), msg.getSenderId());
                 }
             } else if (msg.getType() == NetworkMessage.MessageType.BLOCK_REQUEST) {
-                handleBlockRequest((String) msg.getPayload(), msg.getSenderId());
+                // Inactive agents do not respond to block requests (that would be outbound activity).
+                if (!inactive) handleBlockRequest((String) msg.getPayload(), msg.getSenderId());
             } else if (msg.getType() == NetworkMessage.MessageType.BLOCK_RESPONSE) {
                 Block block = (Block) msg.getPayload();
                 boolean knownBefore = block != null && knownBlocks.containsKey(block.getBlockId());
                 if (receiveBlock(block, msg.getSenderId())) {
-                    gossipBlock((Block) msg.getPayload(), msg.getSenderId());
+                    if (!inactive) gossipBlock((Block) msg.getPayload(), msg.getSenderId());
                 } else if (knownBefore) {
                     duplicateMessages++;
                 }
