@@ -1,33 +1,72 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+# OS and IDE
+.DS_Store
+.DS_Store?
+Thumbs.db
+.idea/
 .vscode/
+*.swp
+*.swo
+*.log
+*.tmp
+*.temp
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+secrets/
+**/secrets/
+credentials/
+**/credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Temporary simulation artifacts at repository root
+/temp_sim*
+/temp_sim*/
+# Temporary simulation artifacts in subdirectories
+**/temp_sim_*
+**/temp_simulation_*
+
+# Frontend generated files
+node_modules/
+frontend/node_modules/
+dist/
+dist-ssr/
+frontend/dist/
+frontend/dist-ssr/
+coverage/
+frontend/coverage/
+.vite/
+frontend/.vite/
+
+# Backend generated files
+**/target/
+**/build/
+**/out/
+**/bin/
+**/.gradle/
+*.class
+
+# Keep test source files — do NOT ignore src/test/
+# Keep Maven wrapper files
+!.mvn/wrapper/maven-wrapper.jar
+
+# Local database dumps
+*.sql
+*.dump
+*.bson
+*.archive
+
+# Local Docker overrides
+docker-compose.override.yml
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
