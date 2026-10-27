@@ -56,6 +56,11 @@ public class ExperimentRunner {
         copy.setByzantineRatio(source.getByzantineRatio());
         copy.setByzantineBehaviorEnabled(source.isByzantineBehaviorEnabled());
         copy.setAuthorityIds(source.getAuthorityIds());
+        copy.setRandomSeed(source.getRandomSeed());
+        copy.setTransactionsPerAgentPerTick(source.getTransactionsPerAgentPerTick());
+        copy.setMempoolCapacity(source.getMempoolCapacity());
+        copy.setMaxTransactionsPerBlock(source.getMaxTransactionsPerBlock());
+        copy.setTransactionAmount(source.getTransactionAmount());
         return copy;
     }
 }

@@ -60,6 +60,17 @@ public class MetricsCalculator {
         snapshot.setBlockProductionRate(state.getCurrentTick() == 0 ? 0.0 : (double) snapshot.getBlocksProduced() / state.getCurrentTick());
         snapshot.setMessageThroughput(state.getCurrentTick() == 0 ? 0.0 : (double) snapshot.getMessagesDelivered() / state.getCurrentTick());
         snapshot.setGiniCoefficient(currentGini);
+        // Use actual count of transactions that were accepted into mempools (not an estimate),
+        // so seeded repeated runs produce consistent, honest metrics.
+        int created = state.getTransactionsCreatedCount();
+        int included = state.getBlockchainState().getIncludedTransactionCount();
+        snapshot.setTransactionsCreated(created);
+        snapshot.setTransactionsIncluded(included);
+        // transactionSuccessRate = included unique txs / created txs; safe zero-denominator guard.
+        snapshot.setTransactionSuccessRate(created == 0 ? 0.0 : (double) included / created);
+        // transactionsPerSimulationTick: included txs divided by elapsed simulation ticks.
+        // NOT labelled TPS because this is simulation time, not real wall-clock time.
+        snapshot.setTransactionsPerSimulationTick(state.getCurrentTick() == 0 ? 0.0 : (double) included / state.getCurrentTick());
         currentSnapshot = snapshot;
         return snapshot;
     }

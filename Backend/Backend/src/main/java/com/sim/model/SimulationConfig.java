@@ -23,6 +23,10 @@ public class SimulationConfig {
     private boolean byzantineBehaviorEnabled = false;
     private List<String> authorityIds = new ArrayList<>();
     private int simulationTicks = 10;
+    private int transactionsPerAgentPerTick = 0;
+    private int mempoolCapacity = 100;
+    private int maxTransactionsPerBlock = 100;
+    private double transactionAmount = 1.0;
 
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
@@ -68,6 +72,14 @@ public class SimulationConfig {
 
     public int getSimulationTicks() { return simulationTicks; }
     public void setSimulationTicks(int simulationTicks) { this.simulationTicks = simulationTicks; }
+    public int getTransactionsPerAgentPerTick() { return transactionsPerAgentPerTick; }
+    public void setTransactionsPerAgentPerTick(int value) { this.transactionsPerAgentPerTick = value; }
+    public int getMempoolCapacity() { return mempoolCapacity; }
+    public void setMempoolCapacity(int value) { this.mempoolCapacity = value; }
+    public int getMaxTransactionsPerBlock() { return maxTransactionsPerBlock; }
+    public void setMaxTransactionsPerBlock(int value) { this.maxTransactionsPerBlock = value; }
+    public double getTransactionAmount() { return transactionAmount; }
+    public void setTransactionAmount(double value) { this.transactionAmount = value; }
 
     public void validate() {
         if (nodeCount <= 0) throw new IllegalArgumentException("nodeCount must be greater than zero");
@@ -84,6 +96,10 @@ public class SimulationConfig {
             throw new IllegalArgumentException("latencies and slotDuration cannot be negative");
         }
         if (simulationTicks <= 0) throw new IllegalArgumentException("simulationTicks must be greater than zero");
+        if (transactionsPerAgentPerTick < 0 || mempoolCapacity <= 0 || maxTransactionsPerBlock <= 0
+                || !Double.isFinite(transactionAmount) || transactionAmount <= 0) {
+            throw new IllegalArgumentException("Transaction settings must be non-negative with positive capacity, block limit, and amount");
+        }
         if (byzantineRatio < 0 || byzantineRatio > 1) {
             throw new IllegalArgumentException("byzantineRatio must be between 0 and 1");
         }

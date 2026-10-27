@@ -26,6 +26,10 @@ public class MetricsSnapshot {
     private double giniCoefficient;
     private int queuedMessages;
     private int convergenceTick = -1;
+    private int transactionsCreated;
+    private int transactionsIncluded;
+    private double transactionSuccessRate;
+    private double transactionsPerSimulationTick;
 
     public int getTick() { return tick; }
     public void setTick(int tick) { this.tick = tick; }
@@ -77,4 +81,12 @@ public class MetricsSnapshot {
     public void setQueuedMessages(int value) { queuedMessages = value; }
     public int getConvergenceTick() { return convergenceTick; }
     public void setConvergenceTick(int value) { convergenceTick = value; }
+    public int getTransactionsCreated() { return transactionsCreated; }
+    public void setTransactionsCreated(int value) { transactionsCreated = value; }
+    public int getTransactionsIncluded() { return transactionsIncluded; }
+    public void setTransactionsIncluded(int value) { transactionsIncluded = value; }
+    public double getTransactionSuccessRate() { return transactionSuccessRate; }
+    public void setTransactionSuccessRate(double value) { transactionSuccessRate = value; }
+    public double getTransactionsPerSimulationTick() { return transactionsPerSimulationTick; }
+    public void setTransactionsPerSimulationTick(double value) { transactionsPerSimulationTick = value; }
 }

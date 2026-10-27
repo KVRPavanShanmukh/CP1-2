@@ -6,6 +6,7 @@ import com.sim.blockchain.BlockchainState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import com.sim.model.Transaction;
 
 public class SimulationState {
     private SimulationConfig config;
@@ -14,6 +15,8 @@ public class SimulationState {
     private BlockchainState globalBlockchainState = new BlockchainState();
     private com.sim.network.NetworkModel networkModel;
     private int currentTick = 0;
+    private int transactionSequence = 0;
+    private int transactionsCreatedCount = 0;
 
     public SimulationState(SimulationConfig config, Random rng) {
         this.config = config;
@@ -42,5 +45,31 @@ public class SimulationState {
     public com.sim.network.NetworkModel getNetworkModel() { return networkModel; }
     
     public void incrementTick() { currentTick++; }
+
+    /**
+     * Generates transactions for the current tick. Each agent attempts to send
+     * {@code transactionsPerAgentPerTick} transactions to a randomly chosen different
+     * agent. Only successfully accepted transactions (i.e. those that pass mempool
+     * deduplication and capacity checks) are counted in {@code transactionsCreatedCount}.
+     */
+    public void generateTransactions() {
+        int count = config.getTransactionsPerAgentPerTick();
+        if (count == 0 || agents.size() < 2) return;
+        for (BlockchainAgent sender : agents) {
+            for (int i = 0; i < count; i++) {
+                BlockchainAgent receiver = agents.get(rng.nextInt(agents.size()));
+                if (receiver == sender) receiver = agents.get((agents.indexOf(sender) + 1) % agents.size());
+                Transaction tx = new Transaction("tx-" + currentTick + "-" + transactionSequence++,
+                        sender.getId(), receiver.getId(), config.getTransactionAmount(), currentTick);
+                if (sender.addTransaction(tx)) {
+                    transactionsCreatedCount++;
+                }
+            }
+        }
+    }
+
     public int getCurrentTick() { return currentTick; }
+
+    /** Returns the cumulative count of transactions that were successfully accepted into agent mempools. */
+    public int getTransactionsCreatedCount() { return transactionsCreatedCount; }
 }

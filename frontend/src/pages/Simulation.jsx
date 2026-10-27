@@ -420,6 +420,26 @@ export default function Simulation() {
                     <span className="meta-label">PROPAGATION DELAY</span>
                     <div className="value">{latestTick.metrics ? `${latestTick.metrics.averagePropagationDelayTicks.toFixed(1)} ticks` : 'N/A'}</div>
                   </div>
+                  <div className="result-item">
+                    <span className="meta-label">TXS CREATED / INCLUDED</span>
+                    <div className="value">
+                      {latestTick.metrics
+                        ? latestTick.metrics.transactionsCreated > 0
+                          ? `${latestTick.metrics.transactionsCreated} / ${latestTick.metrics.transactionsIncluded}`
+                          : '0 / 0'
+                        : 'N/A'}
+                    </div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">TX SUCCESS RATE</span>
+                    <div className="value">
+                      {latestTick.metrics
+                        ? latestTick.metrics.transactionsCreated > 0
+                          ? `${(latestTick.metrics.transactionSuccessRate * 100).toFixed(1)}%`
+                          : 'N/A'
+                        : 'N/A'}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -462,6 +482,30 @@ export default function Simulation() {
                       <div className="result-item">
                         <span className="meta-label">CONVERGENCE</span>
                         <div className="value">{(results.metrics.canonicalHeadAgreement * 100).toFixed(1)}%</div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">TXS CREATED / INCLUDED</span>
+                        <div className="value">
+                          {results.metrics.transactionsCreated > 0
+                            ? `${results.metrics.transactionsCreated} / ${results.metrics.transactionsIncluded}`
+                            : '0 / 0 (none generated)'}
+                        </div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">TX SUCCESS RATE</span>
+                        <div className="value">
+                          {results.metrics.transactionsCreated > 0
+                            ? `${(results.metrics.transactionSuccessRate * 100).toFixed(1)}%`
+                            : 'N/A'}
+                        </div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">TX / SIM TICK</span>
+                        <div className="value">
+                          {results.metrics.transactionsCreated > 0
+                            ? results.metrics.transactionsPerSimulationTick.toFixed(2)
+                            : 'N/A'}
+                        </div>
                       </div>
                     </>}
                   </div>

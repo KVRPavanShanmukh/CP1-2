@@ -46,6 +46,7 @@ public class SimulationEngine {
 
     public SimulationTick tick() {
         state.incrementTick();
+        state.generateTransactions();
         networkModel.deliverMessages();
         
         for (BlockchainAgent agent : state.getAgents()) {

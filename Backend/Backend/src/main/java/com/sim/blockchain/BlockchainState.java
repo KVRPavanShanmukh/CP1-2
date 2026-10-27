@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
+import com.sim.model.Transaction;
 
 public class BlockchainState {
     private Map<String, Block> allBlocks = new HashMap<>();
@@ -13,6 +16,7 @@ public class BlockchainState {
     private int activeForks = 0;
     private double mainchainRate = 1.0;
     private Block globalCanonicalHead = null;
+    private final Set<String> includedTransactionIds = new HashSet<>();
 
     public BlockchainState() {
         Block genesis = new Block(Block.GENESIS_ID, null, "GENESIS", 0, 0);
@@ -26,6 +30,7 @@ public class BlockchainState {
             return false;
         }
         allBlocks.put(block.getBlockId(), block);
+        block.getTransactions().forEach(transaction -> includedTransactionIds.add(transaction.getTxId()));
         String parentId = block.getPreviousBlockId();
         childrenByParent.computeIfAbsent(parentId, k -> new ArrayList<>()).add(block.getBlockId());
         
@@ -63,5 +68,6 @@ public class BlockchainState {
     public int getTotalBlocks() { return allBlocks.size(); }
     public Collection<Block> getAllBlocks() { return allBlocks.values(); }
     public Block getGlobalCanonicalHead() { return globalCanonicalHead; }
+    public int getIncludedTransactionCount() { return includedTransactionIds.size(); }
     public Block getGenesisBlock() { return allBlocks.get(Block.GENESIS_ID); }
 }

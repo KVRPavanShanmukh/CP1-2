@@ -17,6 +17,7 @@ import com.sim.consensus.DposConsensus;
 import com.sim.consensus.PoaConsensus;
 import com.sim.consensus.PolConsensus;
 import com.sim.network.NetworkMessage;
+import com.sim.model.Transaction;
 
 public class BlockchainAgent {
     private String id;
@@ -43,6 +44,7 @@ public class BlockchainAgent {
     private Set<String> pendingOrphanIds = new HashSet<>();
     private Set<String> receivedMessageIds = new HashSet<>();
     private Set<String> requestedBlockIds = new HashSet<>();
+    private final TransactionMempool mempool;
 
     // Metrics
     private int blocksProduced = 0;
@@ -59,6 +61,7 @@ public class BlockchainAgent {
         this.state = state;
         this.hashPower = rng.nextDouble() * 100;
         this.stake = rng.nextDouble() * 1000;
+        this.mempool = new TransactionMempool(state.getConfig().getMempoolCapacity());
     }
 
     public String getId() { return id; }
@@ -69,6 +72,16 @@ public class BlockchainAgent {
     public Random getRng() { return rng; }
     protected com.sim.engine.SimulationState getSimulationState() { return state; }
     public boolean isByzantineBehaviorEnabled() { return false; }
+    public boolean addTransaction(Transaction transaction) {
+        if (transaction == null || !id.equals(transaction.getSenderId())
+                || state.getAgent(transaction.getReceiverId()) == null) return false;
+        return mempool.add(transaction);
+    }
+    public List<Transaction> getPendingTransactions() { return List.copyOf(mempool.getTransactions()); }
+    public int getMempoolSize() { return mempool.size(); }
+    public void removeIncludedTransactions(List<Transaction> transactions) {
+        if (transactions != null) transactions.forEach(transaction -> mempool.remove(transaction.getTxId()));
+    }
 
     // --- PHASE 1: AGENT LIFECYCLE ---
 
@@ -234,6 +247,12 @@ public class BlockchainAgent {
         }
         if (wouldCreateCycle(block)) {
             return false;
+        }
+        Set<String> transactionIds = new HashSet<>();
+        for (Transaction transaction : block.getTransactions()) {
+            if (transaction == null || !transactionIds.add(transaction.getTxId())
+                    || state.getAgent(transaction.getSenderId()) == null
+                    || state.getAgent(transaction.getReceiverId()) == null) return false;
         }
         Block parent = knownBlocks.get(block.getPreviousBlockId());
         if (parent != null && block.getHeight() != parent.getHeight() + 1) {

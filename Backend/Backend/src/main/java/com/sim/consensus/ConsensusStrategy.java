@@ -2,10 +2,12 @@ package com.sim.consensus;
 
 import java.util.Locale;
 import java.util.UUID;
+import java.util.List;
 
 import com.sim.agent.BlockchainAgent;
 import com.sim.blockchain.Block;
 import com.sim.engine.SimulationState;
+import com.sim.model.Transaction;
 
 public abstract class ConsensusStrategy {
     public abstract void execute(BlockchainAgent agent, SimulationState state);
@@ -28,12 +30,15 @@ public abstract class ConsensusStrategy {
         Block parent = agent.getHighestBlock();
         int newHeight = parent == null ? 1 : parent.getHeight() + 1;
         String parentId = parent == null ? Block.GENESIS_ID : parent.getBlockId();
+        List<Transaction> transactions = agent.getPendingTransactions().subList(0,
+                Math.min(state.getConfig().getMaxTransactionsPerBlock(), agent.getMempoolSize()));
         Block block = new Block(UUID.randomUUID().toString(), parentId, agent.getId(),
-                newHeight, state.getCurrentTick());
+                newHeight, state.getCurrentTick(), transactions);
         agent.incrementBlocksProposed();
         if (!agent.receiveBlock(block) || !state.getBlockchainState().addBlock(block)) {
             return false;
         }
+        agent.removeIncludedTransactions(transactions);
         agent.incrementBlocksProduced();
         state.getNetworkModel().broadcastMessage(agent.getId(),
                 com.sim.network.NetworkMessage.MessageType.BLOCK, block);
