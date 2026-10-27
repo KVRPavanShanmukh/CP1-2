@@ -1,6 +1,9 @@
 package com.sim.network;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.UUID;
 
@@ -17,10 +20,19 @@ public class NetworkModel {
     private int messagesDropped = 0;
     private int duplicateMessages = 0;
     private long totalDeliveryDelayTicks = 0;
+    private long totalBlockPropagationDelayTicks = 0;
+    private int totalBlockDeliveries = 0;
+
+    // Partition tracking
+    private final Map<String, Integer> partitionMap = new HashMap<>();
+    private int partitionStartTick = -1;
+    private int partitionEndTick = -1;
 
     public NetworkModel(SimulationState state) {
         this.state = state;
         this.messageQueue = new PriorityQueue<>(Comparator.comparingInt(NetworkMessage::getDeliveryTick));
+        this.partitionStartTick = state.getConfig().getPartitionStartTick();
+        this.partitionEndTick = state.getConfig().getPartitionEndTick();
     }
 
     public void initializeTopology() {
@@ -86,6 +98,73 @@ public class NetworkModel {
                 }
             }
         }
+        initializePartitions();
+    }
+
+    public void initializePartitions() {
+        partitionMap.clear();
+        List<String> groupA = state.getConfig().getPartitionGroupA();
+        List<String> groupB = state.getConfig().getPartitionGroupB();
+        if (!groupA.isEmpty() || !groupB.isEmpty()) {
+            for (String id : groupA) {
+                partitionMap.put(id, 0);
+            }
+            for (String id : groupB) {
+                partitionMap.put(id, 1);
+            }
+        } else if (state.getConfig().getPartitionRatio() > 0.0) {
+            int n = state.getAgents().size();
+            int groupASize = Math.max(1, (int) Math.round(n * (1.0 - state.getConfig().getPartitionRatio())));
+            for (int i = 0; i < n; i++) {
+                partitionMap.put(state.getAgents().get(i).getId(), i < groupASize ? 0 : 1);
+            }
+        }
+    }
+
+    public void setPartition(int startTick, int endTick, List<String> groupA, List<String> groupB) {
+        this.partitionStartTick = startTick;
+        this.partitionEndTick = endTick;
+        partitionMap.clear();
+        if (groupA != null) groupA.forEach(id -> partitionMap.put(id, 0));
+        if (groupB != null) groupB.forEach(id -> partitionMap.put(id, 1));
+    }
+
+    public void setPartitionRatio(double ratio, int startTick, int endTick) {
+        this.partitionStartTick = startTick;
+        this.partitionEndTick = endTick;
+        partitionMap.clear();
+        int n = state.getAgents().size();
+        int groupASize = Math.max(1, (int) Math.round(n * (1.0 - ratio)));
+        for (int i = 0; i < n; i++) {
+            partitionMap.put(state.getAgents().get(i).getId(), i < groupASize ? 0 : 1);
+        }
+    }
+
+    public void healPartition() {
+        this.partitionEndTick = state.getCurrentTick() - 1;
+    }
+
+    public boolean isPartitionActive() {
+        int currentTick = state.getCurrentTick();
+        if (partitionStartTick < 0) {
+            return false;
+        }
+        if (currentTick < partitionStartTick) {
+            return false;
+        }
+        if (partitionEndTick >= 0 && currentTick > partitionEndTick) {
+            return false;
+        }
+        if (partitionMap.isEmpty()) {
+            initializePartitions();
+        }
+        return !partitionMap.isEmpty();
+    }
+
+    public boolean isCrossPartition(String senderId, String receiverId) {
+        Integer g1 = partitionMap.get(senderId);
+        Integer g2 = partitionMap.get(receiverId);
+        return g1 != null && g2 != null && !g1.equals(g2);
     }
 
     private void addBidirectionalPeer(int i, int j) {
@@ -111,6 +190,8 @@ public class NetworkModel {
     }
 
     public void sendMessage(String senderId, String receiverId, NetworkMessage.MessageType type, Object payload) {
+        messagesSent++;
+
         BlockchainAgent sender = state.getAgent(senderId);
         BlockchainAgent receiver = state.getAgent(receiverId);
         if (sender == null || receiver == null || !sender.getPeers().contains(receiverId)) {
@@ -118,8 +199,22 @@ public class NetworkModel {
             return;
         }
 
+        // 1. Partition isolation check
+        if (isPartitionActive() && isCrossPartition(senderId, receiverId)) {
+            messagesDropped++;
+            return;
+        }
+
+        // 2. Packet loss check (uses state seeded RNG)
+        double packetLossRate = state.getConfig().getPacketLossRate();
+        if (packetLossRate > 0.0 && state.getRng().nextDouble() < packetLossRate) {
+            messagesDropped++;
+            return;
+        }
+
         int latencyTicks = Math.max(1, (int)(state.getConfig().getBlockGossipLatency() * 10));
-        int jitter = state.getRng().nextInt(3);
+        int maxJitter = state.getConfig().getNetworkLatencyJitter();
+        int jitter = maxJitter > 0 ? state.getRng().nextInt(maxJitter + 1) : 0;
         int deliveryTick = state.getCurrentTick() + latencyTicks + jitter;
 
         NetworkMessage msg = new NetworkMessage(
@@ -132,7 +227,6 @@ public class NetworkModel {
             deliveryTick
         );
         messageQueue.offer(msg);
-        messagesSent++;
         totalDeliveryDelayTicks += deliveryTick - state.getCurrentTick();
     }
 
@@ -142,10 +236,24 @@ public class NetworkModel {
             NetworkMessage msg = messageQueue.poll();
             BlockchainAgent receiver = state.getAgent(msg.getReceiverId());
             if (receiver != null) {
-                if (!receiver.receiveMessage(msg)) {
+                // Check if partition became active while message was in transit
+                if (isPartitionActive() && isCrossPartition(msg.getSenderId(), msg.getReceiverId())) {
+                    messagesDropped++;
+                    continue;
+                }
+                boolean accepted = receiver.receiveMessage(msg);
+                if (!accepted) {
                     duplicateMessages++;
                 }
                 messagesDelivered++;
+                // Record block propagation latency only for newly accepted (non-duplicate) peer blocks
+                if (accepted && msg.getType() == NetworkMessage.MessageType.BLOCK
+                        && msg.getPayload() instanceof com.sim.blockchain.Block block) {
+                    if (!receiver.getId().equals(block.getProducerAgentId())) {
+                        totalBlockPropagationDelayTicks += Math.max(0, currentTick - block.getTickProduced());
+                        totalBlockDeliveries++;
+                    }
+                }
             } else {
                 messagesDropped++;
             }
@@ -159,5 +267,11 @@ public class NetworkModel {
     public int getQueuedMessages() { return messageQueue.size(); }
     public double getAverageDeliveryDelayTicks() {
         return messagesSent == 0 ? 0.0 : (double) totalDeliveryDelayTicks / messagesSent;
+    }
+    public double getAverageBlockPropagationDelay() {
+        return totalBlockDeliveries == 0 ? 0.0 : (double) totalBlockPropagationDelayTicks / totalBlockDeliveries;
+    }
+    public Map<String, Integer> getPartitionMap() {
+        return new HashMap<>(partitionMap);
     }
 }

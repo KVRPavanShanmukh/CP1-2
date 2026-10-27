@@ -188,7 +188,12 @@ export default function Simulation() {
     randomSeed: 7,
     byzantineRatio: 0.0,
     byzantineBehaviorEnabled: false,
-    byzantineAttackMode: 'EQUIVOCATION'
+    byzantineAttackMode: 'EQUIVOCATION',
+    packetLossRate: 0.0,
+    networkLatencyJitter: 2,
+    partitionRatio: 0.0,
+    partitionStartTick: -1,
+    partitionEndTick: -1
   });
 
   const [loading, setLoading] = useState(false);
@@ -407,6 +412,73 @@ export default function Simulation() {
                       </select>
                     </div>
                   </div>
+                  <div className="form-group" style={{ marginTop: '16px', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '110px' }}>
+                      <span className="meta-label">PACKET LOSS (0-1)</span>
+                      <input
+                        type="number"
+                        name="packetLossRate"
+                        className="form-control"
+                        value={formData.packetLossRate}
+                        onChange={(e) => setFormData({ ...formData, packetLossRate: parseFloat(e.target.value) || 0 })}
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        style={{ color: '#FFFFFF' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '110px' }}>
+                      <span className="meta-label">LATENCY JITTER</span>
+                      <input
+                        type="number"
+                        name="networkLatencyJitter"
+                        className="form-control"
+                        value={formData.networkLatencyJitter}
+                        onChange={(e) => setFormData({ ...formData, networkLatencyJitter: parseInt(e.target.value) || 0 })}
+                        min="0"
+                        max="10"
+                        style={{ color: '#FFFFFF' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '120px' }}>
+                      <span className="meta-label">PARTITION START</span>
+                      <input
+                        type="number"
+                        name="partitionStartTick"
+                        className="form-control"
+                        value={formData.partitionStartTick}
+                        onChange={(e) => setFormData({ ...formData, partitionStartTick: parseInt(e.target.value) || -1 })}
+                        min="-1"
+                        style={{ color: '#FFFFFF' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '120px' }}>
+                      <span className="meta-label">PARTITION END</span>
+                      <input
+                        type="number"
+                        name="partitionEndTick"
+                        className="form-control"
+                        value={formData.partitionEndTick}
+                        onChange={(e) => setFormData({ ...formData, partitionEndTick: parseInt(e.target.value) || -1 })}
+                        min="-1"
+                        style={{ color: '#FFFFFF' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '110px' }}>
+                      <span className="meta-label">PARTITION RATIO</span>
+                      <input
+                        type="number"
+                        name="partitionRatio"
+                        className="form-control"
+                        value={formData.partitionRatio}
+                        onChange={(e) => setFormData({ ...formData, partitionRatio: parseFloat(e.target.value) || 0 })}
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        style={{ color: '#FFFFFF' }}
+                      />
+                    </div>
+                  </div>
                 </form>
               )}
 
@@ -495,9 +567,21 @@ export default function Simulation() {
                     <div className="value">
                       {latestTick.metrics
                         ? latestTick.metrics.transactionsCreated > 0
-                          ? `${(latestTick.metrics.transactionSuccessRate * 100).toFixed(1)}%`
+                        ? `${(latestTick.metrics.transactionSuccessRate * 100).toFixed(1)}%`
                           : 'N/A'
                         : 'N/A'}
+                    </div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">MSGS (SENT/DELIV/DROP)</span>
+                    <div className="value">
+                      {latestTick.metrics ? `${latestTick.metrics.messagesSent} / ${latestTick.metrics.messagesDelivered} / ${latestTick.metrics.messagesDropped}` : 'N/A'}
+                    </div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">PARTITION STATUS</span>
+                    <div className="value">
+                      {latestTick.metrics?.networkPartitionActive ? 'ACTIVE' : 'NORMAL'}
                     </div>
                   </div>
                 </div>
@@ -577,6 +661,18 @@ export default function Simulation() {
                           {results.metrics.transactionsCreated > 0
                             ? results.metrics.transactionsPerSimulationTick.toFixed(2)
                             : 'N/A'}
+                        </div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">MSGS (SENT/DELIV/DROP/QUEUED)</span>
+                        <div className="value">
+                          {results.metrics.messagesSent} / {results.metrics.messagesDelivered} / {results.metrics.messagesDropped} / {results.metrics.queuedMessages}
+                        </div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">PROPAGATION / BLOCK DELAY</span>
+                        <div className="value">
+                          {results.metrics.averagePropagationDelayTicks.toFixed(1)} / {results.metrics.blockPropagationDelay.toFixed(1)} ticks
                         </div>
                       </div>
                     </>}

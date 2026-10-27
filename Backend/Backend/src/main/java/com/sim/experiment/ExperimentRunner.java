@@ -63,6 +63,13 @@ public class ExperimentRunner {
         copy.setMaxTransactionsPerBlock(source.getMaxTransactionsPerBlock());
         copy.setTransactionAmount(source.getTransactionAmount());
         copy.setInactiveAgentRatio(source.getInactiveAgentRatio());
+        copy.setPacketLossRate(source.getPacketLossRate());
+        copy.setNetworkLatencyJitter(source.getNetworkLatencyJitter());
+        copy.setPartitionRatio(source.getPartitionRatio());
+        copy.setPartitionStartTick(source.getPartitionStartTick());
+        copy.setPartitionEndTick(source.getPartitionEndTick());
+        copy.setPartitionGroupA(source.getPartitionGroupA());
+        copy.setPartitionGroupB(source.getPartitionGroupB());
         return copy;
     }
 }

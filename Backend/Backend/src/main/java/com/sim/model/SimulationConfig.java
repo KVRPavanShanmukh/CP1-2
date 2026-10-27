@@ -47,6 +47,46 @@ public class SimulationConfig {
      */
     private double inactiveAgentRatio = 0.0;
 
+    /**
+     * Probability [0.0, 1.0] that a sent network message is dropped by packet loss.
+     * Default: 0.0 (no packet loss).
+     */
+    private double packetLossRate = 0.0;
+
+    /**
+     * Maximum random jitter ticks added to message latency.
+     * Default: 2 (jitter in [0, 2], matching previous state.getRng().nextInt(3)).
+     */
+    private int networkLatencyJitter = 2;
+
+    /**
+     * Fraction of nodes assigned to partition group B when partition is active.
+     * Default: 0.0 (no partition).
+     */
+    private double partitionRatio = 0.0;
+
+    /**
+     * Starting tick for network partition (inclusive).
+     * Value < 0 indicates partition is disabled. Default: -1.
+     */
+    private int partitionStartTick = -1;
+
+    /**
+     * Ending tick for network partition (inclusive).
+     * Value < 0 indicates partition does not heal (permanent). Default: -1.
+     */
+    private int partitionEndTick = -1;
+
+    /**
+     * Explicit list of agent IDs assigned to partition group A.
+     */
+    private List<String> partitionGroupA = new ArrayList<>();
+
+    /**
+     * Explicit list of agent IDs assigned to partition group B.
+     */
+    private List<String> partitionGroupB = new ArrayList<>();
+
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
         this.status = "CREATED";
@@ -107,6 +147,33 @@ public class SimulationConfig {
     public double getInactiveAgentRatio() { return inactiveAgentRatio; }
     public void setInactiveAgentRatio(double value) { this.inactiveAgentRatio = value; }
 
+    public double getPacketLossRate() { return packetLossRate; }
+    public void setPacketLossRate(double packetLossRate) { this.packetLossRate = packetLossRate; }
+    public double getPacketLossProbability() { return packetLossRate; }
+    public void setPacketLossProbability(double packetLossProbability) { this.packetLossRate = packetLossProbability; }
+
+    public int getNetworkLatencyJitter() { return networkLatencyJitter; }
+    public void setNetworkLatencyJitter(int networkLatencyJitter) { this.networkLatencyJitter = networkLatencyJitter; }
+
+    public double getPartitionRatio() { return partitionRatio; }
+    public void setPartitionRatio(double partitionRatio) { this.partitionRatio = partitionRatio; }
+
+    public int getPartitionStartTick() { return partitionStartTick; }
+    public void setPartitionStartTick(int partitionStartTick) { this.partitionStartTick = partitionStartTick; }
+
+    public int getPartitionEndTick() { return partitionEndTick; }
+    public void setPartitionEndTick(int partitionEndTick) { this.partitionEndTick = partitionEndTick; }
+
+    public List<String> getPartitionGroupA() { return new ArrayList<>(partitionGroupA); }
+    public void setPartitionGroupA(List<String> partitionGroupA) {
+        this.partitionGroupA = partitionGroupA == null ? new ArrayList<>() : new ArrayList<>(partitionGroupA);
+    }
+
+    public List<String> getPartitionGroupB() { return new ArrayList<>(partitionGroupB); }
+    public void setPartitionGroupB(List<String> partitionGroupB) {
+        this.partitionGroupB = partitionGroupB == null ? new ArrayList<>() : new ArrayList<>(partitionGroupB);
+    }
+
     public void validate() {
         if (nodeCount <= 0) throw new IllegalArgumentException("nodeCount must be greater than zero");
         if (consensusType == null || consensusType.isBlank()
@@ -147,6 +214,18 @@ public class SimulationConfig {
         if (authorityIds.stream().anyMatch(id -> id == null || id.isBlank())) {
             throw new IllegalArgumentException("authorityIds cannot contain blank IDs");
         }
+        if (packetLossRate < 0.0 || packetLossRate > 1.0) {
+            throw new IllegalArgumentException("packetLossRate must be between 0 and 1");
+        }
+        if (networkLatencyJitter < 0) {
+            throw new IllegalArgumentException("networkLatencyJitter cannot be negative");
+        }
+        if (partitionRatio < 0.0 || partitionRatio > 1.0) {
+            throw new IllegalArgumentException("partitionRatio must be between 0 and 1");
+        }
+        if (partitionStartTick >= 0 && partitionEndTick >= 0 && partitionEndTick < partitionStartTick) {
+            throw new IllegalArgumentException("partitionEndTick cannot be less than partitionStartTick");
+        }
     }
 
     @Override
@@ -161,20 +240,28 @@ public class SimulationConfig {
                byzantineBehaviorEnabled == that.byzantineBehaviorEnabled &&
                Double.compare(that.byzantineRatio, byzantineRatio) == 0 &&
                Double.compare(that.inactiveAgentRatio, inactiveAgentRatio) == 0 &&
+               Double.compare(that.packetLossRate, packetLossRate) == 0 &&
+               networkLatencyJitter == that.networkLatencyJitter &&
+               Double.compare(that.partitionRatio, partitionRatio) == 0 &&
+               partitionStartTick == that.partitionStartTick &&
+               partitionEndTick == that.partitionEndTick &&
                Objects.equals(id, that.id) &&
                Objects.equals(consensusType, that.consensusType) &&
                Objects.equals(networkTopology, that.networkTopology) &&
                Objects.equals(byzantineAttackMode, that.byzantineAttackMode) &&
                Objects.equals(status, that.status) &&
                Objects.equals(randomSeed, that.randomSeed) &&
-               Objects.equals(authorityIds, that.authorityIds);
+               Objects.equals(authorityIds, that.authorityIds) &&
+               Objects.equals(partitionGroupA, that.partitionGroupA) &&
+               Objects.equals(partitionGroupB, that.partitionGroupB);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, nodeCount, consensusType, networkTopology, blockGossipLatency, slotDuration,
             status, randomSeed, byzantineBehaviorEnabled, byzantineRatio, inactiveAgentRatio, byzantineAttackMode,
-            authorityIds, simulationTicks);
+            authorityIds, simulationTicks, packetLossRate, networkLatencyJitter, partitionRatio,
+            partitionStartTick, partitionEndTick, partitionGroupA, partitionGroupB);
     }
 
     @Override

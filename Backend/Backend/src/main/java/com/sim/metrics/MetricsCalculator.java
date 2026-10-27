@@ -28,6 +28,9 @@ public class MetricsCalculator {
         snapshot.setDuplicateMessages(state.getNetworkModel().getDuplicateMessages()
             + state.getAgents().stream().mapToInt(BlockchainAgent::getDuplicateMessages).sum());
         snapshot.setAveragePropagationDelayTicks(state.getNetworkModel().getAverageDeliveryDelayTicks());
+        snapshot.setBlockPropagationDelay(state.getNetworkModel().getAverageBlockPropagationDelay());
+        snapshot.setPacketLossRate(state.getConfig().getPacketLossRate());
+        snapshot.setNetworkPartitionActive(state.getNetworkModel().isPartitionActive());
         snapshot.setAttestationsProduced(state.getAgents().stream().mapToInt(BlockchainAgent::getAttestationsProduced).sum());
         snapshot.setAttestationsReceived(state.getAgents().stream().mapToInt(BlockchainAgent::getAttestationsReceived).sum());
         snapshot.setByzantineAgents((int) state.getAgents().stream().filter(agent -> agent instanceof com.sim.agent.ByzantineNodeAgent).count());
