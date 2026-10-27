@@ -421,6 +421,14 @@ export default function Simulation() {
                     <div className="value">{latestTick.metrics ? `${latestTick.metrics.averagePropagationDelayTicks.toFixed(1)} ticks` : 'N/A'}</div>
                   </div>
                   <div className="result-item">
+                    <span className="meta-label">ACTIVE AGENTS</span>
+                    <div className="value">{latestTick.metrics?.activeAgents ?? 'N/A'}</div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">INACTIVE AGENTS</span>
+                    <div className="value">{latestTick.metrics?.inactiveAgents ?? 0}</div>
+                  </div>
+                  <div className="result-item">
                     <span className="meta-label">TXS CREATED / INCLUDED</span>
                     <div className="value">
                       {latestTick.metrics
@@ -482,6 +490,10 @@ export default function Simulation() {
                       <div className="result-item">
                         <span className="meta-label">CONVERGENCE</span>
                         <div className="value">{(results.metrics.canonicalHeadAgreement * 100).toFixed(1)}%</div>
+                      </div>
+                      <div className="result-item">
+                        <span className="meta-label">ACTIVE / INACTIVE</span>
+                        <div className="value">{results.metrics.activeAgents} / {results.metrics.inactiveAgents}</div>
                       </div>
                       <div className="result-item">
                         <span className="meta-label">TXS CREATED / INCLUDED</span>

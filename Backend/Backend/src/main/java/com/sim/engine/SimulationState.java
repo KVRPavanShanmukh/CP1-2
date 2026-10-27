@@ -56,6 +56,7 @@ public class SimulationState {
         int count = config.getTransactionsPerAgentPerTick();
         if (count == 0 || agents.size() < 2) return;
         for (BlockchainAgent sender : agents) {
+            if (sender.isInactive()) continue; // inactive agents do not generate transactions
             for (int i = 0; i < count; i++) {
                 BlockchainAgent receiver = agents.get(rng.nextInt(agents.size()));
                 if (receiver == sender) receiver = agents.get((agents.indexOf(sender) + 1) % agents.size());

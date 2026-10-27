@@ -61,6 +61,7 @@ public class ExperimentRunner {
         copy.setMempoolCapacity(source.getMempoolCapacity());
         copy.setMaxTransactionsPerBlock(source.getMaxTransactionsPerBlock());
         copy.setTransactionAmount(source.getTransactionAmount());
+        copy.setInactiveAgentRatio(source.getInactiveAgentRatio());
         return copy;
     }
 }

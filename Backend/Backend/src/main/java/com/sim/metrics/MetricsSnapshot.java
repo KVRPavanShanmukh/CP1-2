@@ -21,6 +21,10 @@ public class MetricsSnapshot {
     private int attestationsProduced;
     private int attestationsReceived;
     private int byzantineAgents;
+    /** Number of agents marked inactive for this simulation. */
+    private int inactiveAgents;
+    /** Number of agents that are neither Byzantine nor inactive. */
+    private int activeAgents;
     private double blockProductionRate;
     private double messageThroughput;
     private double giniCoefficient;
@@ -71,6 +75,10 @@ public class MetricsSnapshot {
     public void setAttestationsReceived(int value) { attestationsReceived = value; }
     public int getByzantineAgents() { return byzantineAgents; }
     public void setByzantineAgents(int value) { byzantineAgents = value; }
+    public int getInactiveAgents() { return inactiveAgents; }
+    public void setInactiveAgents(int value) { inactiveAgents = value; }
+    public int getActiveAgents() { return activeAgents; }
+    public void setActiveAgents(int value) { activeAgents = value; }
     public double getBlockProductionRate() { return blockProductionRate; }
     public void setBlockProductionRate(double value) { blockProductionRate = value; }
     public double getMessageThroughput() { return messageThroughput; }

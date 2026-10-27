@@ -31,6 +31,10 @@ public class MetricsCalculator {
         snapshot.setAttestationsProduced(state.getAgents().stream().mapToInt(BlockchainAgent::getAttestationsProduced).sum());
         snapshot.setAttestationsReceived(state.getAgents().stream().mapToInt(BlockchainAgent::getAttestationsReceived).sum());
         snapshot.setByzantineAgents((int) state.getAgents().stream().filter(agent -> agent instanceof com.sim.agent.ByzantineNodeAgent).count());
+        int inactiveCount = (int) state.getAgents().stream().filter(BlockchainAgent::isInactive).count();
+        snapshot.setInactiveAgents(inactiveCount);
+        // activeAgents = all agents that are neither Byzantine nor inactive
+        snapshot.setActiveAgents(state.getAgents().size() - snapshot.getByzantineAgents() - inactiveCount);
 
         int canonicalBlocks = 0;
         int staleBlocks = 0;
