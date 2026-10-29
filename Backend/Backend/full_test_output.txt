@@ -1,0 +1,59 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< com.ProB:Backend >--------------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ Backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ Backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ Backend ---
+[INFO] skip non existing resourceDirectory D:\CP1\CHAIN55\PROJECT B\Backend\Backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ Backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ Backend ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.sim.Phase10NetworkReliabilityTests
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.317 s -- in com.sim.Phase10NetworkReliabilityTests
+[INFO] Running com.sim.Phase11ExperimentComparisonTests
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.101 s -- in com.sim.Phase11ExperimentComparisonTests
+[INFO] Running com.sim.Phase12ExperimentValidationTests
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.083 s -- in com.sim.Phase12ExperimentValidationTests
+[INFO] Running com.sim.Phase2NetworkTests
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s -- in com.sim.Phase2NetworkTests
+[INFO] Running com.sim.Phase3BlockTreeTests
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s -- in com.sim.Phase3BlockTreeTests
+[INFO] Running com.sim.Phase4AttestationTests
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s -- in com.sim.Phase4AttestationTests
+[INFO] Running com.sim.Phase5ConsensusTests
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.060 s -- in com.sim.Phase5ConsensusTests
+[INFO] Running com.sim.Phase6MetricsTests
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in com.sim.Phase6MetricsTests
+[INFO] Running com.sim.Phase7TransactionTests
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s -- in com.sim.Phase7TransactionTests
+[INFO] Running com.sim.Phase8InactiveAgentTests
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.050 s -- in com.sim.Phase8InactiveAgentTests
+[INFO] Running com.sim.Phase9ByzantineTests
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s -- in com.sim.Phase9ByzantineTests
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 134, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.236 s
+[INFO] Finished at: 2026-10-29T21:56:09+05:30
+[INFO] ------------------------------------------------------------------------

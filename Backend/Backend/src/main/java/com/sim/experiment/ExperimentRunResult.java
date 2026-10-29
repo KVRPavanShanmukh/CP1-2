@@ -1,10 +1,17 @@
 package com.sim.experiment;
 
 import com.sim.metrics.MetricsSnapshot;
+import com.sim.model.SimulationConfig;
 
 public class ExperimentRunResult {
     private String status;
     private Long randomSeed;
+    /**
+     * Configuration actually executed for this run. Repeated runs hand the runner a
+     * fresh copy per seed, so this snapshot keeps the copied values instead of a
+     * shared template reference.
+     */
+    private SimulationConfig configuration;
     private String consensusType;
     private int simulationTicks;
     private long durationMillis;
@@ -15,6 +22,8 @@ public class ExperimentRunResult {
     public void setStatus(String status) { this.status = status; }
     public Long getRandomSeed() { return randomSeed; }
     public void setRandomSeed(Long randomSeed) { this.randomSeed = randomSeed; }
+    public SimulationConfig getConfiguration() { return configuration; }
+    public void setConfiguration(SimulationConfig configuration) { this.configuration = configuration; }
     public String getConsensusType() { return consensusType; }
     public void setConsensusType(String consensusType) { this.consensusType = consensusType; }
     public int getSimulationTicks() { return simulationTicks; }

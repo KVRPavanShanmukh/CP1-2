@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sim.experiment.ExperimentAggregate;
+import com.sim.experiment.ExperimentComparisonRequest;
+import com.sim.experiment.ExperimentComparisonRunner;
 import com.sim.experiment.ExperimentRequest;
 import com.sim.experiment.ExperimentRunner;
 import com.sim.model.SimulationConfig;
@@ -48,6 +50,8 @@ public class SimulationController {
     private AuthHelper authHelper;
 
     private final ExperimentRunner experimentRunner = new ExperimentRunner();
+    private final ExperimentComparisonRunner comparisonRunner =
+            new ExperimentComparisonRunner(MAX_EXPERIMENT_SEEDS);
 
     @PostMapping("/start")
     public ResponseEntity<?> startSimulation(@RequestBody SimulationConfig config, HttpServletRequest request) {
@@ -104,6 +108,39 @@ public class SimulationController {
             validateResourceLimits(experimentRequest.getConfiguration());
             return ResponseEntity.ok(experimentRunner.runRepeated(
                     experimentRequest.getConfiguration(), experimentRequest.getSeeds()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Runs one baseline and one or more treatments with the same ordered seeds and returns
+     * per-metric deltas. Kept beside the single-configuration experiment endpoint so that
+     * the existing request and response shape stays unchanged.
+     */
+    @PostMapping("/experiment/compare")
+    public ResponseEntity<?> compareExperiment(@RequestBody ExperimentComparisonRequest comparisonRequest,
+            HttpServletRequest request) {
+        Optional<User> userOpt = authHelper.getAuthenticatedUser(request);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Authentication required."));
+        }
+
+        try {
+            if (comparisonRequest == null || comparisonRequest.getBaseline() == null
+                    || comparisonRequest.getBaseline().getConfiguration() == null) {
+                throw new IllegalArgumentException("Baseline configuration is required.");
+            }
+            validateResourceLimits(comparisonRequest.getBaseline().getConfiguration());
+            if (comparisonRequest.getTreatments() != null) {
+                for (ExperimentComparisonRequest.NamedExperimentConfig treatment
+                        : comparisonRequest.getTreatments()) {
+                    if (treatment != null && treatment.getConfiguration() != null) {
+                        validateResourceLimits(treatment.getConfiguration());
+                    }
+                }
+            }
+            return ResponseEntity.ok(comparisonRunner.run(comparisonRequest));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

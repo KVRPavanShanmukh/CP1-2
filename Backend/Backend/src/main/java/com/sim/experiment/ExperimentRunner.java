@@ -10,6 +10,7 @@ public class ExperimentRunner {
         config.validate();
         long startedAt = System.currentTimeMillis();
         ExperimentRunResult result = new ExperimentRunResult();
+        result.setConfiguration(config);
         result.setRandomSeed(config.getRandomSeed());
         result.setConsensusType(config.getConsensusType());
         result.setSimulationTicks(config.getSimulationTicks());

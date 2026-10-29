@@ -8,6 +8,7 @@ import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
+import { simulationApi } from '../services/api';
 
 const API_BASE_URL = 'http://localhost:8080/api/simulations';
 const WS_URL = 'http://localhost:8080/ws-simulation';
@@ -152,6 +153,300 @@ function NetworkVisualization({ stateIndex }) {
   );
 }
 
+// --- CONTROLLED EXPERIMENT WORKFLOW ---
+const MEASUREMENT_LABELS = {
+  DIRECT: 'direct',
+  MODELED_TICK_PROXY: 'tick proxy',
+  AGENT_LOCAL_OBSERVATION: 'agent-local'
+};
+
+function parseSeedList(text) {
+  return text
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map((raw) => (/^-?\d+$/.test(raw) ? Number(raw) : NaN));
+}
+
+function formatMetric(value, digits = 2) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return 'n/a';
+  const fixed = Number(value).toFixed(digits);
+  if (!fixed.includes('.')) return fixed;
+  return fixed.replace(/0+$/, '').replace(/\.$/, '');
+}
+
+function describeExperimentConfig(config) {
+  if (!config) return 'no configuration captured';
+  const byzantine = config.byzantineBehaviorEnabled
+    ? `${config.byzantineRatio}/${config.byzantineAttackMode}`
+    : `${config.byzantineRatio}/off`;
+  return [
+    `nodes=${config.nodeCount}`,
+    `consensus=${config.consensusType}`,
+    `ticks=${config.simulationTicks}`,
+    `latency=${config.blockGossipLatency}`,
+    `jitter=${config.networkLatencyJitter}`,
+    `loss=${config.packetLossRate}`,
+    `partition=${config.partitionStartTick}..${config.partitionEndTick}`,
+    `byzantine=${byzantine}`,
+    `inactive=${config.inactiveAgentRatio}`
+  ].join(' · ');
+}
+
+function meanWithDeviation(aggregate, metric) {
+  const statistics = aggregate && aggregate.statistics ? aggregate.statistics[metric] : null;
+  if (!statistics || !statistics.available) return 'n/a';
+  return `${formatMetric(statistics.mean)} ± ${formatMetric(statistics.populationStandardDeviation)}`;
+}
+
+function experimentBadge(treatment) {
+  if (treatment.controlled) return 'CONTROLLED';
+  return treatment.changedFactors.length > 1 ? 'MULTI-FACTOR' : 'NO CHANGE';
+}
+
+function ExperimentAggregateLine({ label, aggregate }) {
+  const runs = (aggregate && aggregate.runs) || [];
+  return (
+    <div className="exp-aggregate">
+      <div className="exp-line">
+        <span>{label}</span>
+        <span className="exp-note">
+          attempted {aggregate?.attemptedRuns ?? 0} · successful {aggregate?.successfulRuns ?? 0} · failed {aggregate?.failedRuns ?? 0}
+        </span>
+      </div>
+      {runs
+        .filter((run) => run.status !== 'COMPLETED' || !run.metrics)
+        .map((run, index) => (
+          <div className="exp-note exp-warn" key={`${run.randomSeed}-${index}`}>
+            failed seed {run.randomSeed ?? 'n/a'}: {run.status}
+            {run.errorMessage ? ` — ${run.errorMessage}` : ''}
+          </div>
+        ))}
+    </div>
+  );
+}
+
+function ExperimentReport({ report }) {
+  return (
+    <div className="exp-report">
+      <div className="exp-line">
+        <span>SHARED SEEDS ({report.seeds.length})</span>
+        <span className="exp-note">{report.seeds.join(', ')}</span>
+      </div>
+      <ExperimentAggregateLine label={`BASELINE · ${report.baselineName}`} aggregate={report.baseline} />
+
+      {report.treatments.map((treatment) => (
+        <div className="exp-treatment" key={treatment.treatmentName}>
+          <div className="exp-line">
+            <span>{treatment.treatmentName}</span>
+            <span className={`exp-badge ${treatment.controlled ? 'controlled' : 'uncontrolled'}`}>
+              {experimentBadge(treatment)}
+            </span>
+          </div>
+          <div className="exp-note">{treatment.statusNote}</div>
+          <div className="exp-factors">
+            {treatment.changedFactors.length === 0 && (
+              <div className="exp-note">no configuration factor changed</div>
+            )}
+            {treatment.changedFactors.map((factor) => (
+              <div className="exp-factor" key={factor.factor}>
+                <span className="exp-factor-label">{factor.label}</span>
+                {factor.fieldChanges.map((change) => (
+                  <span className="exp-factor-change" key={change.field}>
+                    {change.field}: {change.baselineValue} → {change.treatmentValue}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+          <ExperimentAggregateLine label="TREATMENT" aggregate={treatment.treatment} />
+
+          <div className="exp-table-wrap">
+            <table className="exp-table">
+              <thead>
+                <tr>
+                  <th>METRIC</th>
+                  <th>BASE μ±σ</th>
+                  <th>TREAT μ±σ</th>
+                  <th>Δ</th>
+                  <th>Δ%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {treatment.comparisons.map((comparison) => (
+                  <tr
+                    key={comparison.metric}
+                    title={comparison.unavailableReason || comparison.definition}
+                  >
+                    <td>
+                      {comparison.metric} <span className="exp-kind">{MEASUREMENT_LABELS[comparison.measurement] || comparison.measurement}</span>
+                    </td>
+                    <td>{meanWithDeviation(report.baseline, comparison.metric)}</td>
+                    <td>{meanWithDeviation(treatment.treatment, comparison.metric)}</td>
+                    <td>{comparison.available ? formatMetric(comparison.absoluteDelta) : '—'}</td>
+                    <td>
+                      {comparison.relativeDelta !== null && comparison.relativeDelta !== undefined
+                        ? `${(comparison.relativeDelta * 100).toFixed(1)}%`
+                        : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {treatment.comparisons.some((comparison) => !comparison.available) && (
+            <div className="exp-note exp-warn">
+              unavailable:{' '}
+              {treatment.comparisons
+                .filter((comparison) => !comparison.available)
+                .map((comparison) => comparison.metric)
+                .join(', ')}
+            </div>
+          )}
+          <div className="exp-note">
+            μ = mean of successful runs · σ = population standard deviation · “—” means no value is reported
+            (zero baseline or no successful observation; hover a row for the reason) · deltas are descriptive,
+            not causal unless the comparison is marked CONTROLLED.
+          </div>
+        </div>
+      ))}
+
+      <div className="exp-block">
+        <div className="exp-label">UNSUPPORTED MEASUREMENTS</div>
+        {Object.entries(report.unsupportedMeasurements || {}).map(([metric, reason]) => (
+          <div className="exp-note" key={metric}>
+            <strong>{metric}</strong>: {reason}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExperimentPanel({ currentConfig }) {
+  const [seedsText, setSeedsText] = useState('1,2,3');
+  const [baseline, setBaseline] = useState(null);
+  const [treatments, setTreatments] = useState([]);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const seeds = parseSeedList(seedsText);
+  const seedsValid = seeds.length > 0 && seeds.length <= 50 && seeds.every((seed) => Number.isInteger(seed));
+
+  const captureBaseline = () => {
+    setBaseline({ name: 'baseline', configuration: { ...currentConfig } });
+    setResult(null);
+    setError('');
+  };
+
+  const addTreatment = () => {
+    setTreatments((previous) => [
+      ...previous,
+      { name: `treatment-${previous.length + 1}`, configuration: { ...currentConfig } }
+    ]);
+    setResult(null);
+  };
+
+  const renameTreatment = (index, name) => {
+    setTreatments((previous) => previous.map((entry, position) => (position === index ? { ...entry, name } : entry)));
+  };
+
+  const removeTreatment = (index) => {
+    setTreatments((previous) => previous.filter((entry, position) => position !== index));
+    setResult(null);
+  };
+
+  const runComparison = async () => {
+    setError('');
+    setResult(null);
+    setBusy(true);
+    try {
+      const report = await simulationApi.compareExperiment({ baseline, treatments, seeds });
+      setResult(report);
+    } catch (requestError) {
+      setError(requestError.message || 'Comparison failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const canRun = Boolean(baseline) && treatments.length > 0 && seedsValid && !busy;
+
+  return (
+    <div className="experiment-panel" onWheel={(event) => event.stopPropagation()}>
+      <div className="exp-head">
+        <span className="meta-label" style={{ marginBottom: 0 }}>EXPERIMENT WORKFLOW</span>
+        <span className="exp-note">capability only — results exist only after you run a comparison</span>
+      </div>
+
+      <div className="exp-label">SHARED SEEDS (comma separated, max 50)</div>
+      <input
+        className="exp-input"
+        value={seedsText}
+        onChange={(event) => setSeedsText(event.target.value)}
+        aria-label="Shared experiment seeds"
+      />
+      {!seedsValid && <div className="exp-error">Enter between 1 and 50 integer seeds.</div>}
+
+      <div className="exp-actions">
+        <button type="button" className="exp-btn" onClick={captureBaseline}>
+          CAPTURE BASELINE
+        </button>
+        <button type="button" className="exp-btn" onClick={addTreatment} disabled={!baseline}>
+          ADD TREATMENT
+        </button>
+        <button type="button" className="exp-btn exp-btn-primary" onClick={runComparison} disabled={!canRun}>
+          {busy ? 'RUNNING…' : 'RUN COMPARISON'}
+        </button>
+      </div>
+
+      {!baseline && (
+        <div className="exp-note">
+          Capture the current configuration as the baseline, change a parameter, then add it as a treatment.
+          The seed list is applied to every run so differences are not seed noise.
+        </div>
+      )}
+
+      {baseline && (
+        <div className="exp-block">
+          <div className="exp-line">
+            <span>BASELINE · {baseline.name}</span>
+            <span className="exp-note">captured configuration</span>
+          </div>
+          <div className="exp-config">{describeExperimentConfig(baseline.configuration)}</div>
+        </div>
+      )}
+
+      {treatments.map((treatment, index) => (
+        <div className="exp-block" key={`treatment-${index}`}>
+          <div className="exp-line">
+            <input
+              className="exp-input exp-input-inline"
+              value={treatment.name}
+              onChange={(event) => renameTreatment(index, event.target.value)}
+              aria-label={`Treatment ${index + 1} name`}
+            />
+            <button type="button" className="exp-x" onClick={() => removeTreatment(index)}>
+              REMOVE
+            </button>
+          </div>
+          <div className="exp-config">{describeExperimentConfig(treatment.configuration)}</div>
+        </div>
+      ))}
+
+      {error && <div className="exp-error">{error}</div>}
+      {result ? (
+        <ExperimentReport report={result} />
+      ) : (
+        <div className="exp-note">
+          No comparison has been executed in this session. Counts, means, deviations, and deltas are never
+          prefilled.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- MAIN APPLICATION COMPONENT ---
 export default function Simulation() {
   const [activeSection, setActiveSection] = useState(0); 
@@ -205,6 +500,7 @@ export default function Simulation() {
   useEffect(() => {
     const handleWheel = (e) => {
       if (scrollLocked) return;
+      if (e.target && typeof e.target.closest === 'function' && e.target.closest('.experiment-panel')) return;
       
       if (!simulationStarted) {
         if (e.deltaY > 50) {
@@ -336,6 +632,7 @@ export default function Simulation() {
 
               {/* SECTION CONTROLS / CONTENT */}
               {activeSection === 0 && (
+                <>
                 <form onSubmit={(e) => e.preventDefault()}>
                   <div className="form-group" style={{ marginBottom: '24px' }}>
                     <span className="meta-label">Consensus Type</span>
@@ -480,6 +777,8 @@ export default function Simulation() {
                     </div>
                   </div>
                 </form>
+                <ExperimentPanel currentConfig={formData} />
+                </>
               )}
 
               {/* DYNAMIC SCENE RESULTS MAP */}

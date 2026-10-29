@@ -134,3 +134,17 @@ export const blogApi = {
   }),
   getCategories: () => request('/blog/categories')
 };
+
+// Simulation experiment API
+export const simulationApi = {
+  // Repeats one configuration with an ordered seed list (existing endpoint).
+  runExperiment: (configuration, seeds) => request('/simulations/experiment', {
+    method: 'POST',
+    body: JSON.stringify({ configuration, seeds })
+  }),
+  // Runs a named baseline and treatments with one shared ordered seed list.
+  compareExperiment: ({ baseline, treatments, seeds }) => request('/simulations/experiment/compare', {
+    method: 'POST',
+    body: JSON.stringify({ baseline, treatments, seeds })
+  })
+};
