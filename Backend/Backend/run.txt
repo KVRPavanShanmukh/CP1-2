@@ -1,0 +1,239 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< com.ProB:Backend >--------------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ Backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ Backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ Backend ---
+[INFO] skip non existing resourceDirectory D:\CP1\CHAIN55\PROJECT B\Backend\Backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ Backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 15 source files with javac [debug parameters release 17] to target\test-classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,51] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,55] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,63] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,73] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[22,8] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[22,16] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,47] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,51] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,49] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,76] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,88] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,82] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[30,34] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[30,47] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[30,36] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,44] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,31] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,47] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,48] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,40] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,30] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,43] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,44] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,46] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,31] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,49] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,50] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[91,132] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[91,145] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[91,134] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[92,136] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[92,140] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[92,138] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,38] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,23] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,41] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,42] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,26] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,39] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,40] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[109,34] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[109,38] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[109,36] not a statement
+[INFO] 100 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.556 s
+[INFO] Finished at: 2026-10-29T22:18:09+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:testCompile (default-testCompile) on project Backend: Compilation failure: Compilation failure: 
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,51] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,55] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,63] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[21,73] illegal character: '\'
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[22,8] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[22,16] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,47] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,51] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,49] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,76] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,88] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[27,82] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[30,34] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[30,47] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[30,36] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[63,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,44] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,31] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,47] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[66,48] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[72,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,40] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,30] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,43] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[75,44] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[84,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,46] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,31] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,49] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[87,50] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[91,132] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[91,145] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[91,134] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[92,136] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[92,140] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[92,138] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[93,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,38] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,23] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,41] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[96,42] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,48] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,40] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,51] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,55] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,57] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,70] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,61] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,73] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[102,78] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,18] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,36] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,26] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,39] not a statement
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[105,40] ';' expected
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[109,34] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[109,38] unclosed character literal
+[ERROR] /D:/CP1/CHAIN55/PROJECT B/Backend/Backend/src/test/java/com/sim/Phase13ResearchExperiments.java:[109,36] not a statement
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

@@ -1,0 +1,48 @@
+[INFO] Scanning for projects...
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/springframework/boot/maven-metadata.xml
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/cyclonedx/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/cyclonedx/maven-metadata.xml
+Progress (1): 249 BProgress (2): 249 B | 243 B                           Downloaded from central: https://repo.maven.apache.org/maven2/org/cyclonedx/maven-metadata.xml (243 B at 164 B/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/flywaydb/maven-metadata.xml
+Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/maven-metadata.xml (249 B at 166 B/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/maven-metadata.xml
+Progress (1): 234 B                   Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/maven-metadata.xml (234 B at 1.7 kB/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/io/github/git-commit-id/maven-metadata.xml
+Progress (1): 270 B                   Downloading from central: https://repo.maven.apache.org/maven2/io/github/git-commit-id/maven-metadata.xml
+Downloaded from spring-snapshots: https://repo.spring.io/snapshot/org/springframework/boot/maven-metadata.xml (270 B at 157 B/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/jooq/maven-metadata.xml
+Progress (1): 255 B                   Downloaded from central: https://repo.maven.apache.org/maven2/io/github/git-commit-id/maven-metadata.xml (255 B at 1.8 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/jooq/maven-metadata.xml
+Progress (1): 398 B                   Downloaded from central: https://repo.maven.apache.org/maven2/org/jooq/maven-metadata.xml (398 B at 3.6 kB/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/jetbrains/kotlin/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/maven-metadata.xml
+Progress (1): 375 B                   Downloaded from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/maven-metadata.xml (375 B at 3.8 kB/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/liquibase/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/liquibase/maven-metadata.xml
+Progress (1): 394 B                   Downloaded from central: https://repo.maven.apache.org/maven2/org/liquibase/maven-metadata.xml (394 B at 3.5 kB/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/graalvm/buildtools/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/buildtools/maven-metadata.xml
+Progress (1): 242 B                   Downloaded from central: https://repo.maven.apache.org/maven2/org/graalvm/buildtools/maven-metadata.xml (242 B at 2.0 kB/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/io/github/ascopes/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/io/github/ascopes/maven-metadata.xml
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/apache/maven/plugins/maven-metadata.xml
+Progress (1): 240 B                   Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml
+Downloaded from central: https://repo.maven.apache.org/maven2/io/github/ascopes/maven-metadata.xml (240 B at 2.2 kB/s)
+Downloading from spring-snapshots: https://repo.spring.io/snapshot/org/codehaus/mojo/maven-metadata.xml
+Progress (1): 3.9 kBProgress (1): 4.0 kBProgress (1): 9.9 kBProgress (1): 10 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml (10 kB at 78 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml
+Progress (1): 3.7 kBProgress (1): 3.7 kBProgress (1): 9.4 kBProgress (1): 15 kB Progress (1): 19 kBProgress (1): 20 kB                   Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml (20 kB at 145 kB/s)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.824 s
+[INFO] Finished at: 2026-10-29T22:14:39+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] No plugin found for prefix 'EXIT_CODE' in the current project and in the plugin groups [org.springframework.boot, org.cyclonedx, org.flywaydb, io.github.git-commit-id, org.jooq, org.jetbrains.kotlin, org.liquibase, org.graalvm.buildtools, io.github.ascopes, org.apache.maven.plugins, org.codehaus.mojo] available from the repositories [local (C:\Users\HP\.m2\repository), spring-snapshots (https://repo.spring.io/snapshot), central (https://repo.maven.apache.org/maven2)] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/NoPluginFoundForPrefixException
