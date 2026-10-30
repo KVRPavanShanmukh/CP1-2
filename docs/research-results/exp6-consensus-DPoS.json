@@ -6,7 +6,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 1,
       "configuration" : {
-        "id" : "5819281d-0396-4085-aa79-bf0f64a2b218",
+        "id" : "fae0117c-ac5b-4218-a3d9-df1dfe952898",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -35,7 +35,7 @@
       },
       "consensusType" : "PoW",
       "simulationTicks" : 8,
-      "durationMillis" : 1,
+      "durationMillis" : 0,
       "metrics" : {
         "tick" : 8,
         "blocksProduced" : 2,
@@ -47,8 +47,8 @@
         "competingBlocks" : 2,
         "orphanBlocks" : 0,
         "activeForks" : 1,
-        "canonicalHeadAgreement" : 1.0,
-        "converged" : true,
+        "canonicalHeadAgreement" : 0.6666666666666666,
+        "converged" : false,
         "messagesSent" : 34,
         "messagesDelivered" : 6,
         "messagesDropped" : 0,
@@ -80,7 +80,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 2,
       "configuration" : {
-        "id" : "3efdfac8-c200-4cbb-8658-bf012b66a554",
+        "id" : "505c2441-0277-408e-ad6d-b647855a1bdd",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -109,7 +109,7 @@
       },
       "consensusType" : "PoW",
       "simulationTicks" : 8,
-      "durationMillis" : 0,
+      "durationMillis" : 1,
       "metrics" : {
         "tick" : 8,
         "blocksProduced" : 5,
@@ -121,7 +121,7 @@
         "competingBlocks" : 6,
         "orphanBlocks" : 0,
         "activeForks" : 2,
-        "canonicalHeadAgreement" : 0.3333333333333333,
+        "canonicalHeadAgreement" : 0.5,
         "converged" : false,
         "messagesSent" : 42,
         "messagesDelivered" : 9,
@@ -154,7 +154,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 3,
       "configuration" : {
-        "id" : "ee0e36f0-0f7e-4e43-9837-74fe5beb461b",
+        "id" : "61fc203a-eec6-4e4e-88cc-4404edbdb4f2",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -183,7 +183,7 @@
       },
       "consensusType" : "PoW",
       "simulationTicks" : 8,
-      "durationMillis" : 1,
+      "durationMillis" : 0,
       "metrics" : {
         "tick" : 8,
         "blocksProduced" : 7,
@@ -228,7 +228,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 4,
       "configuration" : {
-        "id" : "faed71f6-2a44-43fb-830b-a90545fc3799",
+        "id" : "66d23656-cf51-4063-abc9-9e80d120bb97",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -257,7 +257,7 @@
       },
       "consensusType" : "PoW",
       "simulationTicks" : 8,
-      "durationMillis" : 0,
+      "durationMillis" : 1,
       "metrics" : {
         "tick" : 8,
         "blocksProduced" : 2,
@@ -302,7 +302,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 5,
       "configuration" : {
-        "id" : "cdaf3d93-3354-4432-8c07-9f76bc0b0dc2",
+        "id" : "7461ea47-e9a9-434c-a220-e0283b8a7a8a",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -395,10 +395,10 @@
         "available" : true,
         "unavailableReason" : null,
         "sampleCount" : 5,
-        "mean" : 0.5999999999999999,
-        "populationStandardDeviation" : 0.24944382578492946,
+        "mean" : 0.5666666666666667,
+        "populationStandardDeviation" : 0.13333333333333333,
         "minimum" : 0.3333333333333333,
-        "maximum" : 1.0
+        "maximum" : 0.6666666666666666
       },
       "convergedRunRate" : {
         "metric" : "convergedRunRate",
@@ -408,10 +408,10 @@
         "available" : true,
         "unavailableReason" : null,
         "sampleCount" : 5,
-        "mean" : 0.2,
-        "populationStandardDeviation" : 0.4000000000000001,
+        "mean" : 0.0,
+        "populationStandardDeviation" : 0.0,
         "minimum" : 0.0,
-        "maximum" : 1.0
+        "maximum" : 0.0
       },
       "staleBlocks" : {
         "metric" : "staleBlocks",
@@ -721,7 +721,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 1,
         "configuration" : {
-          "id" : "75f00f41-251c-454c-908a-f4aec629f320",
+          "id" : "75b9cb08-1baa-4be5-9238-fc3645f18c0a",
           "nodeCount" : 6,
           "consensusType" : "DPoS",
           "networkTopology" : "Erdos-Renyi",
@@ -750,7 +750,7 @@
         },
         "consensusType" : "DPoS",
         "simulationTicks" : 8,
-        "durationMillis" : 5,
+        "durationMillis" : 2,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
@@ -795,7 +795,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 2,
         "configuration" : {
-          "id" : "f54c7bea-54b2-40d6-ba1d-a17c65f423bd",
+          "id" : "e24b656b-9b10-409a-953c-c7bbbe6bc555",
           "nodeCount" : 6,
           "consensusType" : "DPoS",
           "networkTopology" : "Erdos-Renyi",
@@ -869,7 +869,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 3,
         "configuration" : {
-          "id" : "d5f7a43f-645a-418b-b56f-d83cd2c2f0af",
+          "id" : "e5834afb-1f7e-4b0b-9517-c4f71490afb8",
           "nodeCount" : 6,
           "consensusType" : "DPoS",
           "networkTopology" : "Erdos-Renyi",
@@ -898,7 +898,7 @@
         },
         "consensusType" : "DPoS",
         "simulationTicks" : 8,
-        "durationMillis" : 2,
+        "durationMillis" : 1,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
@@ -943,7 +943,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 4,
         "configuration" : {
-          "id" : "61e5c315-ff8b-483e-8353-8ceaf64119e8",
+          "id" : "bfb81f67-09fd-4426-b53e-87d2c62ce8cf",
           "nodeCount" : 6,
           "consensusType" : "DPoS",
           "networkTopology" : "Erdos-Renyi",
@@ -972,19 +972,19 @@
         },
         "consensusType" : "DPoS",
         "simulationTicks" : 8,
-        "durationMillis" : 3,
+        "durationMillis" : 2,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
           "blockProposals" : 8,
           "blocksAccepted" : 8,
           "blocksRejected" : 0,
-          "canonicalBlocks" : 19,
-          "staleBlocks" : 7,
-          "competingBlocks" : 7,
+          "canonicalBlocks" : 15,
+          "staleBlocks" : 11,
+          "competingBlocks" : 11,
           "orphanBlocks" : 0,
-          "activeForks" : 2,
-          "canonicalHeadAgreement" : 0.3333333333333333,
+          "activeForks" : 1,
+          "canonicalHeadAgreement" : 0.8333333333333334,
           "converged" : false,
           "messagesSent" : 78,
           "messagesDelivered" : 12,
@@ -1017,7 +1017,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 5,
         "configuration" : {
-          "id" : "a4d8de78-c56c-473e-9f36-e8ccc51ad3d9",
+          "id" : "bd9680e7-c1d0-4ce7-a26d-247a79de22fb",
           "nodeCount" : 6,
           "consensusType" : "DPoS",
           "networkTopology" : "Erdos-Renyi",
@@ -1046,7 +1046,7 @@
         },
         "consensusType" : "DPoS",
         "simulationTicks" : 8,
-        "durationMillis" : 0,
+        "durationMillis" : 2,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
@@ -1110,10 +1110,10 @@
           "available" : true,
           "unavailableReason" : null,
           "sampleCount" : 5,
-          "mean" : 0.39999999999999997,
-          "populationStandardDeviation" : 0.13333333333333336,
+          "mean" : 0.5,
+          "populationStandardDeviation" : 0.21081851067789198,
           "minimum" : 0.16666666666666666,
-          "maximum" : 0.5
+          "maximum" : 0.8333333333333334
         },
         "convergedRunRate" : {
           "metric" : "convergedRunRate",
@@ -1136,10 +1136,10 @@
           "available" : true,
           "unavailableReason" : null,
           "sampleCount" : 5,
-          "mean" : 5.4,
-          "populationStandardDeviation" : 1.8547236990991407,
+          "mean" : 6.2,
+          "populationStandardDeviation" : 2.9257477676655586,
           "minimum" : 2.0,
-          "maximum" : 7.0
+          "maximum" : 11.0
         },
         "competingBlocks" : {
           "metric" : "competingBlocks",
@@ -1149,10 +1149,10 @@
           "available" : true,
           "unavailableReason" : null,
           "sampleCount" : 5,
-          "mean" : 5.4,
-          "populationStandardDeviation" : 1.8547236990991407,
+          "mean" : 6.2,
+          "populationStandardDeviation" : 2.9257477676655586,
           "minimum" : 2.0,
-          "maximum" : 7.0
+          "maximum" : 11.0
         },
         "orphanBlocks" : {
           "metric" : "orphanBlocks",
@@ -1175,8 +1175,8 @@
           "available" : true,
           "unavailableReason" : null,
           "sampleCount" : 5,
-          "mean" : 1.8,
-          "populationStandardDeviation" : 0.4000000000000001,
+          "mean" : 1.6,
+          "populationStandardDeviation" : 0.4898979485566356,
           "minimum" : 1.0,
           "maximum" : 2.0
         },
@@ -1438,23 +1438,23 @@
       "unavailableReason" : null,
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
-      "baselineMean" : 0.5999999999999999,
-      "treatmentMean" : 0.39999999999999997,
-      "absoluteDelta" : -0.1999999999999999,
-      "relativeDelta" : -0.33333333333333326
+      "baselineMean" : 0.5666666666666667,
+      "treatmentMean" : 0.5,
+      "absoluteDelta" : -0.06666666666666665,
+      "relativeDelta" : -0.11764705882352938
     }, {
       "metric" : "convergedRunRate",
       "unit" : "fraction",
       "measurement" : "DIRECT",
       "definition" : "Mean of the converged flag: 1.0 when every agent shares one head, otherwise 0.0.",
       "available" : true,
-      "unavailableReason" : null,
+      "unavailableReason" : "Baseline mean is zero, so a relative delta is undefined; no zero substitute was used.",
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
-      "baselineMean" : 0.2,
+      "baselineMean" : 0.0,
       "treatmentMean" : 0.0,
-      "absoluteDelta" : -0.2,
-      "relativeDelta" : -1.0
+      "absoluteDelta" : 0.0,
+      "relativeDelta" : null
     }, {
       "metric" : "staleBlocks",
       "unit" : "blocks",
@@ -1465,9 +1465,9 @@
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
       "baselineMean" : 2.8,
-      "treatmentMean" : 5.4,
-      "absoluteDelta" : 2.6000000000000005,
-      "relativeDelta" : 0.9285714285714288
+      "treatmentMean" : 6.2,
+      "absoluteDelta" : 3.4000000000000004,
+      "relativeDelta" : 1.2142857142857144
     }, {
       "metric" : "competingBlocks",
       "unit" : "blocks",
@@ -1478,9 +1478,9 @@
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
       "baselineMean" : 2.8,
-      "treatmentMean" : 5.4,
-      "absoluteDelta" : 2.6000000000000005,
-      "relativeDelta" : 0.9285714285714288
+      "treatmentMean" : 6.2,
+      "absoluteDelta" : 3.4000000000000004,
+      "relativeDelta" : 1.2142857142857144
     }, {
       "metric" : "orphanBlocks",
       "unit" : "blocks",
@@ -1504,9 +1504,9 @@
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
       "baselineMean" : 2.0,
-      "treatmentMean" : 1.8,
-      "absoluteDelta" : -0.19999999999999996,
-      "relativeDelta" : -0.09999999999999998
+      "treatmentMean" : 1.6,
+      "absoluteDelta" : -0.3999999999999999,
+      "relativeDelta" : -0.19999999999999996
     }, {
       "metric" : "transactionsCreated",
       "unit" : "transactions",

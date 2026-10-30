@@ -25,9 +25,8 @@ public class SimulationWorker {
         try {
             SimulationConfig config = objectMapper.readValue(payload, SimulationConfig.class);
             
-            // Execute actual simulation asynchronously or inline depending on architecture
-            // For now, we simulate the work in a separate thread so we don't block the listener
-            new Thread(() -> runSimulation(config)).start();
+// Execute inline so status/result handling remains deterministic
+runSimulation(config);
             
         } catch (Exception e) {
             System.err.println("Worker failed to process job: " + e.getMessage());

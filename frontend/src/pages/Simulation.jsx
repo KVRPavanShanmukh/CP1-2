@@ -571,7 +571,7 @@ export default function Simulation() {
     setActiveSection(1); 
     
     try {
-      const res = await axios.post(`${API_BASE_URL}/start`, formData);
+      const res = await axios.post(`${API_BASE_URL}/start`, formData, { withCredentials: true });
       connectWebSocket(res.data.id);
     } catch (error) {
       console.error('Failed to start simulation', error);

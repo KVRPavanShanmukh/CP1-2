@@ -6,7 +6,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 1,
       "configuration" : {
-        "id" : "a408220d-14be-4295-b60a-172266baac85",
+        "id" : "1ee15828-1100-4c41-b732-bfb079e9ea5d",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -35,7 +35,7 @@
       },
       "consensusType" : "PoW",
       "simulationTicks" : 8,
-      "durationMillis" : 0,
+      "durationMillis" : 1,
       "metrics" : {
         "tick" : 8,
         "blocksProduced" : 2,
@@ -47,8 +47,8 @@
         "competingBlocks" : 2,
         "orphanBlocks" : 0,
         "activeForks" : 1,
-        "canonicalHeadAgreement" : 1.0,
-        "converged" : true,
+        "canonicalHeadAgreement" : 0.6666666666666666,
+        "converged" : false,
         "messagesSent" : 34,
         "messagesDelivered" : 6,
         "messagesDropped" : 0,
@@ -80,7 +80,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 2,
       "configuration" : {
-        "id" : "1291acb5-8208-4b47-9949-4e29c5e9a48c",
+        "id" : "918babee-b702-43dd-9c50-797c724acf77",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -154,7 +154,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 3,
       "configuration" : {
-        "id" : "348713cc-61d0-4051-b7d3-444a283b9a7e",
+        "id" : "8811feb5-4bf1-4684-8a7c-9c4e4b26efb8",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -228,7 +228,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 4,
       "configuration" : {
-        "id" : "991926cd-e1c5-4f33-9b44-6d1f843a8ae5",
+        "id" : "f858efcb-266b-49f4-90bc-a839f864d519",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -302,7 +302,7 @@
       "status" : "COMPLETED",
       "randomSeed" : 5,
       "configuration" : {
-        "id" : "d02470f2-d05d-442a-aec5-45cb42f849f8",
+        "id" : "067b50e7-cc26-49a2-9d27-0d425698a3cc",
         "nodeCount" : 6,
         "consensusType" : "PoW",
         "networkTopology" : "Erdos-Renyi",
@@ -395,10 +395,10 @@
         "available" : true,
         "unavailableReason" : null,
         "sampleCount" : 5,
-        "mean" : 0.5666666666666667,
-        "populationStandardDeviation" : 0.24944382578492943,
+        "mean" : 0.5,
+        "populationStandardDeviation" : 0.14907119849998596,
         "minimum" : 0.3333333333333333,
-        "maximum" : 1.0
+        "maximum" : 0.6666666666666666
       },
       "convergedRunRate" : {
         "metric" : "convergedRunRate",
@@ -408,10 +408,10 @@
         "available" : true,
         "unavailableReason" : null,
         "sampleCount" : 5,
-        "mean" : 0.2,
-        "populationStandardDeviation" : 0.4000000000000001,
+        "mean" : 0.0,
+        "populationStandardDeviation" : 0.0,
         "minimum" : 0.0,
-        "maximum" : 1.0
+        "maximum" : 0.0
       },
       "staleBlocks" : {
         "metric" : "staleBlocks",
@@ -721,7 +721,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 1,
         "configuration" : {
-          "id" : "ce65b41b-f0a0-49ba-baee-f3cd5d7f55f7",
+          "id" : "2bb37a86-4edf-4e43-a4c1-884f08ec81b3",
           "nodeCount" : 6,
           "consensusType" : "PoA",
           "networkTopology" : "Erdos-Renyi",
@@ -750,7 +750,7 @@
         },
         "consensusType" : "PoA",
         "simulationTicks" : 8,
-        "durationMillis" : 6,
+        "durationMillis" : 5,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
@@ -761,8 +761,8 @@
           "staleBlocks" : 6,
           "competingBlocks" : 6,
           "orphanBlocks" : 0,
-          "activeForks" : 2,
-          "canonicalHeadAgreement" : 0.5,
+          "activeForks" : 1,
+          "canonicalHeadAgreement" : 0.6666666666666666,
           "converged" : false,
           "messagesSent" : 80,
           "messagesDelivered" : 10,
@@ -795,7 +795,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 2,
         "configuration" : {
-          "id" : "18a76384-3021-48fb-a43a-6774846d90a6",
+          "id" : "8f4c3b2e-5f1e-45d2-a541-ca4ad1633f3b",
           "nodeCount" : 6,
           "consensusType" : "PoA",
           "networkTopology" : "Erdos-Renyi",
@@ -824,7 +824,7 @@
         },
         "consensusType" : "PoA",
         "simulationTicks" : 8,
-        "durationMillis" : 2,
+        "durationMillis" : 1,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
@@ -869,7 +869,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 3,
         "configuration" : {
-          "id" : "2daf3cf8-0321-4d58-9cd8-d6d24fa10519",
+          "id" : "9c42743c-6210-4570-8f50-20ae0e380923",
           "nodeCount" : 6,
           "consensusType" : "PoA",
           "networkTopology" : "Erdos-Renyi",
@@ -898,7 +898,7 @@
         },
         "consensusType" : "PoA",
         "simulationTicks" : 8,
-        "durationMillis" : 3,
+        "durationMillis" : 1,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
@@ -943,7 +943,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 4,
         "configuration" : {
-          "id" : "110c60ef-8f7b-4fc8-8a6f-e91e84a16601",
+          "id" : "a0db1612-72c5-4b55-88b6-cb6a1a46e721",
           "nodeCount" : 6,
           "consensusType" : "PoA",
           "networkTopology" : "Erdos-Renyi",
@@ -972,19 +972,19 @@
         },
         "consensusType" : "PoA",
         "simulationTicks" : 8,
-        "durationMillis" : 1,
+        "durationMillis" : 2,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
           "blockProposals" : 8,
           "blocksAccepted" : 8,
           "blocksRejected" : 0,
-          "canonicalBlocks" : 15,
-          "staleBlocks" : 12,
-          "competingBlocks" : 12,
+          "canonicalBlocks" : 20,
+          "staleBlocks" : 7,
+          "competingBlocks" : 7,
           "orphanBlocks" : 0,
-          "activeForks" : 1,
-          "canonicalHeadAgreement" : 0.6666666666666666,
+          "activeForks" : 2,
+          "canonicalHeadAgreement" : 0.5,
           "converged" : false,
           "messagesSent" : 81,
           "messagesDelivered" : 13,
@@ -1017,7 +1017,7 @@
         "status" : "COMPLETED",
         "randomSeed" : 5,
         "configuration" : {
-          "id" : "aa575456-78d6-417f-a43a-4b06f2942ed9",
+          "id" : "03a4104b-43e8-4aa7-b8bd-058c6492fc3c",
           "nodeCount" : 6,
           "consensusType" : "PoA",
           "networkTopology" : "Erdos-Renyi",
@@ -1046,7 +1046,7 @@
         },
         "consensusType" : "PoA",
         "simulationTicks" : 8,
-        "durationMillis" : 2,
+        "durationMillis" : 1,
         "metrics" : {
           "tick" : 8,
           "blocksProduced" : 8,
@@ -1110,8 +1110,8 @@
           "available" : true,
           "unavailableReason" : null,
           "sampleCount" : 5,
-          "mean" : 0.4666666666666667,
-          "populationStandardDeviation" : 0.1247219128924647,
+          "mean" : 0.4666666666666666,
+          "populationStandardDeviation" : 0.12472191289246472,
           "minimum" : 0.3333333333333333,
           "maximum" : 0.6666666666666666
         },
@@ -1136,10 +1136,10 @@
           "available" : true,
           "unavailableReason" : null,
           "sampleCount" : 5,
-          "mean" : 4.2,
-          "populationStandardDeviation" : 4.4,
+          "mean" : 3.2,
+          "populationStandardDeviation" : 2.785677655436824,
           "minimum" : 0.0,
-          "maximum" : 12.0
+          "maximum" : 7.0
         },
         "competingBlocks" : {
           "metric" : "competingBlocks",
@@ -1149,10 +1149,10 @@
           "available" : true,
           "unavailableReason" : null,
           "sampleCount" : 5,
-          "mean" : 4.2,
-          "populationStandardDeviation" : 4.4,
+          "mean" : 3.2,
+          "populationStandardDeviation" : 2.785677655436824,
           "minimum" : 0.0,
-          "maximum" : 12.0
+          "maximum" : 7.0
         },
         "orphanBlocks" : {
           "metric" : "orphanBlocks",
@@ -1176,7 +1176,7 @@
           "unavailableReason" : null,
           "sampleCount" : 5,
           "mean" : 1.2,
-          "populationStandardDeviation" : 0.4000000000000001,
+          "populationStandardDeviation" : 0.4,
           "minimum" : 1.0,
           "maximum" : 2.0
         },
@@ -1438,23 +1438,23 @@
       "unavailableReason" : null,
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
-      "baselineMean" : 0.5666666666666667,
-      "treatmentMean" : 0.4666666666666667,
-      "absoluteDelta" : -0.09999999999999998,
-      "relativeDelta" : -0.17647058823529407
+      "baselineMean" : 0.5,
+      "treatmentMean" : 0.4666666666666666,
+      "absoluteDelta" : -0.03333333333333338,
+      "relativeDelta" : -0.06666666666666676
     }, {
       "metric" : "convergedRunRate",
       "unit" : "fraction",
       "measurement" : "DIRECT",
       "definition" : "Mean of the converged flag: 1.0 when every agent shares one head, otherwise 0.0.",
       "available" : true,
-      "unavailableReason" : null,
+      "unavailableReason" : "Baseline mean is zero, so a relative delta is undefined; no zero substitute was used.",
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
-      "baselineMean" : 0.2,
+      "baselineMean" : 0.0,
       "treatmentMean" : 0.0,
-      "absoluteDelta" : -0.2,
-      "relativeDelta" : -1.0
+      "absoluteDelta" : 0.0,
+      "relativeDelta" : null
     }, {
       "metric" : "staleBlocks",
       "unit" : "blocks",
@@ -1465,9 +1465,9 @@
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
       "baselineMean" : 2.8,
-      "treatmentMean" : 4.2,
-      "absoluteDelta" : 1.4000000000000004,
-      "relativeDelta" : 0.5000000000000001
+      "treatmentMean" : 3.2,
+      "absoluteDelta" : 0.40000000000000036,
+      "relativeDelta" : 0.142857142857143
     }, {
       "metric" : "competingBlocks",
       "unit" : "blocks",
@@ -1478,9 +1478,9 @@
       "baselineSampleCount" : 5,
       "treatmentSampleCount" : 5,
       "baselineMean" : 2.8,
-      "treatmentMean" : 4.2,
-      "absoluteDelta" : 1.4000000000000004,
-      "relativeDelta" : 0.5000000000000001
+      "treatmentMean" : 3.2,
+      "absoluteDelta" : 0.40000000000000036,
+      "relativeDelta" : 0.142857142857143
     }, {
       "metric" : "orphanBlocks",
       "unit" : "blocks",
