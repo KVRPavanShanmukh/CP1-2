@@ -130,3 +130,31 @@ docker-compose.override.yml
 *.zip
 *.tar.gz
 *.rar
+
+
+
+
+
+# ==============================
+# Generated build and debug output
+# ==============================
+
+# Compilation and test output files
+compile.txt
+compile_log.txt
+compile_output.txt
+compile_err.txt
+run_output.txt
+test_output.txt
+full_test_output.txt
+errors.txt
+run.txt
+
+# Maven and Java generated reports
+surefire-reports/
+failsafe-reports/
+*.hprof
+
+# Temporary editor and diagnostic output
+*.stackdump
+hs_err_pid*.log
