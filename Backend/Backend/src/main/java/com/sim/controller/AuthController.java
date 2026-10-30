@@ -64,8 +64,8 @@ public class AuthController {
         String username = payload.get("username");
         String password = payload.get("password");
 
-        if (username == null || password == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Missing fields"));
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username and password are required."));
         }
 
         if (userRepository.findByUsername(username).isPresent()) {
@@ -110,8 +110,8 @@ public class AuthController {
         String password = payload.get("password");
         String uid = payload.get("uid");
 
-        if (username == null || password == null || uid == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Missing fields"));
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username and password are required."));
         }
 
         Optional<User> userOpt = userRepository.findByUsername(username);
@@ -127,7 +127,7 @@ public class AuthController {
             return genericAuthError();
         }
 
-        if (!uid.equals(user.getUid())) {
+        if (uid != null && !uid.isBlank() && !uid.equals(user.getUid())) {
             recordAttempt(ip);
             return genericAuthError();
         }

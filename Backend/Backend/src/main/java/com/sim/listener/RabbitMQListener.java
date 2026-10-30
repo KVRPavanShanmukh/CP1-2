@@ -21,8 +21,7 @@ public class RabbitMQListener {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private SimulationResultRepository resultRepository;

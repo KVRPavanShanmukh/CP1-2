@@ -139,7 +139,7 @@ const Login = () => {
         return;
       }
     } else {
-      if (!formData.username || !formData.password || !formData.uid) {
+      if (!formData.username || !formData.password) {
         setAuthStatus('error');
         setErrorMessage('SECURITY WARNING: FIELDS EMPTY');
         return;
@@ -178,7 +178,7 @@ const Login = () => {
             setSuccessMessage('CREDENTIALS VERIFIED');
             setTimeout(() => {
                 setSuccessMessage('ACCESS GRANTED');
-                setTimeout(() => navigate('/landing'), 800);
+                setTimeout(() => navigate('/dashboard'), 800);
             }, 1000);
         }
       } else if (response.status === 429) {
@@ -186,8 +186,19 @@ const Login = () => {
         setErrorMessage('RATE LIMIT EXCEEDED');
       } else {
         setAuthStatus('error');
-        if (isSignupMode && data.error) setErrorMessage(`REGISTRATION FAILED: ${data.error.toUpperCase()}`);
-        else setErrorMessage('AUTHENTICATION FAILED: INVALID CREDENTIALS');
+        if (isSignupMode && data.error) {
+          setErrorMessage(`REGISTRATION FAILED: ${data.error.toUpperCase()}`);
+        } else if (response.status === 401) {
+          setErrorMessage('AUTHENTICATION FAILED: INVALID CREDENTIALS');
+        } else if (response.status === 403) {
+          setErrorMessage('ACCESS FORBIDDEN');
+        } else if (response.status === 404) {
+          setErrorMessage('LOGIN ENDPOINT NOT FOUND');
+        } else if (response.status >= 500) {
+          setErrorMessage('AUTHENTICATION SERVER ERROR');
+        } else {
+          setErrorMessage(data.error || `AUTHENTICATION FAILED: REQUEST REJECTED (${response.status})`);
+        }
       }
     } catch (err) {
       setAuthStatus('network_error');

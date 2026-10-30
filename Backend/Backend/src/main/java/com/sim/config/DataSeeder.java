@@ -42,17 +42,35 @@ public class DataSeeder implements CommandLineRunner {
             User admin = new User();
             admin.setUsername("admin");
             admin.setPasswordHash(passwordEncoder.encode("admin")); // Dev default
-            admin.setUid("AD000001");
+            admin.setUid("AD000010");
             admin.setAccountType(AccountType.ADMIN);
             admin.setRole(Role.ADMIN);
             admin.setActive(true);
             admin.setCreatedAt(Instant.now());
             userRepository.save(admin);
-            System.out.println("Created development ADMIN user (UID: AD000001).");
+            System.out.println("Created development ADMIN user (UID: AD000010).");
         } else {
-            // Do NOT reset the admin password on restart — this would revert any
-            // manual password change and leave the account permanently compromised.
-            System.out.println("Development ADMIN user already exists — password NOT reset.");
+            // Update existing admin UID and password if needed for development
+            User existingAdmin = userRepository.findByUsername("admin").get();
+            boolean updated = false;
+            if (!"AD000010".equals(existingAdmin.getUid())) {
+                existingAdmin.setUid("AD000010");
+                updated = true;
+            }
+            if (!passwordEncoder.matches("admin", existingAdmin.getPasswordHash())) {
+                existingAdmin.setPasswordHash(passwordEncoder.encode("admin"));
+                updated = true;
+            }
+            if (!existingAdmin.isActive()) {
+                existingAdmin.setActive(true);
+                updated = true;
+            }
+            if (updated) {
+                userRepository.save(existingAdmin);
+                System.out.println("Updated development ADMIN user (UID: AD000010).");
+            } else {
+                System.out.println("Development ADMIN user already exists — password NOT reset.");
+            }
         }
 
         if (userRepository.findByUsername("pavan").isEmpty()) {

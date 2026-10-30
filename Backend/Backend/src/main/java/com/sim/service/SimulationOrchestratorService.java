@@ -18,8 +18,7 @@ public class SimulationOrchestratorService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public SimulationConfig startSimulation(SimulationConfig config) throws JsonProcessingException {
         config.validate();

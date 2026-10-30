@@ -18,8 +18,7 @@ public class SimulationWorker {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @RabbitListener(queues = RabbitMQConfig.JOBS_QUEUE)
     public void processJob(String payload) {
