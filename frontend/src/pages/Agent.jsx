@@ -72,6 +72,27 @@ const getDormantCoreTexture = (() => {
   };
 })();
 
+const getByzantineCoreTexture = (() => {
+  let texture = null;
+  return () => {
+    if (texture) return texture;
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    g.addColorStop(0.2, 'rgba(255, 34, 51, 0.95)');
+    g.addColorStop(0.55, 'rgba(220, 38, 38, 0.55)');
+    g.addColorStop(0.85, 'rgba(153, 27, 27, 0.25)');
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+    texture = new THREE.CanvasTexture(canvas);
+    return texture;
+  };
+})();
+
 export default function Agent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -190,9 +211,9 @@ export default function Agent() {
               });
             }
 
-            // Update or generate 3D node positions & meshes
-            if (tickData.nodes && tickData.nodes.length > 0) {
-              update3DGraph(tickData.nodes, tickData.edges || []);
+            // Update or generate 3D node positions & meshes (ensures endpoints always have nodes)
+            if ((tickData.nodes && tickData.nodes.length > 0) || (tickData.edges && tickData.edges.length > 0)) {
+              update3DGraph(tickData.nodes || [], tickData.edges || []);
             }
           }
         } catch (err) {
@@ -270,9 +291,16 @@ export default function Agent() {
     controls.minDistance = 3;
     controlsRef.current = controls;
 
-    // LIGHTING: Cosmic stellar ambience
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // LIGHTING: Cosmic stellar ambience (bright and clear from all camera angles)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.6);
     scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x0f172a, 1.1);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.position.set(20, 30, 20);
+    scene.add(dirLight);
 
     const cyanPoint = new THREE.PointLight(0x00e5ff, 4.0, 70);
     cyanPoint.position.set(-18, 14, 12);
@@ -293,7 +321,7 @@ export default function Agent() {
     gridHelper.material.transparent = true;
     scene.add(gridHelper);
 
-    // Rich cosmic star dust field
+    // Rich cosmic star dust field with circular soft-glow texture (no square artifacts)
     const starCount = 1200;
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
@@ -316,11 +344,13 @@ export default function Agent() {
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
     const starMat = new THREE.PointsMaterial({
-      size: 0.12,
+      size: 0.55,
+      map: getGalacticCoreTexture(),
       vertexColors: true,
       transparent: true,
-      opacity: 0.5,
-      blending: THREE.AdditiveBlending
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
     });
     const starMesh = new THREE.Points(starGeo, starMat);
     scene.add(starMesh);
@@ -451,9 +481,9 @@ export default function Agent() {
     if (!simulationConfig || !sceneRef.current) return;
     if (nodeEntriesRef.current.size === 0) {
       const cfg = simulationConfig;
-      const numNodes = Math.max(4, Math.min(50, cfg.numAgents || cfg.totalNodes || 10));
-      const byzRatio = cfg.byzantineRatio || 0.2; // default to 20% byzantine if not specified so both galaxies & meteoroids show
-      const byzCount = Math.max(1, Math.round(numNodes * byzRatio));
+      const numNodes = Math.max(4, Math.min(50, cfg.nodeCount || cfg.numAgents || cfg.totalNodes || 10));
+      const byzRatio = typeof cfg.byzantineRatio === 'number' ? cfg.byzantineRatio : (cfg.byzantineBehaviorEnabled ? 0.2 : 0.0);
+      const byzCount = Math.round(numNodes * byzRatio);
 
       const initNodes = [];
       for (let i = 0; i < numNodes; i++) {
@@ -483,7 +513,7 @@ export default function Agent() {
     }
   }, [simulationConfig]);
 
-  // --- 4. PROCEDURAL GALAXY MESH BUILDER (TASK 1B) ---
+  // --- 4. PROCEDURAL GALAXY MESH BUILDER (TASK 1B & CORE GLOW UPGRADE) ---
   const createGalaxyObject = useCallback((node, isProposer, isInactive) => {
     const group = new THREE.Group();
 
@@ -492,10 +522,14 @@ export default function Agent() {
     const tiltZ = (Math.random() - 0.5) * 0.8;
     group.rotation.set(tiltX, 0, tiltZ);
 
-    const particleCount = isProposer ? 280 : (isInactive ? 100 : 200);
+    const particleCount = isProposer ? 320 : (isInactive ? 120 : 220);
     const arms = isProposer ? 3 : 2;
-    const scaleFactor = 1.0 + Math.min(0.5, (node.stake || 100) / 2500);
-    const radius = (isProposer ? 1.4 : 1.1) * scaleFactor;
+
+    // Safe scaling formula to guarantee visibility under PoW / high Gini
+    const rawVal = Number(node?.stake ?? node?.balance ?? node?.hashPower ?? 100);
+    const rawScale = Number.isFinite(rawVal) && rawVal > 0 ? 1.0 + (rawVal / 2500) : 1.0;
+    const safeScale = Number.isFinite(rawScale) ? Math.max(0.95, Math.min(1.65, rawScale)) : 1.0;
+    const radius = (isProposer ? 1.4 : 1.1) * safeScale;
 
     const geo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
@@ -520,24 +554,24 @@ export default function Agent() {
       if (isProposer) {
         // Golden Quasar: White core -> Gold -> Bright Amber -> Orange
         const c1 = new THREE.Color(0xffffff);
-        const c2 = new THREE.Color(0xffd700);
+        const c2 = new THREE.Color(0xfbbf24);
         const c3 = new THREE.Color(0xf59e0b);
         const finalColor = distRatio < 0.3 ? c1.lerp(c2, distRatio / 0.3) : c2.lerp(c3, (distRatio - 0.3) / 0.7);
         colors[i * 3] = finalColor.r;
         colors[i * 3 + 1] = finalColor.g;
         colors[i * 3 + 2] = finalColor.b;
       } else if (isInactive) {
-        // Dormant Nebula: Cool Slate Grey -> Dark Steel
-        const c1 = new THREE.Color(0x94a3b8);
-        const c2 = new THREE.Color(0x475569);
+        // Inactive / Offline Node: cool silver-lavender / slate-blue
+        const c1 = new THREE.Color(0xcbd5e1);
+        const c2 = new THREE.Color(0x94a3b8);
         const finalColor = c1.lerp(c2, distRatio);
         colors[i * 3] = finalColor.r;
         colors[i * 3 + 1] = finalColor.g;
         colors[i * 3 + 2] = finalColor.b;
       } else {
-        // Honest Galaxy: Hot White/Cyan Core -> Electric Cyan -> Cosmic Violet
+        // Honest Galaxy: Hot White/Cyan Core -> Electric Ice-Cyan -> Cosmic Violet
         const c1 = new THREE.Color(0xffffff);
-        const c2 = new THREE.Color(0x00e5ff);
+        const c2 = new THREE.Color(0x38bdf8);
         const c3 = new THREE.Color(0x818cf8);
         const finalColor = distRatio < 0.25 ? c1.lerp(c2, distRatio / 0.25) : c2.lerp(c3, (distRatio - 0.25) / 0.75);
         colors[i * 3] = finalColor.r;
@@ -550,34 +584,53 @@ export default function Agent() {
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const pMat = new THREE.PointsMaterial({
-      size: isProposer ? 0.14 : (isInactive ? 0.08 : 0.11),
+      size: isProposer ? 0.14 : (isInactive ? 0.10 : 0.12),
       vertexColors: true,
       transparent: true,
-      opacity: isInactive ? 0.35 : 0.88,
+      opacity: isInactive ? 0.75 : 0.92, // Visible dim spiral arms for inactive >= 0.75
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     const galaxyPoints = new THREE.Points(geo, pMat);
     group.add(galaxyPoints);
 
-    // Glowing Galactic Core Sprite
+    // Glowing Solid Core Mesh (CRITICAL: prevents edge-on disappearing, radius >= 0.50)
+    const coreRadius = Math.max(0.50, (isProposer ? 0.60 : (isInactive ? 0.50 : 0.52)) * safeScale);
+    const coreGeo = new THREE.SphereGeometry(coreRadius, 16, 16);
+    let coreColor = 0x38bdf8;
+    let coreOpacity = 0.98;
+    if (isProposer) {
+      coreColor = 0xfbbf24; // Bright golden core
+    } else if (isInactive) {
+      coreColor = 0xcbd5e1; // Bright cool silver-lavender
+      coreOpacity = 0.78;
+    }
+    const solidCoreMat = new THREE.MeshBasicMaterial({
+      color: coreColor,
+      transparent: true,
+      opacity: coreOpacity
+    });
+    const solidCoreMesh = new THREE.Mesh(coreGeo, solidCoreMat);
+    group.add(solidCoreMesh);
+
+    // Soft Radial Glow Sprite
     const coreMat = new THREE.SpriteMaterial({
       map: isProposer ? getQuasarCoreTexture() : (isInactive ? getDormantCoreTexture() : getGalacticCoreTexture()),
       blending: THREE.AdditiveBlending,
       transparent: true,
-      opacity: isInactive ? 0.4 : 0.95
+      opacity: isInactive ? 0.75 : 0.98
     });
     const coreSprite = new THREE.Sprite(coreMat);
-    const spriteSize = (isProposer ? 1.6 : (isInactive ? 0.7 : 1.1)) * scaleFactor;
+    const spriteSize = (isProposer ? 1.8 : (isInactive ? 0.9 : 1.25)) * safeScale;
     coreSprite.scale.set(spriteSize, spriteSize, 1);
     group.add(coreSprite);
 
     // Current Slot Proposer: Expanding Golden Shockwave Pulse Ring
     let pulseRing = null;
     if (isProposer) {
-      const ringGeo = new THREE.RingGeometry(0.85, 1.1, 32);
+      const ringGeo = new THREE.RingGeometry(0.85, 1.15, 32);
       const ringMat = new THREE.MeshBasicMaterial({
-        color: 0xffd700,
+        color: 0xfbbf24,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.85,
@@ -588,15 +641,26 @@ export default function Agent() {
       group.add(pulseRing);
     }
 
-    return { group, galaxyPoints, coreSprite, pulseRing, spinSpeed: isProposer ? 0.9 : (isInactive ? 0.12 : 0.5) };
+    return { group, galaxyPoints, solidCoreMesh, coreSprite, pulseRing, spinSpeed: isProposer ? 0.9 : (isInactive ? 0.15 : 0.5) };
   }, []);
 
-  // --- 5. PROCEDURAL CRAGGY METEOROID / ASTEROID BUILDER (TASK 1B) ---
-  const createAsteroidObject = useCallback(() => {
+  // --- 5. PROCEDURAL CRAGGY METEOROID / ASTEROID BUILDER (TASK 1B & HIGH-CONTRAST BYZANTINE) ---
+  const createAsteroidObject = useCallback((node) => {
     const group = new THREE.Group();
 
+    // Safe scaling factor to guarantee visibility
+    const rawVal = Number(node?.stake ?? node?.balance ?? node?.hashPower ?? 100);
+    const rawScale = Number.isFinite(rawVal) && rawVal > 0 ? 1.0 + (rawVal / 2500) : 1.0;
+    const safeScale = Number.isFinite(rawScale) ? Math.max(0.95, Math.min(1.65, rawScale)) : 1.0;
+
+    // Glowing unlit core sphere (radius >= 0.50, prevents edge-on disappearing)
+    const coreGeo = new THREE.SphereGeometry(Math.max(0.50, 0.52 * safeScale), 16, 16);
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xff1744, transparent: true, opacity: 0.88 });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    group.add(coreMesh);
+
     // Displaced rocky icosahedron geometry
-    const geo = new THREE.IcosahedronGeometry(0.58, 2);
+    const geo = new THREE.IcosahedronGeometry(0.60 * safeScale, 2);
     const posAttr = geo.attributes.position;
     for (let i = 0; i < posAttr.count; i++) {
       const vx = posAttr.getX(i);
@@ -617,13 +681,13 @@ export default function Agent() {
     }
     geo.computeVertexNormals();
 
-    // Dark volcanic craggy rock with glowing red emissive
+    // Dark volcanic craggy rock with glowing molten crimson-orange emissive material
     const rockMat = new THREE.MeshStandardMaterial({
-      color: 0x180b0f,
-      roughness: 0.85,
-      metalness: 0.35,
-      emissive: 0x991b1b,
-      emissiveIntensity: 0.75,
+      color: 0x2d0d15,
+      roughness: 0.65,
+      metalness: 0.4,
+      emissive: 0xff2233,
+      emissiveIntensity: 0.95,
       flatShading: true
     });
     const asteroidMesh = new THREE.Mesh(geo, rockMat);
@@ -631,22 +695,34 @@ export default function Agent() {
 
     // Molten lava crack wireframe overlay
     const crackMat = new THREE.MeshBasicMaterial({
-      color: 0xff3b30,
+      color: 0xff5533,
       wireframe: true,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.75,
       blending: THREE.AdditiveBlending
     });
     const crackMesh = new THREE.Mesh(geo.clone(), crackMat);
     crackMesh.scale.set(1.02, 1.02, 1.02);
     asteroidMesh.add(crackMesh);
 
+    // Bright crimson glow sprite/aura so it is unmistakably visible against black space
+    const auraMat = new THREE.SpriteMaterial({
+      map: getByzantineCoreTexture(),
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.85
+    });
+    const auraSprite = new THREE.Sprite(auraMat);
+    const auraSize = 1.45 * safeScale;
+    auraSprite.scale.set(auraSize, auraSize, 1);
+    group.add(auraSprite);
+
     // Surrounding floating volcanic embers
     const emberCount = 36;
     const emberGeo = new THREE.BufferGeometry();
     const emberPos = new Float32Array(emberCount * 3);
     for (let i = 0; i < emberCount; i++) {
-      const r = 0.8 + Math.random() * 0.5;
+      const r = (0.8 + Math.random() * 0.5) * safeScale;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI;
       emberPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
@@ -655,7 +731,7 @@ export default function Agent() {
     }
     emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
     const emberMat = new THREE.PointsMaterial({
-      color: 0xff5500,
+      color: 0xff4400,
       size: 0.08,
       transparent: true,
       opacity: 0.85,
@@ -664,60 +740,108 @@ export default function Agent() {
     const embersPoints = new THREE.Points(emberGeo, emberMat);
     group.add(embersPoints);
 
-    return { group, asteroidMesh, embersPoints };
+    return { group, asteroidMesh, auraSprite, embersPoints };
   }, []);
 
-  // --- 6. 3D GRAPH BUILDER & TOPOLOGY POSITIONING ---
-  const update3DGraph = useCallback((nodes, edges) => {
+  // --- 6. 3D GRAPH BUILDER & TOPOLOGY POSITIONING (ZERO EMPTY LINE ENDS) ---
+  const update3DGraph = useCallback((rawNodes = [], rawEdges = []) => {
     const scene = sceneRef.current;
     if (!scene) return;
 
-    const count = nodes.length;
     const positions = nodePositionsRef.current;
     const nodeEntries = nodeEntriesRef.current;
     const edgeEntries = edgeEntriesRef.current;
 
-    // Check if network partition is active
-    const hasPartition = nodes.some((n) => n.partitionId > 0);
+    // 1. Gather UNION of all node IDs from nodes, edges (from/to, source/target), and previous entries
+    const allNodeIds = new Set();
+    const nodeMap = new Map();
 
-    // Compute or maintain 3D node positions
-    nodes.forEach((node, i) => {
-      if (!positions.has(node.id)) {
+    (rawNodes || []).forEach((n) => {
+      if (n && n.id) {
+        allNodeIds.add(n.id);
+        nodeMap.set(n.id, n);
+      }
+    });
+
+    (rawEdges || []).forEach((e) => {
+      const f = e.from || e.source;
+      const t = e.to || e.target;
+      if (f) allNodeIds.add(f);
+      if (t) allNodeIds.add(t);
+    });
+
+    // Keep any previously registered nodes in the union
+    nodeEntries.forEach((_, id) => allNodeIds.add(id));
+    positions.forEach((_, id) => allNodeIds.add(id));
+
+    if (allNodeIds.size === 0) return;
+
+    // Deterministic natural sort (Agent-0, Agent-1, ..., Agent-9)
+    const sortedNodeIds = Array.from(allNodeIds).sort((a, b) => 
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+    );
+    const totalCount = sortedNodeIds.length;
+
+    // Check if network partition is active
+    const hasPartition = (rawNodes || []).some((n) => (n.partitionId || 0) > 0);
+
+    // 2. Compute or maintain 3D node positions (Guaranteed position for every single node ID)
+    sortedNodeIds.forEach((nodeId, i) => {
+      if (!positions.has(nodeId)) {
+        const node = nodeMap.get(nodeId);
         let x, y, z;
         if (hasPartition) {
-          // Visually separate partition clusters across x-axis
-          const isGroupB = node.partitionId === 1;
+          const isGroupB = (node?.partitionId || 0) === 1;
           const clusterCenterX = isGroupB ? 7.0 : -7.0;
-          const angle = (i / Math.max(1, count / 2)) * Math.PI * 2;
+          const angle = (i / Math.max(1, totalCount / 2)) * Math.PI * 2;
           const radius = 3.5 + (i % 3) * 0.6;
           x = clusterCenterX + Math.cos(angle) * radius;
           y = (Math.sin(angle) * radius * 0.7) + (Math.sin(i) * 1.5);
           z = (Math.sin(angle * 1.5) * 2.5) + (Math.cos(i) * 1.5);
         } else {
           // Elegant spherical Fibonacci spiral distribution
-          const phi = Math.acos(1 - 2 * (i + 0.5) / count);
+          const phi = Math.acos(1 - 2 * (i + 0.5) / totalCount);
           const theta = Math.PI * (1 + 5 ** 0.5) * (i + 0.5);
-          const r = 7.5;
+          const r = 8.0;
           x = r * Math.sin(phi) * Math.cos(theta);
           y = r * Math.sin(phi) * Math.sin(theta);
           z = r * Math.cos(phi);
         }
-        positions.set(node.id, new THREE.Vector3(x, y, z));
+        positions.set(nodeId, new THREE.Vector3(x, y, z));
       }
     });
 
-    // BUILD OR UPDATE 3D NODES (Galaxies & Meteoroids)
-    nodes.forEach((node) => {
-      const pos = positions.get(node.id);
-      let entry = nodeEntries.get(node.id);
+    // 3. BUILD OR UPDATE 3D NODES (Guaranteed visible mesh for every node ID)
+    sortedNodeIds.forEach((nodeId) => {
+      let nodeData = nodeMap.get(nodeId);
+      if (!nodeData) {
+        const prevEntry = nodeEntries.get(nodeId);
+        if (prevEntry?.data) {
+          nodeData = prevEntry.data;
+        } else {
+          nodeData = {
+            id: nodeId,
+            role: 'HONEST',
+            isProposer: false,
+            stake: 100,
+            hashPower: 50,
+            headBlockId: 'GENESIS',
+            mempoolSize: 0,
+            partitionId: 0,
+            peers: []
+          };
+        }
+      }
 
-      const isByzantine = node.role === 'BYZANTINE';
-      const isProposer = Boolean(node.isProposer);
-      const isInactive = node.role === 'INACTIVE';
+      const pos = positions.get(nodeId);
+      let entry = nodeEntries.get(nodeId);
+
+      const isByzantine = nodeData.role === 'BYZANTINE';
+      const isProposer = Boolean(nodeData.isProposer);
+      const isInactive = nodeData.role === 'INACTIVE';
       const currentVisualType = isByzantine ? 'ASTEROID' : (isProposer ? 'QUASAR' : (isInactive ? 'DORMANT' : 'GALAXY'));
 
       if (!entry || entry.visualType !== currentVisualType) {
-        // Clean old object if visual type changed (e.g. node becomes proposer or byzantine)
         if (entry) {
           scene.remove(entry.group);
           if (entry.group) {
@@ -733,52 +857,58 @@ export default function Agent() {
 
         let visualObj;
         if (isByzantine) {
-          visualObj = createAsteroidObject();
+          visualObj = createAsteroidObject(nodeData);
         } else {
-          visualObj = createGalaxyObject(node, isProposer, isInactive);
+          visualObj = createGalaxyObject(nodeData, isProposer, isInactive);
         }
 
         // Add invisible hit-sphere for reliable raycaster click-to-inspect
-        const hitGeo = new THREE.SphereGeometry(1.2, 10, 10);
+        const hitGeo = new THREE.SphereGeometry(1.3, 10, 10);
         const hitMat = new THREE.MeshBasicMaterial({ visible: false });
         const hitMesh = new THREE.Mesh(hitGeo, hitMat);
-        hitMesh.userData = { nodeId: node.id };
+        hitMesh.userData = { nodeId };
         visualObj.group.add(hitMesh);
 
         visualObj.group.position.copy(pos);
+        visualObj.group.visible = true;
         scene.add(visualObj.group);
 
         entry = {
           ...visualObj,
           hitMesh,
-          data: node,
+          data: nodeData,
           visualType: currentVisualType,
           isAttacking: false
         };
-        nodeEntries.set(node.id, entry);
+        nodeEntries.set(nodeId, entry);
       } else {
-        // Update state metadata
-        entry.data = node;
+        entry.data = nodeData;
+        if (!entry.group.parent) {
+          scene.add(entry.group);
+        }
+        entry.group.visible = true;
+        entry.group.position.copy(pos);
       }
     });
 
-    // BUILD OR UPDATE THICK P2P CYLINDER CONNECTIONS (TASK 1A)
-    if (edges && edges.length > 0) {
+    // 4. BUILD OR UPDATE THICK P2P CYLINDER CONNECTIONS (Coordinates match exact node Vector3)
+    const edgesToRender = rawEdges || [];
+    if (edgesToRender.length > 0) {
       const currentEdgeKeys = new Set();
 
-      edges.forEach((edge) => {
-        const p1 = positions.get(edge.from);
-        const p2 = positions.get(edge.to);
+      edgesToRender.forEach((edge) => {
+        const fromId = edge.from || edge.source;
+        const toId = edge.to || edge.target;
+        if (!fromId || !toId) return;
+
+        const p1 = positions.get(fromId);
+        const p2 = positions.get(toId);
         if (!p1 || !p2) return;
 
-        // Normalized key so bidirectional edges share a single cylinder
-        const edgeKey = edge.from < edge.to ? `${edge.from}__${edge.to}` : `${edge.to}__${edge.from}`;
+        const edgeKey = fromId < toId ? `${fromId}__${toId}` : `${toId}__${fromId}`;
         currentEdgeKeys.add(edgeKey);
 
-        const mid = p1.clone().add(p2).multiplyScalar(0.5);
         const dist = p1.distanceTo(p2);
-        const dir = p2.clone().sub(p1).normalize();
-
         let edgeEntry = edgeEntries.get(edgeKey);
         if (!edgeEntry) {
           // Real geometric thickness: Cylinder with radius 0.045
@@ -812,8 +942,8 @@ export default function Agent() {
             baseEmissive,
             flashEmissive: new THREE.Color(0x0ea5e9),
             flashTimer: 0,
-            from: edge.from,
-            to: edge.to
+            from: fromId,
+            to: toId
           };
           edgeEntries.set(edgeKey, edgeEntry);
         } else {
