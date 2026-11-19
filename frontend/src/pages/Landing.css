@@ -780,6 +780,22 @@
   background: rgba(0, 229, 255, 0.06);
 }
 
+.member-role-badge.leader {
+  border: 1px solid rgba(0, 255, 200, 0.5);
+  color: #00ffc8;
+  background: rgba(0, 255, 200, 0.08);
+  box-shadow: 0 0 6px rgba(0, 255, 200, 0.2);
+}
+
+.team-actions-card {
+  transition: all 0.3s ease;
+}
+
+.team-actions-card:hover {
+  border-color: rgba(0, 229, 255, 0.5) !important;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+}
+
 .member-role-title {
   font-family: var(--font-mono);
   font-size: 9.5px;

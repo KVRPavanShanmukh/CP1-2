@@ -839,37 +839,33 @@ export default function Landing() {
                       <span className="summary-chip">STATISTICAL RESEARCH ENGINE</span>
                     </div>
                   </div>
-
-                  {/* CREATOR SPOTLIGHT & NEXUS ACTIONS */}
-                  <div style={{ marginTop: '18px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <button
-                      className="landing-btn accent-cyan"
-                      onClick={() => setCreatorSpotlightOpen(true)}
-                    >
-                      MEET LEAD DEVELOPER ↗
-                    </button>
-                    <button
-                      className="landing-btn"
-                      onClick={() => setNexusModalOpen(true)}
-                    >
-                      NEXUS DIRECTORY ↗
-                    </button>
-                  </div>
                 </div>
 
-                {/* RIGHT SIDE: ALL 5 PROJECT MEMBERS */}
+                {/* RIGHT SIDE: 2-COLUMN TEAM ROSTER + QUICK ACTIONS PANEL */}
                 <div className="team-right-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '72vh', overflowY: 'auto', paddingRight: '12px' }}>
                   <div className="team-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
 
-                    {/* MEMBER 1: K.V.R. SAI PAVAN SHANMUKH (LEAD ARCHITECT) */}
+                    {/* CARD 1: JUPALLI PRAVALLIKA (OFFICIAL TEAM LEADER) */}
+                    <div className="team-member-card">
+                      <div className="member-header">
+                        <div className="member-name">Jupalli Pravallika</div>
+                        <span className="member-role-badge leader">TEAM LEADER</span>
+                      </div>
+                      <div className="member-role-title">Team Leader</div>
+                      <div className="member-contributions">
+                        Project leadership, team coordination, literature survey, research documentation, and consensus algorithm comparison summary.
+                      </div>
+                    </div>
+
+                    {/* CARD 2: K.V.R. SAI PAVAN SHANMUKH (FEATURED CORE BACKEND & LEAD ARCHITECT) */}
                     <div className="team-member-card lead-highlight">
                       <div className="member-header">
                         <div className="member-name">K.V.R. Sai Pavan Shanmukh</div>
-                        <span className="member-role-badge lead">LEAD ARCHITECT</span>
+                        <span className="member-role-badge lead">CORE BACKEND & LEAD ARCHITECT</span>
                       </div>
-                      <div className="member-role-title">Lead Developer & Full-Stack System Architect</div>
+                      <div className="member-role-title">Lead Backend & Full-Stack System Architect</div>
                       <div className="member-contributions">
-                        Architected and built the complete platform end-to-end — including the entire React 19 + Vite frontend, the Three.js 3D Cosmic Agent Visualization, the full Java Spring Boot backend & Agent-Based Simulation Engine (Phases 1–13), all 5 consensus algorithms and network topologies, RabbitMQ + WebSocket real-time streaming, statistical experiment framework, and full-stack integration.
+                        Engineered the core Java Spring Boot backend & Agent-Based Simulation Engine (Phases 1–13 empirical experiments), all 5 consensus mechanisms (PoW, PoS, DPoS, PoA, PoL), P2P network topologies, RabbitMQ + WebSocket telemetry, and statistical research engine — alongside building the React 19 + Vite frontend, Three.js 3D Cosmic Agent Visualizer, and complete full-stack integration.
                       </div>
                       <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                         <button
@@ -891,19 +887,7 @@ export default function Landing() {
                       </div>
                     </div>
 
-                    {/* MEMBER 2: JUPALLI PRAVALLIKA */}
-                    <div className="team-member-card">
-                      <div className="member-header">
-                        <div className="member-name">Jupalli Pravallika</div>
-                        <span className="member-role-badge contributor">TEAM MEMBER</span>
-                      </div>
-                      <div className="member-role-title">Team Member</div>
-                      <div className="member-contributions">
-                        Literature survey, research documentation, and consensus algorithm comparison.
-                      </div>
-                    </div>
-
-                    {/* MEMBER 3: JANGA SATHVIK REDDY */}
+                    {/* CARD 3: JANGA SATHVIK REDDY */}
                     <div className="team-member-card">
                       <div className="member-header">
                         <div className="member-name">Janga Sathvik Reddy</div>
@@ -915,7 +899,7 @@ export default function Landing() {
                       </div>
                     </div>
 
-                    {/* MEMBER 4: V SAI GANESH */}
+                    {/* CARD 4: V SAI GANESH */}
                     <div className="team-member-card">
                       <div className="member-header">
                         <div className="member-name">V Sai Ganesh</div>
@@ -927,7 +911,7 @@ export default function Landing() {
                       </div>
                     </div>
 
-                    {/* MEMBER 5: JALADI ROHAN KUMAR */}
+                    {/* CARD 5: JALADI ROHAN KUMAR */}
                     <div className="team-member-card">
                       <div className="member-header">
                         <div className="member-name">Jaladi Rohan Kumar</div>
@@ -936,6 +920,31 @@ export default function Landing() {
                       <div className="member-role-title">Testing & Quality Assurance</div>
                       <div className="member-contributions">
                         Simulation testing execution, scenario verification, and metric output validation.
+                      </div>
+                    </div>
+
+                    {/* CARD 6: RELOCATED ACTION PANEL (MEET LEAD DEVELOPER & NEXUS DIRECTORY) */}
+                    <div className="team-member-card team-actions-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '12px', position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'rgba(6, 12, 20, 0.75)', border: '1px solid rgba(0, 229, 255, 0.25)', padding: '16px 14px' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '1.5px', color: 'rgba(0, 229, 255, 0.85)', textTransform: 'uppercase' }}>
+                        // QUICK ACCESS & SPOTLIGHT
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '240px' }}>
+                        <button
+                          type="button"
+                          className="landing-btn accent-cyan"
+                          style={{ width: '100%', justifyContent: 'center', fontSize: '10px', padding: '9px 12px' }}
+                          onClick={() => setCreatorSpotlightOpen(true)}
+                        >
+                          MEET LEAD DEVELOPER ↗
+                        </button>
+                        <button
+                          type="button"
+                          className="landing-btn"
+                          style={{ width: '100%', justifyContent: 'center', fontSize: '10px', padding: '9px 12px' }}
+                          onClick={() => setNexusModalOpen(true)}
+                        >
+                          NEXUS DIRECTORY ↗
+                        </button>
                       </div>
                     </div>
 

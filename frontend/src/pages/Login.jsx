@@ -178,7 +178,7 @@ const Login = () => {
             setSuccessMessage('CREDENTIALS VERIFIED');
             setTimeout(() => {
                 setSuccessMessage('ACCESS GRANTED');
-                setTimeout(() => navigate('/dashboard'), 800);
+                setTimeout(() => navigate('/landing'), 800);
             }, 1000);
         }
       } else if (response.status === 429) {
