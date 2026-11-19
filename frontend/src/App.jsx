@@ -12,6 +12,7 @@ import Learning from './pages/Learning';
 import Manual from './pages/Manual';
 import Abstract from './pages/Abstract';
 import Agent from './pages/Agent';
+import Architecture from './pages/Architecture';
 
 function AppContent() {
   return (
@@ -27,6 +28,7 @@ function AppContent() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/agent" element={<Agent />} />
+        <Route path="/architecture" element={<Architecture />} />
         <Route path="/learning" element={<Learning />} />
         <Route path="/manual" element={<Manual />} />
         <Route path="/abstract" element={<Abstract />} />

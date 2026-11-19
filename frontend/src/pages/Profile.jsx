@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getStoredUser, teamApi, friendApi } from '../services/api';
+import { getStoredUser } from '../services/api';
 import SimulationCursor from '../components/SimulationCursor';
-import NexusTeamModal from '../components/NexusTeamModal';
 import '../components/NexusTeam.css';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getStoredUser());
-  const [teamData, setTeamData] = useState(null);
-  const [friendsCount, setFriendsCount] = useState(0);
-  const [nexusModalOpen, setNexusModalOpen] = useState(false);
 
   useEffect(() => {
     const u = getStoredUser();
@@ -20,9 +16,6 @@ export default function Profile() {
       navigate('/login', { replace: true });
       return;
     }
-
-    teamApi.getMyTeam().then(res => setTeamData(res)).catch(() => {});
-    friendApi.getFriends().then(res => setFriendsCount(res?.length || 0)).catch(() => {});
   }, [navigate]);
 
   if (!user) return null;
@@ -87,25 +80,25 @@ export default function Profile() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', marginBottom: '28px' }}>
               <div>
                 <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono, monospace)', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>
-                  AFFILIATED TEAM
+                  RESEARCH PLATFORM
                 </div>
                 <div style={{ fontSize: '16px', fontWeight: 500, color: '#ffffff', marginTop: '6px' }}>
-                  {teamData?.hasTeam ? teamData.team.name : 'NO AFFILIATION'}
+                  CHAIN55 CONSENSUS ENGINE
                 </div>
                 <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono, monospace)', color: '#00bfa5', marginTop: '4px' }}>
-                  {teamData?.hasTeam ? (teamData.isLeader ? 'ROLE: TEAM LEADER' : 'ROLE: MEMBER') : 'Join or create a team'}
+                  KL University • Batch 73
                 </div>
               </div>
 
               <div>
                 <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono, monospace)', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>
-                  CONNECTED FRIENDS
+                  RESEARCH PARTICIPATION
                 </div>
                 <div style={{ fontSize: '16px', fontWeight: 500, color: '#ffffff', marginTop: '6px' }}>
-                  {friendsCount} ACTIVE CONNECTIONS
+                  ACTIVE SIMULATION RESEARCH
                 </div>
-                <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono, monospace)', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
-                  Nexus network discovery
+                <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono, monospace)', color: '#00e5ff', marginTop: '4px' }}>
+                  CHAIN55 Consensus Laboratory
                 </div>
               </div>
 
@@ -123,9 +116,9 @@ export default function Profile() {
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '24px' }}>
               <button
                 className="nexus-btn-primary"
-                onClick={() => setNexusModalOpen(true)}
+                onClick={() => navigate('/landing?section=team', { state: { section: 4 } })}
               >
-                NEXUS TEAM PORTAL ↗
+                OUR PROJECT TEAM ↗
               </button>
               <button
                 className="nexus-btn-secondary"
@@ -143,12 +136,6 @@ export default function Profile() {
           </div>
         </motion.div>
       </div>
-
-      <NexusTeamModal
-        isOpen={nexusModalOpen}
-        onClose={() => setNexusModalOpen(false)}
-        onTeamUpdated={(res) => setTeamData(res)}
-      />
     </div>
   );
 }

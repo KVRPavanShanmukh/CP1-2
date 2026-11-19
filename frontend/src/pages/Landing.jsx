@@ -5,9 +5,7 @@ import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
-import NexusTeamModal from '../components/NexusTeamModal';
-import { teamApi, userApi, getStoredUser } from '../services/api';
-import '../components/NexusTeam.css';
+import { getStoredUser } from '../services/api';
 import './Landing.css';
 
 // ═══════════════════════════════════════════════════════════════
@@ -446,183 +444,24 @@ export default function Landing() {
   const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
   const totalSections = 7;
 
-  // Lead Creator Spotlight States (Task 3)
+  // Lead Creator Spotlight States
   const [creatorSpotlightOpen, setCreatorSpotlightOpen] = useState(false);
   const [portfolioCopied, setPortfolioCopied] = useState(false);
-
-  // Nexus Team Integration States
   const [currentUser, setCurrentUser] = useState(getStoredUser());
-  const [teamData, setTeamData] = useState(null);
-  const [nexusModalOpen, setNexusModalOpen] = useState(false);
-  const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
-  const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false);
-  const [createTeamName, setCreateTeamName] = useState('');
-  const [addMemberInput, setAddMemberInput] = useState('');
-  const [validatedUser, setValidatedUser] = useState(null);
-  const [validating, setValidating] = useState(false);
-  const [isAddingMember, setIsAddingMember] = useState(false);
-  const [addMemberModalError, setAddMemberModalError] = useState(null);
-  const [actionAlert, setActionAlert] = useState(null);
-  const [confirmDialog, setConfirmDialog] = useState(null);
-
-  // Registered users state for member selection
-  const [registeredUsers, setRegisteredUsers] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-
-  const showActionAlert = (msg, type = 'success') => {
-    setActionAlert({ msg, type });
-    setTimeout(() => setActionAlert(null), 4000);
-  };
-
-  const loadTeamData = async () => {
-    try {
-      const res = await teamApi.getMyTeam();
-      setTeamData(res);
-    } catch (e) {
-      // offline / unauthenticated
-    }
-  };
-
-  const loadRegisteredUsers = async () => {
-    setLoadingUsers(true);
-    try {
-      const users = await userApi.getUsers();
-      setRegisteredUsers(users || []);
-    } catch (e) {
-      console.error('Failed to load registered users', e);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
 
   useEffect(() => {
     setCurrentUser(getStoredUser());
-    loadTeamData();
-    loadRegisteredUsers();
   }, []);
 
   useEffect(() => {
     if (location.state?.section !== undefined) {
       setActiveSection(location.state.section);
     }
-    if (location.state?.openManage) {
-      setNexusModalOpen(true);
+    const params = new URLSearchParams(location.search);
+    if (params.get('section') === 'team' || location.hash === '#project-team') {
+      setActiveSection(4);
     }
-  }, [location.state]);
-
-  const handleValidateAddMember = async (e) => {
-    e?.preventDefault();
-    const query = addMemberInput.trim();
-    if (!query) {
-      setAddMemberModalError('User ID or username cannot be empty.');
-      return;
-    }
-    setValidating(true);
-    setValidatedUser(null);
-    setAddMemberModalError(null);
-    try {
-      const res = await teamApi.validateUser(query);
-      if (res.exists) {
-        setValidatedUser(res);
-      } else {
-        setAddMemberModalError(res.message || 'No registered user found with this User ID. Please check the ID and try again.');
-      }
-    } catch (err) {
-      setAddMemberModalError(err.message || 'Failed to query database for user validation.');
-    } finally {
-      setValidating(false);
-    }
-  };
-
-  const handleConfirmAddMember = async () => {
-    if (!validatedUser || !teamData?.team) return;
-    setIsAddingMember(true);
-    setAddMemberModalError(null);
-    try {
-      const targetIdentifier = validatedUser.user.id || validatedUser.user.userId || validatedUser.user.uid;
-      await teamApi.addMember(teamData.team.id, targetIdentifier);
-      showActionAlert(`Team member ${validatedUser.user.username} added successfully.`, 'success');
-      setAddMemberInput('');
-      setValidatedUser(null);
-      setAddMemberModalError(null);
-      setAddMemberModalOpen(false);
-      await loadTeamData();
-      await loadRegisteredUsers();
-    } catch (err) {
-      setAddMemberModalError(err.message || 'Failed to add member to team.');
-      showActionAlert(err.message, 'error');
-    } finally {
-      setIsAddingMember(false);
-    }
-  };
-
-  const handleDirectAddMember = async (targetUser) => {
-    if (!teamData?.team) return;
-    setIsAddingMember(true);
-    setAddMemberModalError(null);
-    try {
-      const targetIdentifier = targetUser.id || targetUser.userId || targetUser.uid;
-      await teamApi.addMember(teamData.team.id, targetIdentifier);
-      showActionAlert(`Team member ${targetUser.username} added successfully via persistent ID!`, 'success');
-      setAddMemberModalOpen(false);
-      await loadTeamData();
-      await loadRegisteredUsers();
-    } catch (err) {
-      setAddMemberModalError(err.message || 'Failed to add member to team.');
-      showActionAlert(err.message, 'error');
-    } finally {
-      setIsAddingMember(false);
-    }
-  };
-
-
-  const handleCreateTeamDirect = async (name) => {
-    try {
-      const cleanName = (name || '').trim();
-      if (!cleanName) return;
-      await teamApi.createTeam(cleanName, 'Formed via Chain55 Team Portal');
-      showActionAlert(`Team "${cleanName}" created successfully! You are now Team Leader.`, 'success');
-      await loadTeamData();
-    } catch (err) {
-      showActionAlert(err.message, 'error');
-    }
-  };
-
-
-  const handleUpdateMemberRole = (targetUserId, targetUsername, newRole) => {
-    setConfirmDialog({
-      title: 'CONFIRM ROLE CHANGE',
-      message: `Are you sure you want to change ${targetUsername}'s role to ${newRole}?`,
-      onConfirm: async () => {
-        setConfirmDialog(null);
-        try {
-          await teamApi.updateMemberRole(teamData.team.id, targetUserId, newRole);
-          showActionAlert(`Role updated to ${newRole} for ${targetUsername}.`, 'success');
-          await loadTeamData();
-        } catch (err) {
-          showActionAlert(err.message, 'error');
-        }
-      }
-    });
-  };
-
-  const handleRemoveTeamMember = (targetUserId, targetUsername) => {
-    setConfirmDialog({
-      title: 'CONFIRM MEMBER REMOVAL',
-      message: `Are you sure you want to remove ${targetUsername} from the team?`,
-      onConfirm: async () => {
-        setConfirmDialog(null);
-        try {
-          await teamApi.removeMember(teamData.team.id, targetUserId);
-          showActionAlert(`Removed ${targetUsername} from the team.`, 'success');
-          await loadTeamData();
-        } catch (err) {
-          showActionAlert(err.message, 'error');
-        }
-      }
-    });
-  };
+  }, [location.state, location.search, location.hash]);
 
   const sectionAccents = ['#ffffff', '#00e5ff', '#e6e6fa', '#ffaa00', '#00bfa5', '#ffffff', '#ff00ff'];
   const currentAccent = sectionAccents[activeSection];
@@ -810,16 +649,16 @@ export default function Landing() {
                   <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[4].num}</span>
                   <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>RESEARCH & SYSTEM ARCHITECTURE</span>
                   <h1 className="section-title size-medium">PROJECT<br/>TEAM.</h1>
-                  <p className="section-desc">
-                    KL University • Dept. of Computer Science & Information Technology (Batch 73).<br />
-                    <strong style={{ color: '#00e5ff' }}>CHAIN55:</strong> Agent-Based Modelling of Distributed Ledger Participant Behaviour.
+                  <p className="section-desc" style={{ color: '#f1f5f9' }}>
+                    <strong style={{ color: '#ffffff' }}>KL University • Dept. of Computer Science & Information Technology (Batch 73).</strong><br />
+                    <strong style={{ color: '#00e5ff' }}>CHAIN55:</strong> <span style={{ color: '#ffffff' }}>Agent-Based Modelling of Distributed Ledger Participant Behaviour.</span>
                   </p>
 
                   {/* FACULTY MENTOR CARD */}
                   <div className="faculty-mentor-box">
                     <div className="faculty-tag">★ FACULTY GUIDE & RESEARCH MENTOR</div>
-                    <div className="faculty-name">K. Nirmala</div>
-                    <div className="faculty-dept">
+                    <div className="faculty-name" style={{ color: '#ffffff' }}>K. Nirmala</div>
+                    <div className="faculty-dept" style={{ color: '#e2e8f0' }}>
                       Faculty Guide, Dept. of Computer Science & Information Technology, KL University
                     </div>
                   </div>
@@ -827,7 +666,7 @@ export default function Landing() {
                   {/* PROJECT TECHNICAL SUMMARY */}
                   <div className="project-summary-box">
                     <div className="summary-title">TECHNICAL ARCHITECTURE SCOPE</div>
-                    <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.55' }}>
+                    <div style={{ fontSize: '10.5px', color: '#f1f5f9', lineHeight: '1.55' }}>
                       Full-stack Complex Adaptive Systems (CAS) consensus laboratory modelling micro-agent interactions and macro emergent ledger phenomena.
                     </div>
                     <div className="project-summary-chips">
@@ -837,6 +676,17 @@ export default function Landing() {
                       <span className="summary-chip">BYZANTINE ATTACK INJECTION</span>
                       <span className="summary-chip">3D WEBGL VISUALIZER</span>
                       <span className="summary-chip">STATISTICAL RESEARCH ENGINE</span>
+                    </div>
+                    <div style={{ marginTop: '14px' }}>
+                      <a
+                        href="/architecture"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="landing-btn accent-cyan"
+                        style={{ fontSize: '9px', padding: '6px 12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+                      >
+                        TECHNICAL ARCHITECTURE SPEC ↗
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -848,11 +698,11 @@ export default function Landing() {
                     {/* CARD 1: JUPALLI PRAVALLIKA (OFFICIAL TEAM LEADER) */}
                     <div className="team-member-card">
                       <div className="member-header">
-                        <div className="member-name">Jupalli Pravallika</div>
+                        <div className="member-name" style={{ color: '#ffffff' }}>Jupalli Pravallika</div>
                         <span className="member-role-badge leader">TEAM LEADER</span>
                       </div>
                       <div className="member-role-title">Team Leader</div>
-                      <div className="member-contributions">
+                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
                         Project leadership, team coordination, literature survey, research documentation, and consensus algorithm comparison summary.
                       </div>
                     </div>
@@ -860,41 +710,32 @@ export default function Landing() {
                     {/* CARD 2: K.V.R. SAI PAVAN SHANMUKH (FEATURED CORE BACKEND & LEAD ARCHITECT) */}
                     <div className="team-member-card lead-highlight">
                       <div className="member-header">
-                        <div className="member-name">K.V.R. Sai Pavan Shanmukh</div>
+                        <div className="member-name" style={{ color: '#ffffff' }}>K.V.R. Sai Pavan Shanmukh</div>
                         <span className="member-role-badge lead">CORE BACKEND & LEAD ARCHITECT</span>
                       </div>
                       <div className="member-role-title">Lead Backend & Full-Stack System Architect</div>
-                      <div className="member-contributions">
+                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
                         Engineered the core Java Spring Boot backend & Agent-Based Simulation Engine (Phases 1–13 empirical experiments), all 5 consensus mechanisms (PoW, PoS, DPoS, PoA, PoL), P2P network topologies, RabbitMQ + WebSocket telemetry, and statistical research engine — alongside building the React 19 + Vite frontend, Three.js 3D Cosmic Agent Visualizer, and complete full-stack integration.
                       </div>
                       <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                         <button
                           className="action-btn"
-                          style={{ borderColor: '#ffd700', color: '#ffd700', background: 'rgba(255, 215, 0, 0.1)', padding: '5px 10px', fontSize: '9px' }}
+                          style={{ borderColor: '#ffd700', color: '#ffd700', background: 'rgba(255, 215, 0, 0.1)', padding: '6px 14px', fontSize: '10px' }}
                           onClick={() => setCreatorSpotlightOpen(true)}
                         >
                           SPOTLIGHT ↗
                         </button>
-                        <a
-                          href="https://yellow-sea-03eb87200.4.azurestaticapps.net/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="action-btn"
-                          style={{ padding: '5px 10px', fontSize: '9px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
-                        >
-                          PORTFOLIO ↗
-                        </a>
                       </div>
                     </div>
 
                     {/* CARD 3: JANGA SATHVIK REDDY */}
                     <div className="team-member-card">
                       <div className="member-header">
-                        <div className="member-name">Janga Sathvik Reddy</div>
+                        <div className="member-name" style={{ color: '#ffffff' }}>Janga Sathvik Reddy</div>
                         <span className="member-role-badge contributor">DATABASE</span>
                       </div>
                       <div className="member-role-title">Database Management (MongoDB)</div>
-                      <div className="member-contributions">
+                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
                         MongoDB database schema configuration, document collections, and persistent storage management.
                       </div>
                     </div>
@@ -902,11 +743,11 @@ export default function Landing() {
                     {/* CARD 4: V SAI GANESH */}
                     <div className="team-member-card">
                       <div className="member-header">
-                        <div className="member-name">V Sai Ganesh</div>
+                        <div className="member-name" style={{ color: '#ffffff' }}>V Sai Ganesh</div>
                         <span className="member-role-badge contributor">QA / TESTING</span>
                       </div>
                       <div className="member-role-title">Testing & Quality Assurance</div>
-                      <div className="member-contributions">
+                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
                         Test case validation, quality assurance workflows, and consensus scenario verification.
                       </div>
                     </div>
@@ -914,19 +755,19 @@ export default function Landing() {
                     {/* CARD 5: JALADI ROHAN KUMAR */}
                     <div className="team-member-card">
                       <div className="member-header">
-                        <div className="member-name">Jaladi Rohan Kumar</div>
+                        <div className="member-name" style={{ color: '#ffffff' }}>Jaladi Rohan Kumar</div>
                         <span className="member-role-badge contributor">QA / TESTING</span>
                       </div>
                       <div className="member-role-title">Testing & Quality Assurance</div>
-                      <div className="member-contributions">
+                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
                         Simulation testing execution, scenario verification, and metric output validation.
                       </div>
                     </div>
 
-                    {/* CARD 6: RELOCATED ACTION PANEL (MEET LEAD DEVELOPER & NEXUS DIRECTORY) */}
+                    {/* CARD 6: RELOCATED ACTION PANEL (MEET LEAD DEVELOPER & TECHNICAL ARCHITECTURE) */}
                     <div className="team-member-card team-actions-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '12px', position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'rgba(6, 12, 20, 0.75)', border: '1px solid rgba(0, 229, 255, 0.25)', padding: '16px 14px' }}>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '1.5px', color: 'rgba(0, 229, 255, 0.85)', textTransform: 'uppercase' }}>
-                        // QUICK ACCESS & SPOTLIGHT
+                        // QUICK ACCESS & ARCHITECTURE
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '240px' }}>
                         <button
@@ -937,14 +778,15 @@ export default function Landing() {
                         >
                           MEET LEAD DEVELOPER ↗
                         </button>
-                        <button
-                          type="button"
+                        <a
+                          href="/architecture"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="landing-btn"
-                          style={{ width: '100%', justifyContent: 'center', fontSize: '10px', padding: '9px 12px' }}
-                          onClick={() => setNexusModalOpen(true)}
+                          style={{ width: '100%', justifyContent: 'center', fontSize: '10px', padding: '9px 12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
                         >
-                          NEXUS DIRECTORY ↗
-                        </button>
+                          TECHNICAL ARCHITECTURE ↗
+                        </a>
                       </div>
                     </div>
 
@@ -1037,276 +879,6 @@ export default function Landing() {
           </div>
         )}
       </div>
-
-      {/* ADD MEMBER MODAL (LANDING TEAM SECTION) */}
-      {addMemberModalOpen && (
-        <div className="nexus-overlay" onClick={() => setAddMemberModalOpen(false)}>
-          <div className="nexus-modal" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
-            <div className="nexus-header">
-              <div className="nexus-header-left">
-                <span className="nexus-badge">TEAM RECRUITMENT</span>
-                <h3 className="nexus-title">ADD REGISTERED MEMBER</h3>
-              </div>
-              <button className="nexus-close-btn" onClick={() => setAddMemberModalOpen(false)}>✕</button>
-            </div>
-            <div className="nexus-body" style={{ padding: '24px' }}>
-              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', lineHeight: '1.6', marginBottom: '18px' }}>
-                Enter the user's persistent Database ID, UID (e.g. US000002), or username to validate and add them to your team.
-              </p>
-              
-              {addMemberModalError && (
-                <div className="nexus-alert error" style={{ marginBottom: '16px' }}>
-                  <span>⚠️ {addMemberModalError}</span>
-                  <button type="button" style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }} onClick={() => setAddMemberModalError(null)}>✕</button>
-                </div>
-              )}
-
-              <form onSubmit={handleValidateAddMember} className="cyber-search-box">
-                <input
-                  type="text"
-                  className="cyber-search-input"
-                  placeholder="DATABASE USER ID, UID, OR USERNAME"
-                  value={addMemberInput}
-                  onChange={(e) => {
-                    setAddMemberInput(e.target.value);
-                    if (addMemberModalError) setAddMemberModalError(null);
-                  }}
-                  autoFocus
-                />
-                <button type="submit" className="nexus-btn-primary" disabled={validating || isAddingMember}>
-                  {validating ? 'CHECKING...' : 'VALIDATE ↗'}
-                </button>
-              </form>
-
-              {validatedUser && (
-                <div className="user-preview-card" style={{ marginTop: '14px' }}>
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>
-                      {validatedUser.user.username}
-                    </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>
-                      DATABASE ID: <strong style={{ color: '#00e5ff' }}>{validatedUser.user.id}</strong> • UID: <strong style={{ color: '#00e5ff' }}>{validatedUser.user.uid}</strong> • ROLE: {validatedUser.user.role}
-                    </div>
-                    {validatedUser.alreadyInTeam ? (
-                      <div style={{ color: '#ff0055', fontSize: '11px', marginTop: '6px' }}>
-                        ⚠️ User already affiliated with team: <strong>{validatedUser.currentTeamName}</strong>
-                      </div>
-                    ) : (
-                      <div style={{ color: '#00e5ff', fontSize: '11px', marginTop: '6px' }}>
-                        ✓ User verified and available to join
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      className="nexus-btn-primary"
-                      disabled={validatedUser.alreadyInTeam || isAddingMember}
-                      onClick={handleConfirmAddMember}
-                    >
-                      {isAddingMember ? 'ADDING MEMBER...' : 'CONFIRM ADDITION ↗'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* REGISTERED USERS DIRECTORY (SHARED DATABASE) */}
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', letterSpacing: '1.5px', color: 'rgba(255,255,255,0.7)' }}>
-                    REGISTERED USERS DIRECTORY ({registeredUsers.length})
-                  </span>
-                  <button
-                    type="button"
-                    className="action-btn"
-                    style={{ fontSize: '9px', padding: '3px 8px' }}
-                    onClick={loadRegisteredUsers}
-                    disabled={loadingUsers}
-                  >
-                    {loadingUsers ? 'LOADING...' : 'REFRESH ↻'}
-                  </button>
-                </div>
-
-                <input
-                  type="text"
-                  className="cyber-search-input"
-                  style={{ width: '100%', boxSizing: 'border-box', marginBottom: '12px', fontSize: '11px' }}
-                  placeholder="Filter users by name, UID, or database ID..."
-                  value={userSearchTerm}
-                  onChange={(e) => setUserSearchTerm(e.target.value)}
-                />
-
-                {loadingUsers ? (
-                  <div style={{ padding: '14px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
-                    FETCHING USERS FROM SHARED DATABASE...
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
-                    {(() => {
-                      const filtered = registeredUsers.filter(u => {
-                        if (!userSearchTerm.trim()) return true;
-                        const q = userSearchTerm.toLowerCase();
-                        return (
-                          (u.username && u.username.toLowerCase().includes(q)) ||
-                          (u.uid && u.uid.toLowerCase().includes(q)) ||
-                          (u.id && u.id.toLowerCase().includes(q))
-                        );
-                      });
-
-                      if (filtered.length === 0) {
-                        return (
-                          <div style={{ padding: '14px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
-                            No matching registered users found.
-                          </div>
-                        );
-                      }
-
-                      return filtered.map(u => {
-                        const isMember = teamData?.team?.members?.some(m => m.userId === u.id || (u.uid && m.uid === u.uid));
-                        const isSelf = u.id === currentUser?.id || u.uid === currentUser?.uid;
-                        const canAdd = !isMember && !u.alreadyInTeam && (teamData?.team?.members?.length || 0) < 4 && !isSelf;
-
-                        return (
-                          <div
-                            key={u.id}
-                            style={{
-                              background: 'rgba(15, 20, 32, 0.7)',
-                              border: `1px solid ${isMember ? 'rgba(0, 229, 255, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
-                              padding: '10px 14px',
-                              borderRadius: '2px',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              gap: '12px'
-                            }}
-                          >
-                            <div>
-                              <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
-                                {u.username} {isSelf && <span style={{ opacity: 0.6, fontSize: '9px' }}>(YOU)</span>}
-                              </div>
-                              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(255,255,255,0.6)', marginTop: '2px', wordBreak: 'break-all' }}>
-                                DB ID: <span style={{ color: '#00e5ff' }}>{u.id}</span> • UID: <span style={{ color: '#fff' }}>{u.uid}</span>
-                              </div>
-                              {isMember && (
-                                <div style={{ fontSize: '9px', color: '#00e5ff', marginTop: '2px' }}>
-                                  ✓ CURRENT TEAM MEMBER
-                                </div>
-                              )}
-                              {!isMember && u.alreadyInTeam && (
-                                <div style={{ fontSize: '9px', color: '#ffaa00', marginTop: '2px' }}>
-                                  IN TEAM: {u.currentTeamName}
-                                </div>
-                              )}
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                              {canAdd && (
-                                <button
-                                  type="button"
-                                  className="action-btn"
-                                  style={{ padding: '4px 8px', fontSize: '9px', background: 'rgba(0, 229, 255, 0.15)', borderColor: '#00e5ff', color: '#00e5ff' }}
-                                  onClick={() => handleDirectAddMember(u)}
-                                  disabled={isAddingMember}
-                                >
-                                  + ADD BY ID
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                className="action-btn"
-                                style={{ padding: '4px 8px', fontSize: '9px' }}
-                                onClick={() => {
-                                  setAddMemberInput(u.id);
-                                  setValidatedUser({
-                                    exists: true,
-                                    user: u,
-                                    alreadyInTeam: u.alreadyInTeam,
-                                    currentTeamName: u.currentTeamName
-                                  });
-                                }}
-                              >
-                                SELECT
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ESTABLISH TEAM MODAL (FOR USERS FOUNDING A TEAM) */}
-      {createTeamModalOpen && (
-        <div className="nexus-overlay" onClick={() => setCreateTeamModalOpen(false)}>
-          <div className="nexus-modal" style={{ maxWidth: '540px' }} onClick={(e) => e.stopPropagation()}>
-            <div className="nexus-header">
-              <div className="nexus-header-left">
-                <span className="nexus-badge">FOUND TEAM</span>
-                <h3 className="nexus-title">ESTABLISH NEXUS TEAM</h3>
-              </div>
-              <button className="nexus-close-btn" onClick={() => setCreateTeamModalOpen(false)}>✕</button>
-            </div>
-            <div className="nexus-body" style={{ padding: '24px' }}>
-              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', lineHeight: '1.6', marginBottom: '18px' }}>
-                As founder of this consensus team, you ({currentUser?.username || 'user'}) will be appointed <strong>TEAM LEADER</strong> with authority to recruit and manage team members.
-              </p>
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                if (!createTeamName.trim()) return;
-                await handleCreateTeamDirect(createTeamName.trim());
-                setCreateTeamModalOpen(false);
-              }}>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '10px', letterSpacing: '2px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px', fontFamily: 'var(--font-mono)' }}>
-                    TEAM DESIGNATION (NAME) *
-                  </label>
-                  <input
-                    type="text"
-                    className="cyber-search-input"
-                    style={{ width: '100%', boxSizing: 'border-box' }}
-                    placeholder="e.g. ALPHA CONSENSUS SQUAD"
-                    value={createTeamName}
-                    onChange={(e) => setCreateTeamName(e.target.value)}
-                    autoFocus
-                    required
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
-                  <button type="button" className="nexus-btn-secondary" onClick={() => setCreateTeamModalOpen(false)}>
-                    CANCEL
-                  </button>
-                  <button type="submit" className="nexus-btn-primary">
-                    ESTABLISH & BECOME LEADER ↗
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CONFIRMATION DIALOG (FOR DESTRUCTIVE ACTIONS) */}
-      {confirmDialog && (
-        <div className="confirm-backdrop" onClick={() => setConfirmDialog(null)}>
-          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-title">{confirmDialog.title}</div>
-            <div className="confirm-message">{confirmDialog.message}</div>
-            <div className="confirm-actions">
-              <button className="nexus-btn-secondary" onClick={() => setConfirmDialog(null)}>
-                CANCEL
-              </button>
-              <button className="action-btn danger" style={{ padding: '10px 20px', fontSize: '11px' }} onClick={confirmDialog.onConfirm}>
-                CONFIRM ACTION ↗
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* DEDICATED LEAD CREATOR SPOTLIGHT MODAL (TASK 3) */}
       {creatorSpotlightOpen && (
@@ -1406,13 +978,6 @@ export default function Landing() {
           </div>
         </div>
       )}
-
-      {/* NEXUS TEAM PORTAL MODAL */}
-      <NexusTeamModal
-        isOpen={nexusModalOpen}
-        onClose={() => setNexusModalOpen(false)}
-        onTeamUpdated={(data) => setTeamData(data)}
-      />
     </div>
   );
 }

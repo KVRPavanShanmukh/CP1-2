@@ -5,7 +5,6 @@ import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
-import NexusTeamModal from '../components/NexusTeamModal';
 import { teamApi, simulationApi, authApi, getStoredUser } from '../services/api';
 import './Simulation.css'; // We will reuse the immersive-shell styles
 
@@ -163,7 +162,6 @@ export default function Dashboard() {
   const [scrollLocked, setScrollLocked] = useState(false);
   const navigate = useNavigate();
   const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
-  const [nexusModalOpen, setNexusModalOpen] = useState(false);
   const [user, setUser] = useState(getStoredUser());
   const [runs, setRuns] = useState([]);
   const [latestResult, setLatestResult] = useState(null);
@@ -205,17 +203,8 @@ export default function Dashboard() {
     return () => { cancelled = true; };
   }, []);
 
-  const handleNexusTeamClick = async () => {
-    try {
-      const res = await teamApi.getMyTeam();
-      if (res.hasTeam && res.isLeader) {
-        navigate('/landing', { state: { section: 4, openManage: true } });
-      } else {
-        setNexusModalOpen(true);
-      }
-    } catch (e) {
-      setNexusModalOpen(true);
-    }
+  const handleNexusTeamClick = () => {
+    navigate('/landing?section=team', { state: { section: 4 } });
   };
 
   const displayRuns = runs;
@@ -394,7 +383,7 @@ export default function Dashboard() {
                     onClick={handleNexusTeamClick}
                     style={{ borderColor: '#00ffff', color: '#00ffff', background: 'rgba(0, 255, 255, 0.08)' }}
                   >
-                    NEXUS TEAM ↗
+                    OUR PROJECT TEAM ↗
                   </button>
                 )}
               </div>
@@ -433,12 +422,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* NEXUS TEAM PORTAL MODAL */}
-      <NexusTeamModal
-        isOpen={nexusModalOpen}
-        onClose={() => setNexusModalOpen(false)}
-      />
     </div>
   );
 }
