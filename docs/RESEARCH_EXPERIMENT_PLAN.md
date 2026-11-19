@@ -24,9 +24,16 @@ This plan defines six controlled experiments using the existing `ExperimentCompa
 
 ## Supported Outcome Metrics (verified against ExperimentAggregate METRICS)
 
-Primary metrics per experiment are drawn from: canonicalHeadAgreement, activeForks, staleBlocks, convergedRunRate, messagesDropped, maliciousActionsAttempted, blocksWithheld, conflictingAttestations, transactionsCreated, transactionsIncluded, transactionSuccessRate, blockProductionRate, giniCoefficient, byzantineAgents, inactiveAgents, activeAgents, messagesSent, messagesDelivered.
+27 metrics are aggregated per comparison. Primary metrics per experiment are drawn from:
+mainchainRate, branchingRatio, giniCoefficient, canonicalHeadAgreement, activeForks,
+convergedRunRate, staleBlocks, messagesDropped, maliciousActionsAttempted, blocksWithheld,
+conflictingAttestations, transactionsCreated, transactionsIncluded, transactionSuccessRate,
+blockProductionRate, byzantineAgents, inactiveAgents, activeAgents, messagesSent,
+messagesDelivered.
 
-Unsupported (not measured): reorganizations, forkDepth.
+Definitions follow the paper: `mainchainRate` is μ = |M|/|B| over non-genesis blocks,
+`branchingRatio` is F = |Θ|/|M|, and `giniCoefficient` is the Gini of per-agent block
+production at the final tick. Unsupported (not measured): reorganizations, forkDepth.
 
 ## Fixed Control Parameters (all experiments unless noted)
 
@@ -109,7 +116,7 @@ Unsupported (not measured): reorganizations, forkDepth.
 | Hypothesis | Higher Byzantine ratio increases maliciousActionsAttempted, blocksWithheld, conflictingAttestations and reduces canonical-head agreement. |
 | Independent variable | `byzantineBehavior` (FACTOR_BYZANTINE) — byzantineRatio, byzantineBehaviorEnabled, byzantineAttackMode |
 | Baseline value | byzantineRatio=0.0, byzantineBehaviorEnabled=false, byzantineAttackMode=EQUIVOCATION |
-| Treatment value | byzantineRatio=0.33 (2 of 6 agents), byzantineBehaviorEnabled=true, byzantineAttackMode=ALL |
+| Treatment value | byzantineRatio=0.34 (2 of 6 agents under floor semantics), byzantineBehaviorEnabled=true, byzantineAttackMode=ALL |
 | Controlled? | Yes — all Byzantine fields form one conceptual factor |
 | Primary outcomes | maliciousActionsAttempted, blocksWithheld, conflictingAttestations |
 | Secondary outcomes | canonicalHeadAgreement, activeForks, byzantineAgents, activeAgents |
@@ -152,14 +159,21 @@ Unsupported (not measured): reorganizations, forkDepth.
 ## Reproducibility Guarantees
 
 - Same ordered seed list applied to baseline and every treatment within an experiment.
+- Block identifiers come from a per-run monotonic sequence, not random UUIDs, so fork-choice tie-breaks are stable and two runs with the same seed produce identical metrics.
 - `ExperimentRunner.runRepeated()` copies the template configuration per seed; templates are never mutated.
 - `ExperimentRunResult.configuration` stores the actual config used per run (including seed).
 - `isControlled()` is true only when exactly one conceptual factor differs.
 - Failed runs remain visible; never treated as zero-valued observations.
+- Ratio fields are converted to agent counts with floor semantics (documented by `Phase8InactiveAgentTests`); Experiment 4 therefore uses 0.34 to instantiate 2 of 6 Byzantine agents.
 
 ## Results Output
 
-All results saved to `D:\CP1\CHAIN55\PROJECT B\docs\research-results\`:
-- `experiment-plan.md` (this file)
-- `experiment-results.json` — raw JSON output from ExperimentComparisonRunner for each experiment
-- `analysis-summary.md` — measured means, variability, deltas, limitations (not causal claims)
+All results are saved to `<repository>/docs/research-results/` (auto-detected from the Maven
+working directory; override with `-Dchain55.researchResultsDir=<path>`):
+
+- `RESEARCH_EXPERIMENT_PLAN.md` (this file)
+- `exp1-network-latency.json`, `exp2-packet-loss.json`, `exp3-network-partition.json`, `exp4-byzantine.json`, `exp5-tx-load.json`
+- `exp6-consensus-PoS.json`, `exp6-consensus-DPoS.json`, `exp6-consensus-PoA.json`, `exp6-consensus-PoL.json` — each contains the PoW baseline
+- `RESEARCH_RESULTS_REPORT.md` — measured means, variability, deltas and limitations (not causal claims)
+
+Regenerate everything with `mvnw test -Dtest=Phase13ResearchExperiments` from `Backend/Backend`.

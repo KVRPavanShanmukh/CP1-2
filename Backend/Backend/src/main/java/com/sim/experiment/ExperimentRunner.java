@@ -48,6 +48,7 @@ public class ExperimentRunner {
 
     private SimulationConfig copy(SimulationConfig source) {
         SimulationConfig copy = new SimulationConfig();
+        copy.setCreatedAt(source.getCreatedAt());
         copy.setNodeCount(source.getNodeCount());
         copy.setConsensusType(source.getConsensusType());
         copy.setNetworkTopology(source.getNetworkTopology());

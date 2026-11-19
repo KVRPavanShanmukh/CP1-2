@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { useNavigate } from 'react-router-dom';
-import SimulationCursor from '../components/SimulationCursor';
-import { simulationApi } from '../services/api';
-
-const API_BASE_URL = 'http://localhost:8080/api/simulations';
-const WS_URL = 'http://localhost:8080/ws-simulation';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  simulationApi,
+  authApi,
+  getStoredUser,
+  WS_BASE,
+  DEFAULT_SIMULATION_CONFIG
+} from '../services/api';
 
 // --- GENERATIVE WEBGL ENGINE ---
 function NetworkVisualization({ stateIndex }) {
@@ -165,6 +166,57 @@ function parseSeedList(text) {
     .split(/[\s,]+/)
     .filter(Boolean)
     .map((raw) => (/^-?\d+$/.test(raw) ? Number(raw) : NaN));
+}
+
+/**
+ * Mirrors SimulationConfig.validate() plus the controller resource limits so invalid
+ * input is rejected locally instead of surfacing as an opaque 400 from the backend.
+ */
+function validateSimulationConfig(config) {
+  const errors = [];
+  const isInt = (value) => Number.isInteger(value);
+  const inRange = (value, min, max) => Number.isFinite(value) && value >= min && value <= max;
+
+  if (!isInt(config.nodeCount) || !inRange(config.nodeCount, 1, 1000)) {
+    errors.push('Nodes must be an integer between 1 and 1000.');
+  }
+  if (!isInt(config.simulationTicks) || !inRange(config.simulationTicks, 1, 10000)) {
+    errors.push('Ticks must be an integer between 1 and 10000.');
+  }
+  if (!inRange(config.blockGossipLatency, 0, Number.MAX_SAFE_INTEGER)) {
+    errors.push('Block gossip latency must be zero or greater.');
+  }
+  if (!inRange(config.slotDuration, 0, 60)) {
+    errors.push('Slot duration must be between 0 and 60 seconds.');
+  }
+  if (!inRange(config.byzantineRatio, 0, 1)) errors.push('Byzantine ratio must be between 0 and 1.');
+  if (!inRange(config.inactiveAgentRatio, 0, 1)) errors.push('Inactive ratio must be between 0 and 1.');
+  if (config.byzantineRatio + config.inactiveAgentRatio > 1.000000001) {
+    errors.push('Byzantine + inactive ratios cannot exceed 1.0.');
+  }
+  if (!inRange(config.packetLossRate, 0, 1)) errors.push('Packet loss must be between 0 and 1.');
+  if (!inRange(config.partitionRatio, 0, 1)) errors.push('Partition ratio must be between 0 and 1.');
+  if (!isInt(config.networkLatencyJitter) || config.networkLatencyJitter < 0) {
+    errors.push('Latency jitter must be a non-negative integer.');
+  }
+  if (config.partitionStartTick >= 0 && config.partitionEndTick >= 0
+      && config.partitionEndTick < config.partitionStartTick) {
+    errors.push('Partition end tick cannot be before the start tick.');
+  }
+  if (config.transactionsPerAgentPerTick < 0 || !isInt(config.transactionsPerAgentPerTick)) {
+    errors.push('Transactions per agent per tick must be a non-negative integer.');
+  }
+  if (!isInt(config.mempoolCapacity) || config.mempoolCapacity <= 0) {
+    errors.push('Mempool capacity must be a positive integer.');
+  }
+  if (!isInt(config.maxTransactionsPerBlock) || config.maxTransactionsPerBlock <= 0) {
+    errors.push('Max transactions per block must be a positive integer.');
+  }
+  if (!inRange(config.transactionAmount, 0.000001, Number.MAX_SAFE_INTEGER)) {
+    errors.push('Transaction amount must be greater than zero.');
+  }
+  if (!Number.isInteger(config.randomSeed)) errors.push('Seed must be an integer.');
+  return errors;
 }
 
 function formatMetric(value, digits = 2) {
@@ -447,12 +499,214 @@ function ExperimentPanel({ currentConfig }) {
   );
 }
 
+// --- LIVE TELEMETRY & ARCHIVE COMPONENTS ---
+const TREND_FIELDS = [
+  { key: 'canonicalHeadAgreement', label: 'HEAD AGREEMENT', color: '#00ffff' },
+  { key: 'giniCoefficient', label: 'GINI', color: '#ff00ff' },
+  { key: 'transactionSuccessRate', label: 'TX SUCCESS', color: '#9b59b6' }
+];
+
+function TrendChart({ ticks }) {
+  const width = 300;
+  const height = 96;
+  const padding = 8;
+  const maxTick = Math.max(1, ...ticks.map((tick) => Number(tick.currentTick) || 0));
+  const toPoint = (tick, value) => {
+    const x = padding + (Math.max(0, Number(tick.currentTick) || 0) / maxTick) * (width - padding * 2);
+    const y = height - padding - Math.min(1, Math.max(0, value)) * (height - padding * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  };
+  const series = TREND_FIELDS.map((field) => ({
+    ...field,
+    points: ticks
+      .map((tick) => ({ tick, value: Number(tick.metrics?.[field.key]) }))
+      .filter((entry) => Number.isFinite(entry.value))
+      .map((entry) => ({ ...entry, point: toPoint(entry.tick, entry.value) }))
+  }));
+  const hasData = series.some((entry) => entry.points.length > 0);
+
+  return (
+    <div className="trend-chart">
+      <div className="exp-line">
+        <span className="meta-label" style={{ marginBottom: 0 }}>LIVE TREND (0—1)</span>
+        <span className="exp-note">{ticks.length} ticks</span>
+      </div>
+      {hasData ? (
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Live consensus metric trends">
+          <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.15)" />
+          <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="rgba(255,255,255,0.15)" />
+          {series.map((entry) => (
+            <polyline
+              key={entry.key}
+              fill="none"
+              stroke={entry.color}
+              strokeWidth="1.6"
+              points={entry.points.map((point) => point.point).join(' ')}
+            />
+          ))}
+        </svg>
+      ) : (
+        <div className="exp-note">Waiting for the first tick…</div>
+      )}
+      <div className="trend-legend">
+        {series.map((entry) => {
+          const last = entry.points[entry.points.length - 1];
+          return (
+            <span key={entry.key} style={{ color: entry.color }}>
+              {entry.label} {last ? last.value.toFixed(3) : '—'}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function formatTimestamp(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString();
+}
+
+function HistoryPanel({ onClose, onOpenRun }) {
+  const [rows, setRows] = useState([]);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    simulationApi.history()
+      .then((data) => { if (!cancelled) setRows(Array.isArray(data) ? data : []); })
+      .catch((requestError) => { if (!cancelled) setError(requestError.message || 'History unavailable.'); })
+      .finally(() => { if (!cancelled) setBusy(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="data-drawer" role="dialog" aria-label="Simulation history">
+      <div className="drawer-head">
+        <div>
+          <span className="meta-label" style={{ marginBottom: 0 }}>SIMULATION HISTORY</span>
+          <div className="exp-note">Persisted runs from MongoDB, newest first</div>
+        </div>
+        <button type="button" className="drawer-close" onClick={onClose}>CLOSE ✕</button>
+      </div>
+      <div className="drawer-body">
+        {busy && <div className="exp-note">Loading runs…</div>}
+        {error && <div className="exp-error">{error}</div>}
+        {!busy && !error && rows.length === 0 && (
+          <div className="exp-note">No simulation has been started yet.</div>
+        )}
+        {rows.length > 0 && (
+          <table className="history-table">
+            <thead>
+              <tr>
+                <th>STATUS</th>
+                <th>CONSENSUS</th>
+                <th>NODES</th>
+                <th>TICKS</th>
+                <th>SEED</th>
+                <th>CREATED</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td><span className={`status-pill ${String(row.status || '').toLowerCase()}`}>{row.status || 'UNKNOWN'}</span></td>
+                  <td>{row.consensusType || '—'}</td>
+                  <td>{row.nodeCount ?? '—'}</td>
+                  <td>{row.simulationTicks ?? '—'}</td>
+                  <td>{row.randomSeed ?? '—'}</td>
+                  <td className="exp-note">{formatTimestamp(row.createdAt)}</td>
+                  <td>
+                    <button type="button" className="exp-btn" onClick={() => onOpenRun(row.id)}>OPEN</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ResearchPanel({ onClose }) {
+  const [catalog, setCatalog] = useState([]);
+  const [directory, setDirectory] = useState('');
+  const [selected, setSelected] = useState('');
+  const [document, setDocument] = useState(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    simulationApi.researchList()
+      .then((data) => {
+        if (cancelled) return;
+        const experiments = data?.experiments || [];
+        setCatalog(experiments);
+        setDirectory(data?.resultsDirectory || '');
+        if (experiments.length > 0) setSelected(experiments[0].file);
+      })
+      .catch((requestError) => { if (!cancelled) setError(requestError.message || 'Archived datasets unavailable.'); })
+      .finally(() => { if (!cancelled) setBusy(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!selected) return undefined;
+    let cancelled = false;
+    setDocument(null);
+    simulationApi.researchDocument(selected)
+      .then((data) => { if (!cancelled) setDocument(data); })
+      .catch((requestError) => { if (!cancelled) setError(requestError.message || 'Dataset unavailable.'); });
+    return () => { cancelled = true; };
+  }, [selected]);
+
+  return (
+    <div className="data-drawer" role="dialog" aria-label="Archived research experiments">
+      <div className="drawer-head">
+        <div>
+          <span className="meta-label" style={{ marginBottom: 0 }}>ARCHIVED EXPERIMENTS (EXP1—EXP6)</span>
+          <div className="exp-note">{directory || 'docs/research-results'}</div>
+        </div>
+        <button type="button" className="drawer-close" onClick={onClose}>CLOSE ✕</button>
+      </div>
+      <div className="drawer-body">
+        {busy && <div className="exp-note">Loading archive…</div>}
+        {error && <div className="exp-error">{error}</div>}
+        {!busy && catalog.length === 0 && !error && (
+          <div className="exp-note">
+            No archived datasets found. Run <code>mvnw test -Dtest=Phase13ResearchExperiments</code> to
+            regenerate docs/research-results.
+          </div>
+        )}
+        {catalog.length > 0 && (
+          <>
+            <div className="exp-label">DATASET</div>
+            <select className="exp-input" value={selected} onChange={(event) => setSelected(event.target.value)}>
+              {catalog.map((entry) => (
+                <option key={entry.file} value={entry.file}>{entry.title}</option>
+              ))}
+            </select>
+            {document ? <ExperimentReport report={document} /> : <div className="exp-note">Loading dataset…</div>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // --- MAIN APPLICATION COMPONENT ---
 export default function Simulation() {
   const [activeSection, setActiveSection] = useState(0); 
   const [scrollLocked, setScrollLocked] = useState(false);
   const [simulationStarted, setSimulationStarted] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   
   const sections = [
     { id: 0, title: "CONFIGURATION", desc: "Select network parameters to synthesize the engine." },
@@ -473,28 +727,43 @@ export default function Simulation() {
   ];
   const currentAccent = accentColors[activeSection];
   
-  const [formData, setFormData] = useState({
-    nodeCount: 10,
-    consensusType: 'PoW',
-    networkTopology: 'Erdos-Renyi',
-    blockGossipLatency: 0.5,
-    slotDuration: 1.0,
-    simulationTicks: 10,
-    randomSeed: 7,
-    byzantineRatio: 0.0,
-    byzantineBehaviorEnabled: false,
-    byzantineAttackMode: 'EQUIVOCATION',
-    packetLossRate: 0.0,
-    networkLatencyJitter: 2,
-    partitionRatio: 0.0,
-    partitionStartTick: -1,
-    partitionEndTick: -1
-  });
+  const [formData, setFormData] = useState({ ...DEFAULT_SIMULATION_CONFIG });
+  const [authorityIdsText, setAuthorityIdsText] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [liveTicks, setLiveTicks] = useState([]);
   const [results, setResults] = useState(null);
+  const [simulationId, setSimulationId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [wsStatus, setWsStatus] = useState('idle');
+  const [drawer, setDrawer] = useState(null);
+  const [user, setUser] = useState(getStoredUser());
   const stompClientRef = useRef(null);
+  const pollTimerRef = useRef(null);
+
+  // Deep link from the dashboard: /simulation with state.openDrawer === 'history'.
+  useEffect(() => {
+    if (location.state?.openDrawer === 'history') {
+      setDrawer('history');
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    authApi.getMe()
+      .then((response) => {
+        if (cancelled) return;
+        if (response?.authenticated && response.user) {
+          setUser(response.user);
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => { if (!cancelled) setUser(getStoredUser()); });
+    return () => { cancelled = true; };
+  }, []);
 
   // Wheel Scroll Navigation
   useEffect(() => {
@@ -529,29 +798,82 @@ export default function Simulation() {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [activeSection, scrollLocked, simulationStarted, navigate]);
 
-  const connectWebSocket = (simulationId) => {
+  const stopResultPolling = () => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  };
+
+  const applyResult = (result) => {
+    setResults(result);
+    setActiveSection(5);
+    setLoading(false);
+    setWsStatus('closed');
+    stopResultPolling();
+  };
+
+  // Fallback when the STOMP result frame is missed (e.g. a reconnect during the run):
+  // poll the persisted status until the worker has stored a final result.
+  const startResultPolling = (id) => {
+    stopResultPolling();
+    pollTimerRef.current = setInterval(async () => {
+      try {
+        const payload = await simulationApi.get(id);
+        if (payload?.result) {
+          applyResult(payload.result);
+        } else if (payload?.status === 'FAILED') {
+          applyResult({
+            configId: id,
+            status: 'FAILED',
+            errorMessage: 'The worker reported a failed run.',
+            consensusType: payload.configuration?.consensusType,
+            simulationTicks: payload.configuration?.simulationTicks
+          });
+        }
+      } catch (pollError) {
+        // Keep polling; a transient network error should not abort the run view.
+        console.warn('Result poll failed:', pollError.message);
+      }
+    }, 3000);
+  };
+
+  const connectWebSocket = (id) => {
     if (stompClientRef.current) stompClientRef.current.deactivate();
+    setWsStatus('connecting');
     const client = new Client({
-      webSocketFactory: () => new SockJS(WS_URL),
-      reconnectDelay: 5000,
+      webSocketFactory: () => new SockJS(WS_BASE),
+      reconnectDelay: 4000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000
     });
     client.onConnect = () => {
-      client.subscribe(`/topic/simulation/${simulationId}`, (message) => {
-        const tick = JSON.parse(message.body);
-        setLiveTicks(prev => [...prev, tick]);
-        
-        // Auto-advance scenes if user hasn't manually overridden it
-        if (tick.currentTick === 2 && activeSection < 2) setActiveSection(2);
-        if (tick.currentTick === 5 && activeSection < 3) setActiveSection(3);
-        if (tick.currentTick === 8 && activeSection < 4) setActiveSection(4);
+      setWsStatus('connected');
+      client.subscribe(`/topic/simulation/${id}`, (message) => {
+        try {
+          const tick = JSON.parse(message.body);
+          setLiveTicks((previous) => [...previous, tick]);
+          const total = Math.max(1, Number(tick.totalTicks) || Number(formData.simulationTicks) || 1);
+          const completed = Number(tick.currentTick) || 0;
+          // Advance the narrative sections proportionally to run progress.
+          if (completed / total >= 0.15 && completed > 0) setActiveSection((current) => (current < 2 ? 2 : current));
+          if (completed / total >= 0.45) setActiveSection((current) => (current < 3 ? 3 : current));
+          if (completed / total >= 0.75) setActiveSection((current) => (current < 4 ? 4 : current));
+        } catch (parseError) {
+          console.warn('Ignoring malformed tick frame:', parseError.message);
+        }
       });
-      client.subscribe(`/topic/simulation/${simulationId}/result`, (message) => {
-        const result = JSON.parse(message.body);
-        setResults(result);
-        setActiveSection(5); 
-        setLoading(false);
+      client.subscribe(`/topic/simulation/${id}/result`, (message) => {
+        try {
+          applyResult(JSON.parse(message.body));
+        } catch (parseError) {
+          console.warn('Ignoring malformed result frame:', parseError.message);
+        }
       });
     };
+    client.onStompError = () => setWsStatus('error');
+    client.onWebSocketClose = () => setWsStatus((current) => (current === 'connected' ? 'reconnecting' : current));
+    client.onWebSocketError = () => setWsStatus('error');
     client.activate();
     stompClientRef.current = client;
   };
@@ -559,31 +881,91 @@ export default function Simulation() {
   useEffect(() => {
     return () => {
       if (stompClientRef.current) stompClientRef.current.deactivate();
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     };
   }, []);
 
+  const buildPayload = () => ({
+    ...formData,
+    authorityIds: authorityIdsText
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean),
+    partitionGroupA: [],
+    partitionGroupB: []
+  });
+
   const handleStartSimulation = async (e) => {
     if (e) e.preventDefault();
+    const payload = buildPayload();
+    const errors = validateSimulationConfig(payload);
+    setValidationErrors(errors);
+    if (errors.length > 0) {
+      setErrorMessage('Fix the highlighted configuration values before starting a run.');
+      return;
+    }
+    if (!user) {
+      setErrorMessage('Authentication required — sign in again before starting a simulation.');
+      return;
+    }
+
+    setErrorMessage('');
     setSimulationStarted(true);
     setLoading(true);
     setLiveTicks([]);
     setResults(null);
-    setActiveSection(1); 
-    
+    setActiveSection(1);
+
     try {
-      const res = await axios.post(`${API_BASE_URL}/start`, formData, { withCredentials: true });
-      connectWebSocket(res.data.id);
+      const startedConfig = await simulationApi.start(payload);
+      setSimulationId(startedConfig.id);
+      connectWebSocket(startedConfig.id);
+      startResultPolling(startedConfig.id);
     } catch (error) {
-      console.error('Failed to start simulation', error);
+      setErrorMessage(error.message || 'Failed to start simulation.');
       setLoading(false);
+      setSimulationStarted(false);
       setActiveSection(0);
+    }
+  };
+
+  const openHistoryRun = async (id) => {
+    setDrawer(null);
+    setErrorMessage('');
+    try {
+      const payload = await simulationApi.get(id);
+      if (payload?.result) {
+        setSimulationId(id);
+        applyResult(payload.result);
+        return;
+      }
+      setSimulationId(id);
+      setResults({
+        configId: id,
+        status: payload?.status || 'UNKNOWN',
+        consensusType: payload?.configuration?.consensusType,
+        simulationTicks: payload?.configuration?.simulationTicks,
+        randomSeed: payload?.configuration?.randomSeed,
+        errorMessage: payload?.status === 'RUNNING'
+          ? 'This run is still in progress. Live ticks are only streamed while the page is open.'
+          : 'No stored result exists for this run.'
+      });
+      setActiveSection(5);
+    } catch (error) {
+      setErrorMessage(error.message || 'Could not open the selected run.');
     }
   };
 
   const latestTick = liveTicks.length > 0 ? liveTicks[liveTicks.length - 1] : null;
   const progressPercent = latestTick
-    ? Math.min(100, (latestTick.currentTick / Math.max(1, formData.simulationTicks)) * 100)
+    ? Math.min(100, Number.isFinite(Number(latestTick.progress))
+      ? Number(latestTick.progress) * 100
+      : (Number(latestTick.currentTick) / Math.max(1, formData.simulationTicks)) * 100)
     : 0;
+
+  const connectionLabel = ['connecting', 'connected'].includes(wsStatus)
+    ? wsStatus.toUpperCase()
+    : wsStatus === 'reconnecting' ? 'RECONNECTING' : wsStatus === 'error' ? 'ERROR' : 'IDLE';
 
 
 
@@ -626,158 +1008,187 @@ export default function Simulation() {
                 {activeSection === 5 && <>SIMULATION<br/>COMPLETE.</>}
               </h1>
               
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#D8D8D8', marginBottom: '24px', maxWidth: '350px', lineHeight: '1.6' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#D8D8D8', marginBottom: '24px', maxWidth: '520px', lineHeight: '1.6' }}>
                 {sections[activeSection].desc}
               </p>
 
               {/* SECTION CONTROLS / CONTENT */}
               {activeSection === 0 && (
                 <>
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <div className="form-group" style={{ marginBottom: '24px' }}>
-                    <span className="meta-label">Consensus Type</span>
-                    <select name="consensusType" className="form-control" value={formData.consensusType} onChange={(e) => setFormData({...formData, consensusType: e.target.value})} style={{ color: '#FFFFFF' }}>
-                      <option value="PoW">Proof of Work (PoW)</option>
-                      <option value="PoS">Proof of Stake (PoS)</option>
-                      <option value="DPoS">Delegated Proof of Stake (DPoS)</option>
-                      <option value="PoA">Proof of Authority (PoA)</option>
-                      <option value="PoL">Proof of Location proxy (PoL)</option>
-                    </select>
-                  </div>
-                  <div className="form-group" style={{ display: 'flex', gap: '2rem' }}>
-                                        <div className="form-group" style={{ display: 'flex', gap: '2rem', marginTop: '24px' }}>
-                                          <div style={{ flex: 1 }}>
-                                            <span className="meta-label">TICKS</span>
-                                            <input type="number" name="simulationTicks" className="form-control" value={formData.simulationTicks} onChange={(e) => setFormData({...formData, simulationTicks: parseInt(e.target.value)})} min="1" style={{ color: '#FFFFFF' }}/>
-                                          </div>
-                                          <div style={{ flex: 1 }}>
-                                            <span className="meta-label">SEED</span>
-                                            <input type="number" name="randomSeed" className="form-control" value={formData.randomSeed} onChange={(e) => setFormData({...formData, randomSeed: parseInt(e.target.value)})} style={{ color: '#FFFFFF' }}/>
-                                          </div>
-                                        </div>
-                      <div style={{ flex: 1 }}>
-                        <span className="meta-label">Nodes</span>
-                        <input type="number" name="nodeCount" className="form-control" value={formData.nodeCount} onChange={(e) => setFormData({...formData, nodeCount: parseInt(e.target.value)})} min="1" style={{ color: '#FFFFFF' }}/>
+                  {errorMessage && <div className="exp-error">{errorMessage}</div>}
+                  {validationErrors.length > 0 && (
+                    <ul className="validation-list">
+                      {validationErrors.map((message) => <li key={message}>{message}</li>)}
+                    </ul>
+                  )}
+                  {!user && (
+                    <div className="exp-note exp-warn">
+                      Session not detected.{' '}
+                      <button type="button" className="inline-link" onClick={() => navigate('/login')}>SIGN IN</button>{' '}
+                      to start a simulation.
+                    </div>
+                  )}
+                  <form onSubmit={handleStartSimulation}>
+                    <div className="config-grid">
+                      <div className="config-section-title">NETWORK & ENGINE CORE</div>
+
+                      <label className="config-field">
+                        <span className="meta-label">CONSENSUS</span>
+                        <select
+                          className="form-control"
+                          value={formData.consensusType}
+                          onChange={(e) => setFormData({ ...formData, consensusType: e.target.value })}
+                        >
+                          <option value="PoW">Proof of Work (PoW)</option>
+                          <option value="PoS">Proof of Stake (PoS)</option>
+                          <option value="DPoS">Delegated Proof of Stake (DPoS)</option>
+                          <option value="PoA">Proof of Authority (PoA)</option>
+                          <option value="PoL">Proof of Location (PoL)</option>
+                        </select>
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">TOPOLOGY</span>
+                        <select
+                          className="form-control"
+                          value={formData.networkTopology}
+                          onChange={(e) => setFormData({ ...formData, networkTopology: e.target.value })}
+                        >
+                          <option value="Erdos-Renyi">Erdős–Rényi</option>
+                          <option value="Small-World">Small-World (Watts–Strogatz)</option>
+                          <option value="Scale-Free">Scale-Free (Barabási–Albert)</option>
+                        </select>
+                      </label>
+
+                      <label className="config-field">
+                        <span className="meta-label">NODES</span>
+                        <input type="number" className="form-control" value={formData.nodeCount} min="1" max="1000"
+                          onChange={(e) => setFormData({ ...formData, nodeCount: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">TICKS</span>
+                        <input type="number" className="form-control" value={formData.simulationTicks} min="1" max="10000"
+                          onChange={(e) => setFormData({ ...formData, simulationTicks: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">SEED</span>
+                        <input type="number" className="form-control" value={formData.randomSeed}
+                          onChange={(e) => setFormData({ ...formData, randomSeed: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+
+                      <label className="config-field">
+                        <span className="meta-label">GOSSIP LATENCY (s)</span>
+                        <input type="number" className="form-control" value={formData.blockGossipLatency} min="0" step="0.1"
+                          onChange={(e) => setFormData({ ...formData, blockGossipLatency: Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">SLOT DURATION (s)</span>
+                        <input type="number" className="form-control" value={formData.slotDuration} min="0" max="60" step="0.1"
+                          onChange={(e) => setFormData({ ...formData, slotDuration: Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">LATENCY JITTER (ticks)</span>
+                        <input type="number" className="form-control" value={formData.networkLatencyJitter} min="0" max="10"
+                          onChange={(e) => setFormData({ ...formData, networkLatencyJitter: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+
+                      <div className="config-section-title">BYZANTINE & NETWORK ADVERSITY</div>
+
+                      <div className="config-field config-field-wide">
+                        <label className="config-check">
+                          <input
+                            type="checkbox"
+                            checked={formData.byzantineBehaviorEnabled}
+                            onChange={(e) => setFormData({ ...formData, byzantineBehaviorEnabled: e.target.checked })}
+                          />
+                          <span className="meta-label" style={{ marginBottom: 0 }}>ENABLE BYZANTINE BEHAVIOUR</span>
+                        </label>
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <span className="meta-label">Latency (s)</span>
-                        <input type="number" name="blockGossipLatency" className="form-control" value={formData.blockGossipLatency} onChange={(e) => setFormData({...formData, blockGossipLatency: parseFloat(e.target.value)})} step="0.1" style={{ color: '#FFFFFF' }}/>
-                      </div>
-                  </div>
-                  <div className="form-group" style={{ marginTop: '20px', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <input
-                        type="checkbox"
-                        id="byzantineBehaviorEnabled"
-                        name="byzantineBehaviorEnabled"
-                        checked={formData.byzantineBehaviorEnabled}
-                        onChange={(e) => setFormData({ ...formData, byzantineBehaviorEnabled: e.target.checked })}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      <label htmlFor="byzantineBehaviorEnabled" className="meta-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
-                        ENABLE BYZANTINE
+                      <label className="config-field">
+                        <span className="meta-label">BYZANTINE RATIO (0–1)</span>
+                        <input type="number" className="form-control" value={formData.byzantineRatio} min="0" max="1" step="0.05"
+                          onChange={(e) => setFormData({ ...formData, byzantineRatio: Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">ATTACK MODE</span>
+                        <select
+                          className="form-control"
+                          value={formData.byzantineAttackMode}
+                          onChange={(e) => setFormData({ ...formData, byzantineAttackMode: e.target.value })}
+                        >
+                          <option value="EQUIVOCATION">Equivocation (attestation)</option>
+                          <option value="BLOCK_WITHHOLDING">Block withholding</option>
+                          <option value="INVALID_BLOCK">Invalid block proposal</option>
+                          <option value="ALL">All attacks</option>
+                          <option value="NONE">None (honest)</option>
+                        </select>
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">INACTIVE RATIO (0–1)</span>
+                        <input type="number" className="form-control" value={formData.inactiveAgentRatio} min="0" max="1" step="0.05"
+                          onChange={(e) => setFormData({ ...formData, inactiveAgentRatio: Number(e.target.value) })} />
+                      </label>
+
+                      <label className="config-field">
+                        <span className="meta-label">PACKET LOSS (0–1)</span>
+                        <input type="number" className="form-control" value={formData.packetLossRate} min="0" max="1" step="0.05"
+                          onChange={(e) => setFormData({ ...formData, packetLossRate: Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field config-field-wide">
+                        <span className="meta-label">PARTITION RATIO (0–1)</span>
+                        <input type="number" className="form-control" value={formData.partitionRatio} min="0" max="1" step="0.05"
+                          onChange={(e) => setFormData({ ...formData, partitionRatio: Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">PARTITION START TICK (-1 off)</span>
+                        <input type="number" className="form-control" value={formData.partitionStartTick} min="-1"
+                          onChange={(e) => setFormData({ ...formData, partitionStartTick: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">PARTITION END TICK (-1 off)</span>
+                        <input type="number" className="form-control" value={formData.partitionEndTick} min="-1"
+                          onChange={(e) => setFormData({ ...formData, partitionEndTick: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+
+                      <div className="config-section-title">TRANSACTIONS & WORKLOAD</div>
+
+                      <label className="config-field">
+                        <span className="meta-label">TX / AGENT / TICK</span>
+                        <input type="number" className="form-control" value={formData.transactionsPerAgentPerTick} min="0"
+                          onChange={(e) => setFormData({ ...formData, transactionsPerAgentPerTick: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">MEMPOOL CAPACITY</span>
+                        <input type="number" className="form-control" value={formData.mempoolCapacity} min="1"
+                          onChange={(e) => setFormData({ ...formData, mempoolCapacity: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">MAX TX / BLOCK</span>
+                        <input type="number" className="form-control" value={formData.maxTransactionsPerBlock} min="1"
+                          onChange={(e) => setFormData({ ...formData, maxTransactionsPerBlock: e.target.value === '' ? NaN : Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field">
+                        <span className="meta-label">TX AMOUNT</span>
+                        <input type="number" className="form-control" value={formData.transactionAmount} min="0.000001" step="0.5"
+                          onChange={(e) => setFormData({ ...formData, transactionAmount: Number(e.target.value) })} />
+                      </label>
+
+                      <label className="config-field config-field-wide">
+                        <span className="meta-label">AUTHORITY AGENT IDS (PoA, comma separated)</span>
+                        <input type="text" className="form-control" value={authorityIdsText}
+                          placeholder="e.g. Agent-0, Agent-1"
+                          onChange={(e) => setAuthorityIdsText(e.target.value)} />
                       </label>
                     </div>
-                    <div style={{ flex: 1, minWidth: '120px' }}>
-                      <span className="meta-label">BYZANTINE RATIO</span>
-                      <input
-                        type="number"
-                        name="byzantineRatio"
-                        className="form-control"
-                        value={formData.byzantineRatio}
-                        onChange={(e) => setFormData({ ...formData, byzantineRatio: parseFloat(e.target.value) || 0 })}
-                        min="0"
-                        max="1"
-                        step="0.05"
-                        style={{ color: '#FFFFFF' }}
-                      />
+
+                    <div className="config-actions">
+                      <button type="submit" className="exp-btn exp-btn-primary" disabled={loading || !user}>
+                        {loading ? 'RUNNING…' : 'START SIMULATION ↗'}
+                      </button>
+                      <button type="button" className="exp-btn" onClick={() => setDrawer('history')}>RUN HISTORY</button>
+                      <button type="button" className="exp-btn" onClick={() => setDrawer('research')}>ARCHIVED EXPERIMENTS</button>
                     </div>
-                    <div style={{ flex: 1, minWidth: '180px' }}>
-                      <span className="meta-label">ATTACK MODE</span>
-                      <select
-                        name="byzantineAttackMode"
-                        className="form-control"
-                        value={formData.byzantineAttackMode}
-                        onChange={(e) => setFormData({ ...formData, byzantineAttackMode: e.target.value })}
-                        style={{ color: '#FFFFFF' }}
-                      >
-                        <option value="EQUIVOCATION">Equivocation (PoS)</option>
-                        <option value="BLOCK_WITHHOLDING">Block Withholding</option>
-                        <option value="INVALID_BLOCK">Invalid Block Proposal</option>
-                        <option value="ALL">All Attacks</option>
-                        <option value="NONE">None (Honest)</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="form-group" style={{ marginTop: '16px', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: '110px' }}>
-                      <span className="meta-label">PACKET LOSS (0-1)</span>
-                      <input
-                        type="number"
-                        name="packetLossRate"
-                        className="form-control"
-                        value={formData.packetLossRate}
-                        onChange={(e) => setFormData({ ...formData, packetLossRate: parseFloat(e.target.value) || 0 })}
-                        min="0"
-                        max="1"
-                        step="0.05"
-                        style={{ color: '#FFFFFF' }}
-                      />
-                    </div>
-                    <div style={{ flex: 1, minWidth: '110px' }}>
-                      <span className="meta-label">LATENCY JITTER</span>
-                      <input
-                        type="number"
-                        name="networkLatencyJitter"
-                        className="form-control"
-                        value={formData.networkLatencyJitter}
-                        onChange={(e) => setFormData({ ...formData, networkLatencyJitter: parseInt(e.target.value) || 0 })}
-                        min="0"
-                        max="10"
-                        style={{ color: '#FFFFFF' }}
-                      />
-                    </div>
-                    <div style={{ flex: 1, minWidth: '120px' }}>
-                      <span className="meta-label">PARTITION START</span>
-                      <input
-                        type="number"
-                        name="partitionStartTick"
-                        className="form-control"
-                        value={formData.partitionStartTick}
-                        onChange={(e) => setFormData({ ...formData, partitionStartTick: parseInt(e.target.value) || -1 })}
-                        min="-1"
-                        style={{ color: '#FFFFFF' }}
-                      />
-                    </div>
-                    <div style={{ flex: 1, minWidth: '120px' }}>
-                      <span className="meta-label">PARTITION END</span>
-                      <input
-                        type="number"
-                        name="partitionEndTick"
-                        className="form-control"
-                        value={formData.partitionEndTick}
-                        onChange={(e) => setFormData({ ...formData, partitionEndTick: parseInt(e.target.value) || -1 })}
-                        min="-1"
-                        style={{ color: '#FFFFFF' }}
-                      />
-                    </div>
-                    <div style={{ flex: 1, minWidth: '110px' }}>
-                      <span className="meta-label">PARTITION RATIO</span>
-                      <input
-                        type="number"
-                        name="partitionRatio"
-                        className="form-control"
-                        value={formData.partitionRatio}
-                        onChange={(e) => setFormData({ ...formData, partitionRatio: parseFloat(e.target.value) || 0 })}
-                        min="0"
-                        max="1"
-                        step="0.05"
-                        style={{ color: '#FFFFFF' }}
-                      />
-                    </div>
-                  </div>
-                </form>
-                <ExperimentPanel currentConfig={formData} />
+                  </form>
+                  <ExperimentPanel currentConfig={buildPayload()} />
                 </>
               )}
 
@@ -789,129 +1200,159 @@ export default function Simulation() {
                     <div className="value">{formData.nodeCount}</div>
                   </div>
                   <div className="result-item">
+                    <span className="meta-label">TOPOLOGY / CONSENSUS</span>
+                    <div className="value value-small">{formData.networkTopology} / {formData.consensusType}</div>
+                  </div>
+                  <div className="result-item">
                     <span className="meta-label">NETWORK STATE</span>
-                    <div className="value">INITIALIZING...</div>
+                    <div className="value value-small">{latestTick ? `TICK ${latestTick.currentTick} / ${latestTick.totalTicks ?? formData.simulationTicks}` : (loading ? 'INITIALIZING…' : 'IDLE')}</div>
+                  </div>
+                  <div className="result-item">
+                    <span className="meta-label">STREAM</span>
+                    <div className="value value-small">{connectionLabel}</div>
                   </div>
                 </div>
               )}
 
               {activeSection === 2 && latestTick && (
-                <div className="results-grid" style={{ marginTop: '2rem' }}>
-                  <div className="result-item">
-                    <span className="meta-label">LIVE BLOCKS</span>
-                    <div className="value">{latestTick.blockCount}</div>
+                <>
+                  <div className="results-grid" style={{ marginTop: '2rem' }}>
+                    <div className="result-item">
+                      <span className="meta-label">LIVE BLOCKS</span>
+                      <div className="value">{latestTick.blockCount}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">ACTIVE FORKS</span>
+                      <div className="value">{latestTick.activeForks}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">MESSAGES</span>
+                      <div className="value">{latestTick.metrics?.messagesDelivered ?? 'N/A'}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">MAINCHAIN RATE</span>
+                      <div className="value">{latestTick.metrics ? `${(latestTick.metrics.mainchainRate * 100).toFixed(1)}%` : 'N/A'}</div>
+                    </div>
                   </div>
-                  <div className="result-item">
-                    <span className="meta-label">ACTIVE FORKS</span>
-                    <div className="value">{latestTick.activeForks}</div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">MESSAGES</span>
-                    <div className="value">{latestTick.metrics?.messagesDelivered ?? 'N/A'}</div>
-                  </div>
-                </div>
+                  <TrendChart ticks={liveTicks} />
+                </>
               )}
 
               {activeSection === 3 && latestTick && (
-                <div className="results-grid" style={{ marginTop: '2rem' }}>
-                  <div className="result-item">
-                    <span className="meta-label">ACTIVE FORKS</span>
-                    <div className="value">{latestTick.activeForks}</div>
+                <>
+                  <div className="results-grid" style={{ marginTop: '2rem' }}>
+                    <div className="result-item">
+                      <span className="meta-label">ACTIVE FORKS</span>
+                      <div className="value">{latestTick.activeForks}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">INSTANT GINI</span>
+                      <div className="value">{Number(latestTick.metrics?.giniCoefficient ?? latestTick.instantGini ?? 0).toFixed(3)}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">HEAD AGREEMENT</span>
+                      <div className="value">{latestTick.metrics ? `${(latestTick.metrics.canonicalHeadAgreement * 100).toFixed(1)}%` : 'N/A'}</div>
+                    </div>
                   </div>
-                  <div className="result-item">
-                    <span className="meta-label">INSTANT GINI</span>
-                    <div className="value">{Number(latestTick.metrics?.giniCoefficient ?? latestTick.instantGini).toFixed(3)}</div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">HEAD AGREEMENT</span>
-                    <div className="value">{latestTick.metrics ? `${(latestTick.metrics.canonicalHeadAgreement * 100).toFixed(1)}%` : 'N/A'}</div>
-                  </div>
-                </div>
+                  <TrendChart ticks={liveTicks} />
+                </>
               )}
 
               {activeSection === 4 && latestTick && (
-                <div className="results-grid" style={{ marginTop: '2rem' }}>
-                  <div className="result-item">
-                    <span className="meta-label">MAINCHAIN STABILITY</span>
-                    <div className="value">{latestTick.metrics ? `${(latestTick.metrics.canonicalHeadAgreement * 100).toFixed(1)}%` : 'N/A'}</div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">PROPAGATION DELAY</span>
-                    <div className="value">{latestTick.metrics ? `${latestTick.metrics.averagePropagationDelayTicks.toFixed(1)} ticks` : 'N/A'}</div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">ACTIVE / INACT / BYZ</span>
-                    <div className="value">
-                      {latestTick.metrics?.activeAgents ?? 'N/A'} / {latestTick.metrics?.inactiveAgents ?? 0} / {latestTick.metrics?.byzantineAgents ?? 0}
-                    </div>
-                  </div>
-                  {(latestTick.metrics?.maliciousActionsAttempted ?? 0) > 0 && (
+                <>
+                  <div className="results-grid" style={{ marginTop: '2rem' }}>
                     <div className="result-item">
-                      <span className="meta-label">MALICIOUS ACTIONS</span>
-                      <div className="value">{latestTick.metrics.maliciousActionsAttempted}</div>
+                      <span className="meta-label">MAINCHAIN RATE</span>
+                      <div className="value">{latestTick.metrics ? `${(latestTick.metrics.mainchainRate * 100).toFixed(1)}%` : 'N/A'}</div>
                     </div>
-                  )}
-                  <div className="result-item">
-                    <span className="meta-label">TXS CREATED / INCLUDED</span>
-                    <div className="value">
-                      {latestTick.metrics
-                        ? latestTick.metrics.transactionsCreated > 0
-                          ? `${latestTick.metrics.transactionsCreated} / ${latestTick.metrics.transactionsIncluded}`
-                          : '0 / 0'
-                        : 'N/A'}
+                    <div className="result-item">
+                      <span className="meta-label">HEAD AGREEMENT</span>
+                      <div className="value">{latestTick.metrics ? `${(latestTick.metrics.canonicalHeadAgreement * 100).toFixed(1)}%` : 'N/A'}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">BRANCHING RATIO F</span>
+                      <div className="value">{latestTick.metrics ? latestTick.metrics.branchingRatio.toFixed(3) : 'N/A'}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">PROPAGATION DELAY</span>
+                      <div className="value">{latestTick.metrics ? `${latestTick.metrics.averagePropagationDelayTicks.toFixed(1)} ticks` : 'N/A'}</div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">ACTIVE / INACT / BYZ</span>
+                      <div className="value">
+                        {latestTick.metrics?.activeAgents ?? 'N/A'} / {latestTick.metrics?.inactiveAgents ?? 0} / {latestTick.metrics?.byzantineAgents ?? 0}
+                      </div>
+                    </div>
+                    {(latestTick.metrics?.maliciousActionsAttempted ?? 0) > 0 && (
+                      <div className="result-item">
+                        <span className="meta-label">MALICIOUS ACTIONS</span>
+                        <div className="value">{latestTick.metrics.maliciousActionsAttempted}</div>
+                      </div>
+                    )}
+                    <div className="result-item">
+                      <span className="meta-label">TXS CREATED / INCLUDED</span>
+                      <div className="value">
+                        {latestTick.metrics
+                          ? latestTick.metrics.transactionsCreated > 0
+                            ? `${latestTick.metrics.transactionsCreated} / ${latestTick.metrics.transactionsIncluded}`
+                            : '0 / 0'
+                          : 'N/A'}
+                      </div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">TX SUCCESS RATE</span>
+                      <div className="value">
+                        {latestTick.metrics
+                          ? latestTick.metrics.transactionsCreated > 0
+                          ? `${(latestTick.metrics.transactionSuccessRate * 100).toFixed(1)}%`
+                            : 'N/A'
+                          : 'N/A'}
+                      </div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">MSGS (SENT/DELIV/DROP)</span>
+                      <div className="value">
+                        {latestTick.metrics ? `${latestTick.metrics.messagesSent} / ${latestTick.metrics.messagesDelivered} / ${latestTick.metrics.messagesDropped}` : 'N/A'}
+                      </div>
+                    </div>
+                    <div className="result-item">
+                      <span className="meta-label">PARTITION STATUS</span>
+                      <div className="value">
+                        {latestTick.metrics?.networkPartitionActive ? 'ACTIVE' : 'NORMAL'}
+                      </div>
                     </div>
                   </div>
-                  <div className="result-item">
-                    <span className="meta-label">TX SUCCESS RATE</span>
-                    <div className="value">
-                      {latestTick.metrics
-                        ? latestTick.metrics.transactionsCreated > 0
-                        ? `${(latestTick.metrics.transactionSuccessRate * 100).toFixed(1)}%`
-                          : 'N/A'
-                        : 'N/A'}
-                    </div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">MSGS (SENT/DELIV/DROP)</span>
-                    <div className="value">
-                      {latestTick.metrics ? `${latestTick.metrics.messagesSent} / ${latestTick.metrics.messagesDelivered} / ${latestTick.metrics.messagesDropped}` : 'N/A'}
-                    </div>
-                  </div>
-                  <div className="result-item">
-                    <span className="meta-label">PARTITION STATUS</span>
-                    <div className="value">
-                      {latestTick.metrics?.networkPartitionActive ? 'ACTIVE' : 'NORMAL'}
-                    </div>
-                  </div>
-                </div>
+                  <TrendChart ticks={liveTicks} />
+                </>
               )}
 
               {activeSection === 5 && results && (
                 <div>
+                  {results.errorMessage && <div className="exp-error">{results.errorMessage}</div>}
                   <div className="results-grid">
                     <div className="result-item">
                       <span className="meta-label">STATUS / CONSENSUS</span>
-                      <div className="value">{results.status || 'COMPLETED'} / {results.consensusType || formData.consensusType}</div>
+                      <div className="value value-small">{results.status || 'COMPLETED'} / {results.consensusType || formData.consensusType}</div>
                     </div>
                     <div className="result-item">
                       <span className="meta-label">SEED / TICKS</span>
                       <div className="value">{results.randomSeed ?? formData.randomSeed} / {results.simulationTicks ?? formData.simulationTicks}</div>
                     </div>
                     <div className="result-item">
-                      <span className="meta-label">MAINCHAIN RATE</span>
-                      <div className="value">{(results.mainchainRate * 100).toFixed(1)}%</div>
+                      <span className="meta-label">MAINCHAIN RATE μ</span>
+                      <div className="value">{results.mainchainRate != null ? `${(results.mainchainRate * 100).toFixed(1)}%` : '—'}</div>
                     </div>
                     <div className="result-item">
-                      <span className="meta-label">BRANCHING RATIO</span>
-                      <div className="value">{results.branchingRatio.toFixed(3)}</div>
+                      <span className="meta-label">BRANCHING RATIO F</span>
+                      <div className="value">{results.branchingRatio != null ? results.branchingRatio.toFixed(3) : '—'}</div>
                     </div>
                     <div className="result-item">
                       <span className="meta-label">GINI COEFFICIENT</span>
-                      <div className="value">{results.finalGiniCoefficient.toFixed(3)}</div>
+                      <div className="value">{results.finalGiniCoefficient != null ? results.finalGiniCoefficient.toFixed(3) : '—'}</div>
                     </div>
                     <div className="result-item">
                       <span className="meta-label">DURATION</span>
-                      <div className="value">{results.durationMillis} ms</div>
+                      <div className="value">{results.durationMillis != null ? `${results.durationMillis} ms` : '—'}</div>
                     </div>
                     {results.metrics && <>
                       <div className="result-item">
@@ -923,7 +1364,7 @@ export default function Simulation() {
                         <div className="value">{results.metrics.staleBlocks} / {results.metrics.orphanBlocks}</div>
                       </div>
                       <div className="result-item">
-                        <span className="meta-label">CONVERGENCE</span>
+                        <span className="meta-label">CANONICAL HEAD AGREEMENT</span>
                         <div className="value">{(results.metrics.canonicalHeadAgreement * 100).toFixed(1)}%</div>
                       </div>
                       <div className="result-item">
@@ -976,7 +1417,8 @@ export default function Simulation() {
                       </div>
                     </>}
                   </div>
-                  <button onClick={() => { setActiveSection(0); setSimulationStarted(false); setLiveTicks([]); setResults(null); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
+                  {liveTicks.length > 0 && <TrendChart ticks={liveTicks} />}
+                  <button onClick={() => { setActiveSection(0); setSimulationStarted(false); setLiveTicks([]); setResults(null); setSimulationId(null); setWsStatus('idle'); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
                     NEW SEQUENCE ↺
                   </button>
                 </div>
@@ -1005,6 +1447,8 @@ export default function Simulation() {
         <div style={{ position: 'absolute', top: '50%', right: '25%', transform: 'translate(50%, -50%)', zIndex: 10 }}>
           <button 
             onClick={handleStartSimulation} 
+            disabled={loading || !user}
+            title={!user ? 'Sign in required' : 'Start a real simulation run'}
             style={{
               background: '#0a0a0c',
               border: '1px solid #00ffff',
@@ -1015,7 +1459,8 @@ export default function Simulation() {
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
               boxShadow: '0 0 20px rgba(0,255,255,0.2), inset 0 0 10px rgba(0,255,255,0.1)',
-              cursor: 'pointer',
+              cursor: loading || !user ? 'not-allowed' : 'pointer',
+              opacity: loading || !user ? 0.45 : 1,
               transition: 'all 0.3s ease',
               borderRadius: '4px',
               fontFamily: 'var(--font-mono)'
@@ -1040,20 +1485,33 @@ export default function Simulation() {
 
 
 
+      {/* ARCHIVE / HISTORY OVERLAYS */}
+      {drawer === 'history' && (
+        <HistoryPanel onClose={() => setDrawer(null)} onOpenRun={openHistoryRun} />
+      )}
+      {drawer === 'research' && (
+        <ResearchPanel onClose={() => setDrawer(null)} />
+      )}
+
       {/* BOTTOM TELEMETRY BAR */}
       <footer className="bottom-bar">
         <div className="bottom-stats">
-          <div style={{ display: 'flex', gap: '2rem' }}>
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
             <span>NODES: <span style={{ color: '#FFFFFF' }}>{formData.nodeCount}</span></span>
+            <span>TOPOLOGY: <span style={{ color: '#FFFFFF' }}>{formData.networkTopology}</span></span>
+            {latestTick && <span>TICK: <span style={{ color: '#FFFFFF' }}>{latestTick.currentTick}/{latestTick.totalTicks ?? formData.simulationTicks}</span></span>}
             {latestTick && <span>BLOCKS: <span style={{ color: '#FFFFFF' }}>{latestTick.blockCount}</span></span>}
             {latestTick && <span>FORKS: <span style={{ color: '#FFFFFF' }}>{latestTick.activeForks}</span></span>}
-            {latestTick && <span>LATENCY: <span style={{ color: '#FFFFFF' }}>{formData.blockGossipLatency}</span>s</span>}
-            {latestTick && <span>MAINCHAIN RATE: <span style={{ color: '#FFFFFF' }}>{latestTick.mainchainRate != null ? (latestTick.mainchainRate * 100).toFixed(1) + '%' : 'N/A'}</span></span>}
+            {latestTick && <span>MAINCHAIN: <span style={{ color: '#FFFFFF' }}>{latestTick.metrics?.mainchainRate != null ? (latestTick.metrics.mainchainRate * 100).toFixed(1) + '%' : 'N/A'}</span></span>}
+            {simulationId && <span>RUN: <span style={{ color: '#FFFFFF' }}>{simulationId.slice(0, 8)}</span></span>}
           </div>
-          <div>● ENGINE STATUS: <span style={{ color: '#FFFFFF' }}>{activeSection === 0 ? 'IDLE' : (activeSection === 5 ? 'COMPLETED' : 'RUNNING')}</span></div>
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+            <span>STREAM: <span style={{ color: '#FFFFFF' }}>{connectionLabel}</span></span>
+            <span>● ENGINE STATUS: <span style={{ color: '#FFFFFF' }}>{results ? (results.status || 'COMPLETED') : loading ? 'RUNNING' : 'IDLE'}</span></span>
+          </div>
         </div>
         <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${activeSection === 5 ? 100 : (activeSection > 0 ? progressPercent : 0)}%` }}></div>
+          <div className="progress-fill" style={{ width: `${results ? 100 : (activeSection > 0 ? progressPercent : 0)}%` }}></div>
         </div>
       </footer>
     </div>

@@ -1,4 +1,41 @@
-export const API_BASE = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const DEFAULT_API_BASE = 'http://localhost:8080/api';
+
+function trimTrailingSlash(value) {
+  return value.replace(/\/+$/, '');
+}
+
+export const API_BASE = trimTrailingSlash(import.meta.env?.VITE_API_BASE_URL || DEFAULT_API_BASE);
+
+// SockJS endpoint lives beside the REST API. It can be overridden independently for
+// deployments where the WebSocket is proxied under a different host/path.
+export const WS_BASE = trimTrailingSlash(
+  import.meta.env?.VITE_WS_URL || API_BASE.replace(/\/api$/, '/ws-simulation')
+);
+
+/** Default configuration shared by the simulation form and the history view. */
+export const DEFAULT_SIMULATION_CONFIG = Object.freeze({
+  nodeCount: 10,
+  consensusType: 'PoW',
+  networkTopology: 'Erdos-Renyi',
+  blockGossipLatency: 0.5,
+  slotDuration: 1.0,
+  simulationTicks: 10,
+  randomSeed: 7,
+  byzantineRatio: 0.0,
+  byzantineBehaviorEnabled: false,
+  byzantineAttackMode: 'EQUIVOCATION',
+  authorityIds: [],
+  inactiveAgentRatio: 0.0,
+  packetLossRate: 0.0,
+  networkLatencyJitter: 2,
+  partitionRatio: 0.0,
+  partitionStartTick: -1,
+  partitionEndTick: -1,
+  transactionsPerAgentPerTick: 0,
+  mempoolCapacity: 100,
+  maxTransactionsPerBlock: 100,
+  transactionAmount: 1.0
+});
 
 export function getStoredUser() {
   try {
@@ -135,8 +172,22 @@ export const blogApi = {
   getCategories: () => request('/blog/categories')
 };
 
-// Simulation experiment API
+// Simulation API
 export const simulationApi = {
+  // Starts a real engine run (persisted in MongoDB and queued through RabbitMQ).
+  start: (configuration) => request('/simulations/start', {
+    method: 'POST',
+    body: JSON.stringify(configuration)
+  }),
+  // Newest-first list of persisted simulation configurations.
+  history: () => request('/simulations/history'),
+  // Stored final result for one run (throws a 404 error when it does not exist yet).
+  result: (simulationId) => request(`/simulations/${simulationId}/result`),
+  // Configuration + status + optional result in one payload.
+  get: (simulationId) => request(`/simulations/${simulationId}`),
+  // Archived exp1-exp6 datasets produced by Phase13ResearchExperiments.
+  researchList: () => request('/simulations/research'),
+  researchDocument: (file) => request(`/simulations/research/${encodeURIComponent(file)}`),
   // Repeats one configuration with an ordered seed list (existing endpoint).
   runExperiment: (configuration, seeds) => request('/simulations/experiment', {
     method: 'POST',

@@ -139,22 +139,40 @@ docker-compose.override.yml
 # Generated build and debug output
 # ==============================
 
-# Compilation and test output files
+# Compilation, test and diagnostic output files
 compile.txt
 compile_log.txt
 compile_output.txt
 compile_err.txt
+compile_out.txt
 run_output.txt
-test_output.txt
-full_test_output.txt
-errors.txt
 run.txt
+clip.txt
+errors.txt
+test_output.txt
+test_pw.txt
+test_pw_results.txt
+test_results.txt
+full_test_output.txt
+build_log.txt
+plan_check.txt
+plan_experiments.txt
+%PYSCRIPT%
 
 # Maven and Java generated reports
 surefire-reports/
 failsafe-reports/
 *.hprof
+*.dumpstream
 
 # Temporary editor and diagnostic output
 *.stackdump
 hs_err_pid*.log
+*.orig
+*.bak
+*.rej
+*~
+
+# Local notes that must never ship
+notes*.txt
+scratch*.md

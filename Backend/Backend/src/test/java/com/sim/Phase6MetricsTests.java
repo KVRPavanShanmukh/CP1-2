@@ -132,17 +132,38 @@ class Phase6MetricsTests {
             engine.tick();
         }
         double mainchainRate = engine.getState().getBlockchainState().getMainchainRate();
-        // After real simulation mainchainRate = canonicalHeight / totalBlocks, range [0, 1]
+        // mainchainRate = canonicalHeight / non-genesis blocks (mu = |M| / |B|),
+        // so a run with no forks is exactly 1.0 and a run with only genesis is 1.0 too.
         assertTrue(mainchainRate >= 0.0 && mainchainRate <= 1.0,
                 "mainchainRate must be in [0, 1], got " + mainchainRate);
-        // mainchainRate is computed from blockchain height, not from Gini.
-        // Verify the source is BlockchainState by checking the denominator is total block count.
         int totalBlocks = engine.getState().getBlockchainState().getTotalBlocks();
         int canonicalHeight = engine.getState().getBlockchainState().getGlobalCanonicalHead() == null
                 ? 0 : engine.getState().getBlockchainState().getGlobalCanonicalHead().getHeight();
-        double expectedRate = totalBlocks > 0 ? (double) canonicalHeight / totalBlocks : 0.0;
+        int nonGenesisBlocks = Math.max(0, totalBlocks - 1);
+        double expectedRate = nonGenesisBlocks == 0
+                ? 1.0 : (double) canonicalHeight / nonGenesisBlocks;
         assertEquals(expectedRate, mainchainRate, 1e-9,
-                "mainchainRate must equal canonicalHeight / totalBlocks");
+                "mainchainRate must equal canonicalHeight / non-genesis blocks");
+
+        // branchingRatio is the fork counterpart F = |Theta| / |M| of the same chain.
+        double expectedBranching = canonicalHeight == 0
+                ? 0.0 : (double) Math.max(0, nonGenesisBlocks - canonicalHeight) / canonicalHeight;
+        assertEquals(expectedBranching, engine.getState().getBlockchainState().getBranchingRatio(), 1e-9,
+                "branchingRatio must equal off-chain blocks / canonical blocks");
+    }
+
+    @Test
+    void mainchainRateIsOneForASingleCanonicalChain() {
+        SimulationConfig cfg = config("PoW", 1, 4);
+        cfg.setBlockGossipLatency(0.0);
+        SimulationEngine engine = new SimulationEngine(cfg);
+        for (int i = 0; i < 4; i++) {
+            engine.tick();
+        }
+        assertEquals(1.0, engine.getState().getBlockchainState().getMainchainRate(), 1e-9,
+                "a single-chain run must report mu = 1.0 (genesis is not counted as a fork)");
+        assertEquals(0.0, engine.getState().getBlockchainState().getBranchingRatio(), 1e-9,
+                "a single-chain run must report F = 0.0");
     }
 
 
@@ -152,6 +173,30 @@ class Phase6MetricsTests {
         SimulationConfig invalid = config("PoW", 2, 0);
         assertThrows(IllegalArgumentException.class, () -> new ExperimentRunner().run(invalid));
         assertThrows(IllegalArgumentException.class, () -> new ExperimentRunner().runRepeated(config("PoW", 2, 1), List.of()));
+    }
+
+    @Test
+    void seededRunsAreBitReproducible() {
+        // The research suite promises that a seed fully determines a run. Block ids feed
+        // deterministic fork-choice tie-breaks, so they must come from the run sequence
+        // rather than a random UUID.
+        SimulationConfig cfg = config("PoS", 6, 8);
+        cfg.setRandomSeed(4242L);
+        cfg.setNetworkLatencyJitter(2);
+        ExperimentRunner runner = new ExperimentRunner();
+        ExperimentRunResult first = runner.run(cfg);
+        ExperimentRunResult second = runner.run(cfg);
+
+        assertEquals("COMPLETED", first.getStatus());
+        assertEquals("COMPLETED", second.getStatus());
+        assertEquals(first.getMetrics().getBlocksProduced(), second.getMetrics().getBlocksProduced());
+        assertEquals(first.getMetrics().getActiveForks(), second.getMetrics().getActiveForks());
+        assertEquals(first.getMetrics().getStaleBlocks(), second.getMetrics().getStaleBlocks());
+        assertEquals(first.getMetrics().getMessagesDelivered(), second.getMetrics().getMessagesDelivered());
+        assertEquals(first.getMetrics().getCanonicalHeadAgreement(),
+                second.getMetrics().getCanonicalHeadAgreement(), 0.0);
+        assertEquals(first.getMetrics().getMainchainRate(), second.getMetrics().getMainchainRate(), 0.0);
+        assertEquals(first.getMetrics().getGiniCoefficient(), second.getMetrics().getGiniCoefficient(), 0.0);
     }
 
     private SimulationEngine engine(String consensus, int nodes, int ticks) {

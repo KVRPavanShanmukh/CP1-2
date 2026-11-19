@@ -11,6 +11,10 @@ public class TickUpdate {
     private int blockCount;
     private MetricsSnapshot metrics;
     private double mainchainRate;
+    /** Configured number of ticks for this run. */
+    private int totalTicks;
+    /** Completed fraction of the run in [0, 1]; 0 before the first tick. */
+    private double progress;
 
     public String getSimulationId() { return simulationId; }
     public void setSimulationId(String simulationId) { this.simulationId = simulationId; }
@@ -30,6 +34,10 @@ public class TickUpdate {
     public void setMetrics(MetricsSnapshot metrics) { this.metrics = metrics; }
     public double getMainchainRate() { return mainchainRate; }
     public void setMainchainRate(double mainchainRate) { this.mainchainRate = mainchainRate; }
+    public int getTotalTicks() { return totalTicks; }
+    public void setTotalTicks(int totalTicks) { this.totalTicks = totalTicks; }
+    public double getProgress() { return progress; }
+    public void setProgress(double progress) { this.progress = progress; }
 
     @Override
     public boolean equals(Object o) {
@@ -40,13 +48,16 @@ public class TickUpdate {
                activeForks == that.activeForks &&
                Double.compare(that.instantGini, instantGini) == 0 &&
                Double.compare(that.mainchainRate, mainchainRate) == 0 &&
+               totalTicks == that.totalTicks &&
+               Double.compare(that.progress, progress) == 0 &&
                blockCount == that.blockCount &&
                Objects.equals(simulationId, that.simulationId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(simulationId, currentTick, activeForks, instantGini, mainchainRate, blockCount);
+        return Objects.hash(simulationId, currentTick, activeForks, instantGini, mainchainRate, blockCount,
+                totalTicks, progress);
     }
 
     @Override
@@ -58,6 +69,8 @@ public class TickUpdate {
                 ", instantGini=" + instantGini +
                 ", mainchainRate=" + mainchainRate +
                 ", blockCount=" + blockCount +
+                ", totalTicks=" + totalTicks +
+                ", progress=" + progress +
                 '}';
     }
 }

@@ -1,7 +1,6 @@
 package com.sim.consensus;
 
 import java.util.Locale;
-import java.util.UUID;
 import java.util.List;
 
 import com.sim.agent.BlockchainAgent;
@@ -38,7 +37,7 @@ public abstract class ConsensusStrategy {
         String parentId = parent == null ? Block.GENESIS_ID : parent.getBlockId();
         List<Transaction> transactions = agent.getPendingTransactions().subList(0,
                 Math.min(state.getConfig().getMaxTransactionsPerBlock(), agent.getMempoolSize()));
-        Block block = new Block(UUID.randomUUID().toString(), parentId, agent.getId(),
+        Block block = new Block(state.nextBlockId(), parentId, agent.getId(),
                 newHeight, state.getCurrentTick(), transactions);
         agent.incrementBlocksProposed();
         if (!agent.receiveBlock(block) || !state.getBlockchainState().addBlock(block)) {

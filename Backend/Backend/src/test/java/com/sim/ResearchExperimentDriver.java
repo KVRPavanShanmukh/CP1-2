@@ -2,16 +2,13 @@ package com.sim;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sim.engine.SimulationEngine;
 import com.sim.experiment.*;
-import com.sim.metrics.MetricsSnapshot;
 import com.sim.model.SimulationConfig;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -23,15 +20,15 @@ import java.util.*;
 public class ResearchExperimentDriver {
 
     private static final List<Long> SEEDS = List.of(1L, 2L, 3L, 4L, 5L);
-    private static final String RESULTS_DIR = "D:\\CP1\\CHAIN55\\PROJECT B\\docs\\research-results";
-    private static final ObjectMapper MAPPER = new ObjectMapper()
+    private static final Path RESULTS_DIR = Phase13ResearchExperiments.resolveResultsDir();
+    private static final ObjectMapper MAPPER = Phase13ResearchExperiments.datasetMapper()
             .enable(SerializationFeature.INDENT_OUTPUT);
 
     private final ExperimentComparisonRunner runner = new ExperimentComparisonRunner();
 
     public static void main(String[] args) throws Exception {
         ResearchExperimentDriver driver = new ResearchExperimentDriver();
-        Files.createDirectories(Paths.get(RESULTS_DIR));
+        Files.createDirectories(RESULTS_DIR);
         driver.runAll();
     }
 
@@ -55,7 +52,7 @@ public class ResearchExperimentDriver {
         ExperimentComparisonResult result = runner.run(request(
                 "baseline-latency-0.5", baseline,
                 "treatment-latency-3.0", treatment, SEEDS));
-        writeJson("exp1-latency.json", result);
+        writeJson("exp1-network-latency.json", result);
         printSummary("Exp 1 — Latency (0.5 → 3.0)", result);
     }
 
@@ -69,7 +66,7 @@ public class ResearchExperimentDriver {
         ExperimentComparisonResult result = runner.run(request(
                 "baseline-packetloss-0.0", baseline,
                 "treatment-packetloss-0.3", treatment, SEEDS));
-        writeJson("exp2-packetloss.json", result);
+        writeJson("exp2-packet-loss.json", result);
         printSummary("Exp 2 — Packet Loss (0.0 → 0.3)", result);
     }
 
@@ -91,7 +88,7 @@ public class ResearchExperimentDriver {
         ExperimentComparisonResult result = runner.run(request(
                 "baseline-partition-none", baseline,
                 "treatment-partition-0.4-ticks2-6", treatment, SEEDS));
-        writeJson("exp3-partition.json", result);
+        writeJson("exp3-network-partition.json", result);
         printSummary("Exp 3 — Partition (none → 0.4 ticks 2-6)", result);
     }
 
@@ -103,7 +100,7 @@ public class ResearchExperimentDriver {
         baseline.setByzantineBehaviorEnabled(false);
         baseline.setByzantineAttackMode("EQUIVOCATION");
         SimulationConfig treatment = baseConfig();
-        treatment.setByzantineRatio(0.33);
+        treatment.setByzantineRatio(0.34);
         treatment.setByzantineBehaviorEnabled(true);
         treatment.setByzantineAttackMode("ALL");
         ExperimentComparisonResult result = runner.run(request(
@@ -123,7 +120,7 @@ public class ResearchExperimentDriver {
         ExperimentComparisonResult result = runner.run(request(
                 "baseline-txload-0", baseline,
                 "treatment-txload-3", treatment, SEEDS));
-        writeJson("exp5-txload.json", result);
+        writeJson("exp5-tx-load.json", result);
         printSummary("Exp 5 — Transaction Load (0 → 3)", result);
     }
 
@@ -188,7 +185,7 @@ public class ResearchExperimentDriver {
     }
 
     private void writeJson(String filename, Object obj) throws IOException {
-        Path path = Paths.get(RESULTS_DIR, filename);
+        Path path = RESULTS_DIR.resolve(filename);
         try (FileWriter writer = new FileWriter(path.toFile())) {
             MAPPER.writeValue(writer, obj);
         }

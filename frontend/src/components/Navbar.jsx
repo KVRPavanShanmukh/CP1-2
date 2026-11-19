@@ -45,6 +45,10 @@ export default function Navbar() {
     navigate('/simulation');
   };
 
+  const handleLearningClick = () => {
+    navigate('/learning');
+  };
+
   const handleAgentClick = (e) => {
     e.preventDefault();
     // Item is displayed as required, but performs no action
@@ -72,6 +76,7 @@ export default function Navbar() {
   const isTeamActive = (location.pathname === '/landing' || location.pathname === '/') && landingSection === 4;
   const isDashboardActive = location.pathname === '/dashboard';
   const isSimulationActive = location.pathname === '/simulation';
+  const isLearningActive = ['/learning', '/manual', '/abstract'].includes(location.pathname);
   const isProfileActive = location.pathname === '/profile';
   const isBlogActive = location.pathname === '/blog';
 
@@ -114,7 +119,16 @@ export default function Navbar() {
           SIMULATION
         </div>
 
-        {/* 4. AGENT (Display item, inert as required) */}
+        {/* 4. LEARNING DOCS */}
+        <div
+          id="nav-item-learning"
+          className={`global-nav-link ${isLearningActive ? 'active' : ''}`}
+          onClick={handleLearningClick}
+        >
+          LEARN
+        </div>
+
+        {/* 5. AGENT (Display item, inert as required) */}
         <div
           id="nav-item-agent"
           className="global-nav-link inert-agent"

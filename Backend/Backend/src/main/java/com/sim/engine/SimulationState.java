@@ -17,6 +17,7 @@ public class SimulationState {
     private int currentTick = 0;
     private int transactionSequence = 0;
     private int transactionsCreatedCount = 0;
+    private int blockSequence = 0;
 
     public SimulationState(SimulationConfig config, Random rng) {
         this.config = config;
@@ -45,6 +46,18 @@ public class SimulationState {
     public com.sim.network.NetworkModel getNetworkModel() { return networkModel; }
     
     public void incrementTick() { currentTick++; }
+
+    /**
+     * Returns the next block identifier from a per-run monotonic sequence.
+     *
+     * <p>Block identifiers participate in deterministic fork-choice tie-breaks, so a
+     * random UUID would make two runs with the same seed diverge. Deriving the id from
+     * the simulation sequence keeps seeded runs reproducible without consuming the RNG
+     * stream used for network and production draws.</p>
+     */
+    public String nextBlockId() {
+        return "b" + (++blockSequence);
+    }
 
     /**
      * Generates transactions for the current tick. Each agent attempts to send

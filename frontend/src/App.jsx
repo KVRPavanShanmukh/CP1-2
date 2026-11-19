@@ -8,6 +8,9 @@ import Simulation from './pages/Simulation';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Blog from './pages/Blog';
+import Learning from './pages/Learning';
+import Manual from './pages/Manual';
+import Abstract from './pages/Abstract';
 
 function AppContent() {
   return (
@@ -22,6 +25,9 @@ function AppContent() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/learning" element={<Learning />} />
+        <Route path="/manual" element={<Manual />} />
+        <Route path="/abstract" element={<Abstract />} />
         <Route path="*" element={<Landing />} />
       </Routes>
     </>

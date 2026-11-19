@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-import java.util.UUID;
 
 import com.sim.blockchain.Attestation;
 import com.sim.blockchain.Block;
@@ -111,7 +110,7 @@ public class ByzantineNodeAgent extends BlockchainAgent {
         maliciousActionsAttempted++;
         // Construct a structurally invalid block (negative height, invalid parent)
         Block invalidBlock = new Block(
-                UUID.randomUUID().toString(),
+                state.nextBlockId(),
                 "invalid-parent-" + state.getCurrentTick(),
                 getId(),
                 -1,

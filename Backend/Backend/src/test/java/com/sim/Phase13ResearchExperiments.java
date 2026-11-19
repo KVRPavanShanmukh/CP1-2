@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,8 +20,77 @@ import com.sim.experiment.ExperimentComparisonRequest.NamedExperimentConfig;
 
 class Phase13ResearchExperiments {
     private static final List<Long> SEEDS = List.of(1L, 2L, 3L, 4L, 5L);
-    private static final String RESULTS_DIR = "D:\\CP1\\CHAIN55\\PROJECT B\\docs\\research-results";
+    /** Overridable with -Dchain55.researchResultsDir=<path>; defaults to docs/research-results. */
+    private static final Path RESULTS_DIR = resolveResultsDir();
     private static final ExperimentComparisonRunner runner = new ExperimentComparisonRunner();
+
+    /**
+     * Locates the repository's docs/research-results directory independently of the
+     * machine it runs on. Maven may be invoked from the repository root or from
+     * Backend/Backend, so walk up until an existing docs/research-results is found.
+     */
+    static Path resolveResultsDir() {
+        String override = System.getProperty("chain55.researchResultsDir");
+        if (override != null && !override.isBlank()) {
+            return Paths.get(override).toAbsolutePath().normalize();
+        }
+        Path current = Paths.get(System.getProperty("user.dir", ".")).toAbsolutePath().normalize();
+        List<Path> existingCandidates = new ArrayList<>();
+        for (int depth = 0; depth < 5 && current != null; depth++) {
+            Path candidate = current.resolve("docs").resolve("research-results");
+            if (Files.isDirectory(candidate)) {
+                existingCandidates.add(candidate.toAbsolutePath().normalize());
+            }
+            current = current.getParent();
+        }
+        // Prefer a directory that already holds experiment datasets; the backend module
+        // may contain an empty docs/research-results placeholder that must not win.
+        for (Path candidate : existingCandidates) {
+            try (var entries = Files.list(candidate)) {
+                boolean hasDatasets = entries.anyMatch(path -> {
+                    String name = path.getFileName().toString();
+                    return name.startsWith("exp") && name.endsWith(".json");
+                });
+                if (hasDatasets) {
+                    return candidate;
+                }
+            } catch (IOException ignored) {
+                // Fall through to the remaining candidates.
+            }
+        }
+        if (!existingCandidates.isEmpty()) {
+            return existingCandidates.get(0);
+        }
+        Path fallback = Paths.get("..", "..", "docs", "research-results").toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(fallback);
+            return fallback;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not create " + fallback, e);
+        }
+    }
+
+    /**
+     * Standalone mapper for the archived datasets. A plain ObjectMapper does not know
+     * {@link java.time.Instant} (the REST layer uses Spring's configured mapper), so the
+     * only java.time value in the payload is serialized explicitly as an ISO-8601 string.
+     */
+    static com.fasterxml.jackson.databind.ObjectMapper datasetMapper() {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var module = new com.fasterxml.jackson.databind.module.SimpleModule();
+        module.addSerializer(java.time.Instant.class,
+                new com.fasterxml.jackson.databind.JsonSerializer<java.time.Instant>() {
+                    @Override
+                    public void serialize(java.time.Instant value,
+                            com.fasterxml.jackson.core.JsonGenerator generator,
+                            com.fasterxml.jackson.databind.SerializerProvider serializers)
+                            throws java.io.IOException {
+                        generator.writeString(value.toString());
+                    }
+                });
+        mapper.registerModule(module);
+        return mapper;
+    }
 
     static SimulationConfig baseConfig() {
         SimulationConfig c = new SimulationConfig();
@@ -48,12 +119,13 @@ class Phase13ResearchExperiments {
     }
 
     static void saveJson(String filename, Object obj) throws Exception {
-        Path p = Paths.get(RESULTS_DIR, filename);
+        Path p = RESULTS_DIR.resolve(filename);
         java.nio.file.Files.createDirectories(p.getParent());
         try (FileWriter w = new FileWriter(p.toFile())) {
-            var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            mapper.writerWithDefaultPrettyPrinter().writeValue(w, obj);
+            datasetMapper().writerWithDefaultPrettyPrinter().writeValue(w, obj);
         }
+        assertTrue(Files.isRegularFile(p) && Files.size(p) > 0,
+                "experiment dataset must be written to " + p);
     }
 
     @Test void exp1() throws Exception {
@@ -62,6 +134,12 @@ class Phase13ResearchExperiments {
         var r = runner.run(request("E1-baseline", base, "E1-treatment", treat));
         assertEquals(5, r.getBaseline().getAttemptedRuns());
         assertTrue(r.getTreatments().get(0).isControlled());
+        // The paper's core chain metrics must be part of every comparison, not omitted.
+        var metrics = r.getTreatments().get(0).getComparisons().stream()
+                .map(com.sim.experiment.MetricComparison::getMetric).toList();
+        assertTrue(metrics.contains("giniCoefficient"), "giniCoefficient must be compared");
+        assertTrue(metrics.contains("mainchainRate"), "mainchainRate must be compared");
+        assertTrue(metrics.contains("branchingRatio"), "branchingRatio must be compared");
         saveJson("exp1-network-latency.json", r);
     }
 
@@ -88,7 +166,8 @@ class Phase13ResearchExperiments {
 
     @Test void exp4() throws Exception {
         var base = baseConfig(); base.setByzantineRatio(0.0); base.setByzantineBehaviorEnabled(false); base.setByzantineAttackMode("EQUIVOCATION");
-        var treat = baseConfig(); treat.setByzantineRatio(0.33); treat.setByzantineBehaviorEnabled(true); treat.setByzantineAttackMode("ALL");
+        // Floor semantics: 0.34 × 6 = 2.04 -> 2 Byzantine agents (the documented 2 of 6).
+        var treat = baseConfig(); treat.setByzantineRatio(0.34); treat.setByzantineBehaviorEnabled(true); treat.setByzantineAttackMode("ALL");
         var r = runner.run(request("E4-baseline", base, "E4-treatment", treat));
         assertEquals(5, r.getBaseline().getAttemptedRuns());
         assertTrue(r.getTreatments().get(0).isControlled());

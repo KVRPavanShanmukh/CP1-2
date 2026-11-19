@@ -1,5 +1,6 @@
 package com.sim.model;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -20,6 +21,8 @@ public class SimulationConfig {
     private double slotDuration;
     private String status; // CREATED, RUNNING, COMPLETED, FAILED
     private Long randomSeed;
+    /** Wall-clock creation time, used to order simulation history newest-first. */
+    private Instant createdAt;
     private double byzantineRatio = 0.0; // Default no byzantine
     private boolean byzantineBehaviorEnabled = false;
     /**
@@ -90,10 +93,14 @@ public class SimulationConfig {
     public SimulationConfig() {
         this.id = UUID.randomUUID().toString();
         this.status = "CREATED";
+        this.createdAt = Instant.now();
     }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
     public int getNodeCount() { return nodeCount; }
     public void setNodeCount(int nodeCount) { this.nodeCount = nodeCount; }

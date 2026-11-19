@@ -80,6 +80,8 @@ public class MetricsCalculator {
         snapshot.setBlockProductionRate(state.getCurrentTick() == 0 ? 0.0 : (double) snapshot.getBlocksProduced() / state.getCurrentTick());
         snapshot.setMessageThroughput(state.getCurrentTick() == 0 ? 0.0 : (double) snapshot.getMessagesDelivered() / state.getCurrentTick());
         snapshot.setGiniCoefficient(currentGini);
+        snapshot.setMainchainRate(state.getBlockchainState().getMainchainRate());
+        snapshot.setBranchingRatio(state.getBlockchainState().getBranchingRatio());
         // Use actual count of transactions that were accepted into mempools (not an estimate),
         // so seeded repeated runs produce consistent, honest metrics.
         int created = state.getTransactionsCreatedCount();

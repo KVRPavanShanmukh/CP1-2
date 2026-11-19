@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import './InfoPages.css';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -22,9 +24,14 @@ const Learning = () => {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} style={{ marginBottom: '6rem' }}>
+      <motion.div variants={itemVariants} style={{ marginBottom: '4rem' }}>
         <h1>Learning <span className="serif">Notes</span></h1>
         <p style={{ marginTop: '1.5rem', maxWidth: '600px' }}>Comprehensive notes on blockchain architecture, simulation mechanics, and consensus theories.</p>
+        <div className="doc-links">
+          <Link className="doc-link" to="/manual">Simulation manual ↗</Link>
+          <Link className="doc-link" to="/abstract">Research abstract ↗</Link>
+          <Link className="doc-link" to="/simulation">Open simulator ↗</Link>
+        </div>
       </motion.div>
 
       <div className="grid-layout">

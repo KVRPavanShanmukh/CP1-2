@@ -28,6 +28,10 @@ public class MetricsSnapshot {
     private double blockProductionRate;
     private double messageThroughput;
     private double giniCoefficient;
+    /** Mainchain rate mu = canonical blocks / non-genesis blocks (1.0 when only genesis exists). */
+    private double mainchainRate;
+    /** Branching ratio F = off-chain blocks / canonical blocks (0.0 when no canonical block exists). */
+    private double branchingRatio;
     private int queuedMessages;
     private int convergenceTick = -1;
     private int transactionsCreated;
@@ -99,6 +103,10 @@ public class MetricsSnapshot {
     public void setMessageThroughput(double value) { messageThroughput = value; }
     public double getGiniCoefficient() { return giniCoefficient; }
     public void setGiniCoefficient(double value) { giniCoefficient = value; }
+    public double getMainchainRate() { return mainchainRate; }
+    public void setMainchainRate(double value) { mainchainRate = value; }
+    public double getBranchingRatio() { return branchingRatio; }
+    public void setBranchingRatio(double value) { branchingRatio = value; }
     public int getQueuedMessages() { return queuedMessages; }
     public void setQueuedMessages(int value) { queuedMessages = value; }
     public int getConvergenceTick() { return convergenceTick; }

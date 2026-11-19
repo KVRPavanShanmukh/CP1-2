@@ -32,7 +32,10 @@ public class SimulationEngine {
 
     private void initializeAgents() {
         int nodeCount = state.getConfig().getNodeCount();
+        // Ratio -> count uses floor semantics, documented by Phase8InactiveAgentTests:
+        // 0.3 of 5 agents is 1 inactive agent, never 2.
         int byzantineCount = (int) (nodeCount * state.getConfig().getByzantineRatio());
+        byzantineCount = Math.max(0, Math.min(nodeCount, byzantineCount));
 
         for (int i = 0; i < nodeCount; i++) {
             BlockchainAgent agent;
@@ -50,6 +53,7 @@ public class SimulationEngine {
         // Uses the seeded state RNG *only* when inactiveCount > 0, so default
         // (ratio = 0) simulations produce bit-identical outputs to before.
         int inactiveCount = (int) (nodeCount * state.getConfig().getInactiveAgentRatio());
+        inactiveCount = Math.max(0, Math.min(nodeCount, inactiveCount));
         if (inactiveCount > 0) {
             List<BlockchainAgent> nonByzantine = state.getAgents().stream()
                     .filter(a -> !(a instanceof com.sim.agent.ByzantineNodeAgent))

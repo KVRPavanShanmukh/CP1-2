@@ -44,18 +44,30 @@ RABBITMQ       WEBSOCKET (RabbitMQListener.java forwards)
 
 `MetricsSnapshot` is the backend source of truth for live and final telemetry.
 
+- Chain metrics: `mainchainRate` (μ = |M|/|B| over non-genesis blocks, `1.0` for a single-chain run), `branchingRatio` (F = |Θ|/|M|), `activeForks`, `canonicalBlocks`, and `giniCoefficient` (per-agent block production).
 - Block counts are cumulative per run: proposals/production, globally accepted blocks, validation rejections, local canonical blocks, stale competing blocks, and retained orphans.
 - Canonical/stale/orphan counts are aggregate agent-local observations; they are not global block totals and may count a block once per agent that knows it.
 - Network message counts are cumulative queue events. Propagation delay is the configured scheduled delivery delay in ticks, not physical network latency. Duplicate delivery counts rejected duplicate payload processing.
 - Canonical-head agreement is the fraction of agents sharing the most common local head. Convergence is true only when all agents have a head and agree.
 - Production and message-throughput rates are cumulative totals divided by completed simulation ticks. Gini is recalculated from agent production counts.
 - A run records consensus mode, tick count, seed, status, duration, and the final snapshot. Failed runs retain `FAILED` status and an error message.
+- Each live `TickUpdate` also carries `totalTicks` and `progress` (0–1), plus the full snapshot, so the UI can render progress, charts and final metrics from the same payload.
 
-`ExperimentRunner` reuses `SimulationEngine` for repeated seeded runs. Aggregates report successful sample count, failed-run count, mean, population standard deviation, minimum, and maximum block production. Failed runs are retained and are never treated as zero-valued successful observations.
+`ExperimentRunner` reuses `SimulationEngine` for repeated seeded runs. Seeds fully determine a run because block ids come from a per-run monotonic sequence rather than random UUIDs, keeping LMD-GHOST tie-breaks stable. Aggregates report successful sample count, failed-run count, mean, population standard deviation, minimum, and maximum for 27 metrics, including `mainchainRate`, `branchingRatio` and `giniCoefficient`. Failed runs are retained and are never treated as zero-valued successful observations.
 
-Model limitations remain explicit: PoL is a deterministic agent-ID proxy rather than geographic verification; Byzantine behavior is simulated and is not a security claim; and network delay is a discrete queue model rather than real network latency. Stake/delegate/authority behavior follows the simplified Phase 5 strategies, and transaction metrics describe mempool and chain inclusion inside the model rather than external throughput.
+Model limitations remain explicit: PoL (Proof of Location) is a deterministic agent-ID proximity proxy rather than geographic verification; Byzantine behavior is simulated and is not a security claim; and network delay is a discrete queue model rather than real network latency. Stake/delegate/authority behavior follows the simplified Phase 5 strategies, and transaction metrics describe mempool and chain inclusion inside the model rather than external throughput.
 
 ## Controlled Experiment Workflow
+
+### Run, history and archive endpoints
+
+All simulation endpoints require an authenticated session cookie (`POST /api/auth/login`).
+
+- `POST /api/simulations/start` validates, persists (`RUNNING`) and publishes the job to RabbitMQ. A publish failure marks the configuration `FAILED` instead of leaving it stuck.
+- `GET /api/simulations/history` returns persisted configurations newest-first (MongoDB `createdAt`).
+- `GET /api/simulations/{id}` returns the configuration, its status and the stored final result (or `null` while running).
+- `GET /api/simulations/{id}/result` returns the stored result list, or HTTP 404 until the worker finishes.
+- `GET /api/simulations/research` indexes the archived `exp1`–`exp6` datasets; `GET /api/simulations/research/{file}` returns one dataset exactly as written by `Phase13ResearchExperiments`.
 
 ### Endpoints and backward compatibility
 
@@ -135,8 +147,11 @@ SIMULATION
 │
 ├── /00 CONFIGURATION (IDLE)
 │   ├── Consensus Type (PoW / PoS / DPoS / PoA / PoL)
-│   ├── Nodes (nodeCount)
-│   ├── Latency (blockGossipLatency)
+│   ├── Topology (Erdős–Rényi / Small-World / Scale-Free)
+│   ├── Nodes, Ticks, Seed, Latency, Slot duration, Jitter
+│   ├── Byzantine ratio/mode, Inactive ratio, Packet loss
+│   ├── Partition ratio/start/end and PoA authority ids
+│   ├── Transaction load (tx/agent/tick, mempool, block cap, amount)
 │   └── FLOATING START SIMULATION BUTTON (Over WebGL)
 │
 ├── START

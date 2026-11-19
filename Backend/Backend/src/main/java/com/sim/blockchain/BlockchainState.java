@@ -57,14 +57,36 @@ public class BlockchainState {
         }
         this.globalCanonicalHead = best;
 
-        // Mainchain rate: canonical blocks / total blocks
-        if (allBlocks.size() > 0 && best != null) {
-            this.mainchainRate = (double) best.getHeight() / allBlocks.size();
+        // Mainchain rate mu = |M| / |B| (Kraner et al.), where B excludes the genesis
+        // block and M is the canonical chain. A run with only genesis is fully canonical.
+        int nonGenesisBlocks = Math.max(0, allBlocks.size() - 1);
+        int canonicalBlocks = best == null ? 0 : best.getHeight();
+        if (nonGenesisBlocks == 0) {
+            this.mainchainRate = 1.0;
+        } else {
+            this.mainchainRate = Math.min(1.0, (double) canonicalBlocks / nonGenesisBlocks);
         }
     }
 
     public int getActiveForks() { return activeForks; }
     public double getMainchainRate() { return mainchainRate; }
+    /** Canonical chain length in blocks after genesis (the paper's |M|). */
+    public int getCanonicalBlockCount() {
+        return globalCanonicalHead == null ? 0 : globalCanonicalHead.getHeight();
+    }
+    /** Blocks that are not part of the canonical chain (the paper's |Theta|). */
+    public int getOffChainBlockCount() {
+        return Math.max(0, getTotalBlocks() - 1 - getCanonicalBlockCount());
+    }
+    /**
+     * Branching ratio F = |Theta| / |M|: off-chain blocks per canonical block.
+     * Because mu = |M| / (|M| + |Theta|), F is the direct fork counterpart of the
+     * mainchain rate and equals (1 - mu) / mu when mu > 0.
+     */
+    public double getBranchingRatio() {
+        int canonical = getCanonicalBlockCount();
+        return canonical == 0 ? 0.0 : (double) getOffChainBlockCount() / canonical;
+    }
     public int getTotalBlocks() { return allBlocks.size(); }
     public Collection<Block> getAllBlocks() { return allBlocks.values(); }
     public Block getGlobalCanonicalHead() { return globalCanonicalHead; }

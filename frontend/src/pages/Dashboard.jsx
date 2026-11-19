@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 import SimulationCursor from '../components/SimulationCursor';
 import NexusTeamModal from '../components/NexusTeamModal';
-import { teamApi } from '../services/api';
+import { teamApi, simulationApi, authApi, getStoredUser } from '../services/api';
 import './Simulation.css'; // We will reuse the immersive-shell styles
 
 // --- GENERATIVE WEBGL ENGINE ---
@@ -164,6 +164,46 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
   const [nexusModalOpen, setNexusModalOpen] = useState(false);
+  const [user, setUser] = useState(getStoredUser());
+  const [runs, setRuns] = useState([]);
+  const [latestResult, setLatestResult] = useState(null);
+  const [historyState, setHistoryState] = useState({ loading: true, error: '' });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const me = await authApi.getMe();
+        if (!cancelled && me?.authenticated && me.user) setUser(me.user);
+      } catch {
+        /* keep the cached user; the history call below reports real failures */
+      }
+
+      try {
+        const history = await simulationApi.history();
+        if (cancelled) return;
+        const list = Array.isArray(history) ? history : [];
+        setRuns(list.slice(0, 6));
+        setHistoryState({ loading: false, error: '' });
+
+        const latestCompleted = list.find((run) => run.status === 'COMPLETED');
+        if (latestCompleted) {
+          try {
+            const payload = await simulationApi.get(latestCompleted.id);
+            if (!cancelled) setLatestResult(payload?.result || null);
+          } catch {
+            /* a missing result is not an error for the overview */
+          }
+        }
+      } catch (error) {
+        if (!cancelled) setHistoryState({ loading: false, error: error.message || 'History unavailable.' });
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleNexusTeamClick = async () => {
     try {
@@ -178,18 +218,30 @@ export default function Dashboard() {
     }
   };
 
-  const transactions = [
-    { id: 'tx-89a1', type: 'Received', amount: '+500', date: '2026-09-28', status: 'Completed' },
-    { id: 'tx-44b2', type: 'Sent', amount: '-150', date: '2026-09-27', status: 'Completed' },
-    { id: 'tx-21c3', type: 'Staked', amount: '-1000', date: '2026-09-25', status: 'Active' },
-  ];
+  const displayRuns = runs;
+
+  const formatRunDate = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
+  };
+
+  const metrics = latestResult?.metrics || null;
+  const summary = latestResult
+    ? [
+        { label: 'MAINCHAIN RATE μ', value: `${((latestResult.mainchainRate ?? 0) * 100).toFixed(1)}%` },
+        { label: 'BRANCHING RATIO F', value: (latestResult.branchingRatio ?? 0).toFixed(3) },
+        { label: 'GINI COEFFICIENT', value: (latestResult.finalGiniCoefficient ?? 0).toFixed(3) },
+        { label: 'CANONICAL HEAD', value: metrics ? `${(metrics.canonicalHeadAgreement * 100).toFixed(1)}%` : '—' }
+      ]
+    : [];
   
   const sections = [
     { id: 0, title: "PROJECT\nINTRODUCTION.", desc: "We are building an agent-based modelling system for high-frequency distributed networks. The core engine simulates consensus environments in real-time.", btn: "DISCOVER THE ENGINE ↓" },
     { id: 1, title: "THE NEXUS", desc: "The core abstract concept. A densely connected peer-to-peer network acting as a unified entity. Representing the collective intelligence of the distributed system.", btn: "EXPLORE TOPOLOGY ↗" },
     { id: 2, title: "SYSTEM\nARCHITECTURE", desc: "Underneath the nexus lies a scalable, highly concurrent worker architecture. RabbitMQ drives inter-process message propagation seamlessly.", btn: "VIEW ARCHITECTURE ↗" },
     { id: 3, title: "PROJECT\nVISION", desc: "Transforming ambitious ideas into shipped systems. The vision is to provide absolute clarity into decentralized consensus behaviors through flawless execution.", btn: "ENTER THE FIELD ↓" },
-    { id: 4, title: "FINAL SYSTEM\nOVERVIEW", desc: "Personal account and simulation metadata dashboard. Monitor your real-time CHN55 token holdings and network status here.", btn: "ACCESS SIMULATION ↗" }
+    { id: 4, title: "FINAL SYSTEM\nOVERVIEW", desc: "Live simulation ledger: the latest measured consensus metrics and your most recent runs, read directly from MongoDB.", btn: "ACCESS SIMULATION ↗" }
   ];
 
   const accentColors = [
@@ -260,32 +312,72 @@ export default function Dashboard() {
 
             {activeSection === 4 ? (
               <div style={{ marginTop: '2rem' }}>
-                <div style={{ marginBottom: '2rem' }}>
-                  <span className="meta-label" style={{ marginBottom: '10px' }}>ACCOUNT OVERVIEW (CHN55)</span>
-                  <div style={{ fontSize: '3.5rem', fontWeight: 200, letterSpacing: '-1px', lineHeight: '1', color: '#fff' }}>
-                    2,450<span style={{ fontSize: '0.4em', opacity: 0.5 }}>.00</span>
+                {!user && (
+                  <div className="exp-note exp-warn" style={{ marginBottom: '1.5rem' }}>
+                    Session not detected.{' '}
+                    <button type="button" className="inline-link" onClick={() => navigate('/login')}>SIGN IN</button>{' '}
+                    to load your simulation ledger.
                   </div>
-                </div>
-                
-                <span className="meta-label" style={{ marginBottom: '15px' }}>RECENT ACTIVITY</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
-                  {transactions.map(tx => (
-                    <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                )}
+
+                <span className="meta-label" style={{ marginBottom: '10px' }}>LATEST COMPLETED RUN</span>
+                {latestResult ? (
+                  <>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 200, letterSpacing: '-0.5px', color: '#fff', marginBottom: '1.25rem' }}>
+                      {latestResult.consensusType || '—'}
+                      <span style={{ fontSize: '0.5em', opacity: 0.55 }}> · {latestResult.simulationTicks ?? '—'} ticks · {latestResult.durationMillis ?? '—'} ms</span>
+                    </div>
+                    <div className="results-grid" style={{ maxWidth: '520px' }}>
+                      {summary.map((item) => (
+                        <div className="result-item" key={item.label}>
+                          <span className="meta-label">{item.label}</span>
+                          <div className="value value-small">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="exp-note" style={{ marginBottom: '1.5rem' }}>
+                    {historyState.loading ? 'Loading the latest result…' : 'No completed run has been stored yet. Start one from the simulation page.'}
+                  </div>
+                )}
+
+                <span className="meta-label" style={{ display: 'block', marginTop: '2rem', marginBottom: '10px' }}>RECENT RUNS</span>
+                {historyState.error && <div className="exp-error">{historyState.error}</div>}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
+                  {displayRuns.map((run) => (
+                    <div key={run.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                       <div>
-                        <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>{tx.type}</div>
-                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{tx.date} • {tx.id}</div>
+                        <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                          {run.consensusType || '—'} · {run.nodeCount ?? '—'} nodes
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                          {formatRunDate(run.createdAt)} · {run.simulationTicks ?? '—'} ticks
+                        </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '14px', color: tx.amount.startsWith('+') ? '#fff' : 'rgba(255,255,255,0.6)' }}>{tx.amount} CHN</div>
-                        <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px', color: tx.status === 'Completed' ? 'rgba(255,255,255,0.4)' : '#fff', marginTop: '2px' }}>{tx.status}</div>
+                        <div style={{ fontSize: '11px', letterSpacing: '1px', color: run.status === 'COMPLETED' ? '#7dffb2' : run.status === 'FAILED' ? '#ff5c8a' : '#00ffff' }}>
+                          {run.status || 'UNKNOWN'}
+                        </div>
+                        <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                          {(run.id || '').slice(0, 8)}
+                        </div>
                       </div>
                     </div>
                   ))}
+                  {!historyState.loading && !historyState.error && displayRuns.length === 0 && (
+                    <div className="exp-note">No simulation has been started yet.</div>
+                  )}
                 </div>
                 
-                <button className="hollow-btn" onClick={() => navigate('/simulation')} style={{ marginTop: '30px' }}>
-                  {sections[activeSection].btn}
-                </button>
+                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                  <button className="hollow-btn" onClick={() => navigate('/simulation')} style={{ marginTop: '30px' }}>
+                    {sections[activeSection].btn}
+                  </button>
+                  <button className="hollow-btn" onClick={() => navigate('/simulation', { state: { openDrawer: 'history' } })} style={{ marginTop: '30px', borderColor: '#00ffff', color: '#00ffff' }}>
+                    FULL HISTORY ↗
+                  </button>
+                </div>
               </div>
             ) : (
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
