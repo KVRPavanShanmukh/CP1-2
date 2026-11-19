@@ -817,10 +817,10 @@ export default function Landing() {
 
                   {/* FACULTY MENTOR CARD */}
                   <div className="faculty-mentor-box">
-                    <div className="faculty-tag">★ FACULTY MENTOR & RESEARCH GUIDE</div>
+                    <div className="faculty-tag">★ FACULTY GUIDE & RESEARCH MENTOR</div>
                     <div className="faculty-name">K. Nirmala</div>
                     <div className="faculty-dept">
-                      Assistant Professor, Dept. of CS & IT • Koneru Lakshmaiah Education Foundation (KL University)
+                      Faculty Guide, Dept. of Computer Science & Information Technology, KL University
                     </div>
                   </div>
 
@@ -867,9 +867,9 @@ export default function Landing() {
                         <div className="member-name">K.V.R. Sai Pavan Shanmukh</div>
                         <span className="member-role-badge lead">LEAD ARCHITECT</span>
                       </div>
-                      <div className="member-role-title">Lead Architect, Full-Stack & Simulation Engine Developer</div>
+                      <div className="member-role-title">Lead Developer & Full-Stack System Architect</div>
                       <div className="member-contributions">
-                        Designed end-to-end architecture, Spring Boot Complex Adaptive Systems (CAS) engine (Phases 1–13 empirical experiments), RabbitMQ message broker, WebSocket sub-second streaming, and React + Three.js 3D cosmic visualizer.
+                        Architected and built the complete platform end-to-end — including the entire React 19 + Vite frontend, the Three.js 3D Cosmic Agent Visualization, the full Java Spring Boot backend & Agent-Based Simulation Engine (Phases 1–13), all 5 consensus algorithms and network topologies, RabbitMQ + WebSocket real-time streaming, statistical experiment framework, and full-stack integration.
                       </div>
                       <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                         <button
@@ -895,35 +895,35 @@ export default function Landing() {
                     <div className="team-member-card">
                       <div className="member-header">
                         <div className="member-name">Jupalli Pravallika</div>
-                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
+                        <span className="member-role-badge contributor">TEAM MEMBER</span>
                       </div>
-                      <div className="member-role-title">Consensus Protocols & Empirical Research</div>
+                      <div className="member-role-title">Team Member</div>
                       <div className="member-contributions">
-                        Formulated verification pipelines for PoW and PoS consensus dynamics against Kraner et al. (2023) and Wei et al. (2020), LMD GHOST fork choice rule research, and mempool validation.
+                        Literature survey, research documentation, and consensus algorithm comparison.
                       </div>
                     </div>
 
-                    {/* MEMBER 3: V SAI GANESH */}
-                    <div className="team-member-card">
-                      <div className="member-header">
-                        <div className="member-name">V Sai Ganesh</div>
-                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
-                      </div>
-                      <div className="member-role-title">P2P Network Topologies & Latency Dynamics</div>
-                      <div className="member-contributions">
-                        Implemented Erdős–Rényi random graphs, Watts–Strogatz small-world, and Barabási–Albert scale-free graph generators with heterogeneous propagation delays and distance-based gossip dissemination.
-                      </div>
-                    </div>
-
-                    {/* MEMBER 4: JANGA SATHVIK REDDY */}
+                    {/* MEMBER 3: JANGA SATHVIK REDDY */}
                     <div className="team-member-card">
                       <div className="member-header">
                         <div className="member-name">Janga Sathvik Reddy</div>
-                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
+                        <span className="member-role-badge contributor">DATABASE</span>
                       </div>
-                      <div className="member-role-title">Byzantine Adversary & Fault Injection Modelling</div>
+                      <div className="member-role-title">Database Management (MongoDB)</div>
                       <div className="member-contributions">
-                        Designed Byzantine adversary agent models (equivocation, double-spending, selfish mining) and partition disruption routines validated across Phase 10 & 11 test suites.
+                        MongoDB database schema configuration, document collections, and persistent storage management.
+                      </div>
+                    </div>
+
+                    {/* MEMBER 4: V SAI GANESH */}
+                    <div className="team-member-card">
+                      <div className="member-header">
+                        <div className="member-name">V Sai Ganesh</div>
+                        <span className="member-role-badge contributor">QA / TESTING</span>
+                      </div>
+                      <div className="member-role-title">Testing & Quality Assurance</div>
+                      <div className="member-contributions">
+                        Test case validation, quality assurance workflows, and consensus scenario verification.
                       </div>
                     </div>
 
@@ -931,11 +931,11 @@ export default function Landing() {
                     <div className="team-member-card">
                       <div className="member-header">
                         <div className="member-name">Jaladi Rohan Kumar</div>
-                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
+                        <span className="member-role-badge contributor">QA / TESTING</span>
                       </div>
-                      <div className="member-role-title">Gossip Dissemination & Telemetry Metrics</div>
+                      <div className="member-role-title">Testing & Quality Assurance</div>
                       <div className="member-contributions">
-                        Validated P2P block and attestation gossip layers with stochastic packet loss, telemetry schema models, and statistical calculation of mainchain rate ($\mu$), branching ratio ($F$), and Gini coefficient.
+                        Simulation testing execution, scenario verification, and metric output validation.
                       </div>
                     </div>
 
@@ -1305,7 +1305,7 @@ export default function Landing() {
           <div className="creator-modal-card" onClick={(e) => e.stopPropagation()}>
             {/* MODAL HEADER */}
             <div className="creator-modal-header">
-              <span className="creator-badge">★ LEAD DEVELOPER & SYSTEM ARCHITECT</span>
+              <span className="creator-badge">★ LEAD DEVELOPER & FULL-STACK SYSTEM ARCHITECT</span>
               <button
                 className="creator-close-btn"
                 onClick={() => setCreatorSpotlightOpen(false)}
@@ -1323,7 +1323,7 @@ export default function Landing() {
                   KL UNIVERSITY • DEPT. OF COMPUTER SCIENCE & INFORMATION TECHNOLOGY (BATCH 73)
                 </div>
                 <div className="creator-role">
-                  Lead System Architect, Full-Stack & Simulation Engine Developer
+                  Lead Developer & Full-Stack System Architect
                 </div>
               </div>
 
@@ -1332,7 +1332,7 @@ export default function Landing() {
                 <div className="creator-feature-item">
                   <span className="creator-bullet">✦</span>
                   <div>
-                    <strong style={{ color: '#00e5ff' }}>End-to-End System Architecture:</strong> Designed and implemented the complete CHAIN55 distributed consensus simulation platform spanning React 19 WebGL frontend, Spring Boot backend, RabbitMQ broker, and MongoDB persistence.
+                    <strong style={{ color: '#00e5ff' }}>End-to-End System Architecture:</strong> Architected and built the complete platform end-to-end — including the entire React 19 + Vite frontend, the Three.js 3D Cosmic Agent Visualization, the full Java Spring Boot backend & Agent-Based Simulation Engine (Phases 1–13), all 5 consensus algorithms and network topologies, RabbitMQ + WebSocket real-time streaming, statistical experiment framework, and full-stack integration.
                   </div>
                 </div>
 
