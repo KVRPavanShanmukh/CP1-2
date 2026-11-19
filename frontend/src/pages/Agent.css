@@ -1,0 +1,504 @@
+/* ============================================================
+   CHAIN55 — 3D AGENT SPECTACLE COMMAND CENTER
+   ============================================================ */
+
+.agent-viewport-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #020306;
+  font-family: 'JetBrains Mono', monospace;
+  color: #ffffff;
+  user-select: none;
+}
+
+.agent-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: grab;
+}
+
+.agent-canvas:active {
+  cursor: grabbing;
+}
+
+/* --- TOP TELEMETRY HUD STRIP --- */
+.agent-top-hud {
+  position: absolute;
+  top: 80px;
+  left: 30px;
+  right: 30px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: rgba(4, 8, 14, 0.75);
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.08);
+  pointer-events: auto;
+}
+
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.hud-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hud-label {
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  color: rgba(0, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+
+.hud-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+}
+
+.hud-value.highlight {
+  color: #00ffff;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+
+.hud-value.warning {
+  color: #ff5c8a;
+  text-shadow: 0 0 8px rgba(255, 92, 138, 0.5);
+}
+
+.hud-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.hud-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hud-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ffff, #7dffb2);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+}
+
+/* --- RIGHT ACTIVITY STREAM OVERLAY --- */
+.agent-activity-panel {
+  position: absolute;
+  top: 155px;
+  right: 30px;
+  bottom: 95px;
+  width: 340px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: rgba(4, 8, 14, 0.82);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 35px rgba(0, 255, 255, 0.06);
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+  background: rgba(0, 255, 255, 0.03);
+}
+
+.panel-title {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: #00ffff;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.panel-badge {
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  background: rgba(0, 255, 255, 0.12);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 2px;
+  color: #00ffff;
+}
+
+.activity-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 255, 0.3) transparent;
+}
+
+.activity-item {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 2px solid rgba(0, 255, 255, 0.3);
+  font-size: 0.6rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 0 2px 2px 0;
+  transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.activity-item.type-BLOCK_PROPOSAL {
+  border-left-color: #ffd700;
+}
+
+.activity-item.type-ATTESTATION {
+  border-left-color: #00ff88;
+}
+
+.activity-item.type-TX_PROPAGATION {
+  border-left-color: #bd00ff;
+}
+
+.activity-item.type-BYZANTINE_ATTACK {
+  border-left-color: #ff0055;
+  background: rgba(255, 0, 85, 0.05);
+}
+
+.activity-item.type-PACKET_DROPPED {
+  border-left-color: #ff5c8a;
+  color: rgba(255, 120, 150, 0.8);
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 2px;
+}
+
+.activity-tag {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* --- NODE INSPECTOR MODAL/DRAWER (LEFT OVERLAY) --- */
+.node-inspector-card {
+  position: absolute;
+  top: 155px;
+  left: 30px;
+  width: 320px;
+  z-index: 10;
+  background: rgba(4, 8, 14, 0.88);
+  border: 1px solid rgba(0, 255, 255, 0.35);
+  border-radius: 4px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.12);
+  pointer-events: auto;
+  overflow: hidden;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+  background: rgba(0, 255, 255, 0.04);
+}
+
+.inspector-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inspector-role-badge {
+  font-size: 0.48rem;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.inspector-role-badge.HONEST {
+  background: rgba(0, 255, 255, 0.15);
+  border: 1px solid #00ffff;
+  color: #00ffff;
+}
+
+.inspector-role-badge.BYZANTINE {
+  background: rgba(255, 0, 85, 0.15);
+  border: 1px solid #ff0055;
+  color: #ff0055;
+}
+
+.inspector-role-badge.INACTIVE {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.inspector-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  transition: color 0.2s ease;
+}
+
+.inspector-close:hover {
+  color: #ff5c8a;
+}
+
+.inspector-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inspector-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.62rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 4px;
+}
+
+.inspector-label {
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.08em;
+}
+
+.inspector-val {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.inspector-peers {
+  margin-top: 6px;
+}
+
+.peers-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.peer-chip {
+  font-size: 0.5rem;
+  padding: 2px 6px;
+  background: rgba(0, 255, 255, 0.06);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 2px;
+  color: rgba(0, 255, 255, 0.8);
+}
+
+/* --- BOTTOM CONTROLS & NAVIGATION HUD --- */
+.agent-bottom-hud {
+  position: absolute;
+  bottom: 24px;
+  left: 30px;
+  right: 30px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 18px;
+  background: rgba(4, 8, 14, 0.78);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+
+.legend-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.54rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Cosmic Galaxy Icon */
+.legend-galaxy-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  background: radial-gradient(circle, #ffffff 15%, #00e5ff 60%, transparent 80%);
+  box-shadow: 0 0 8px #00e5ff;
+}
+
+.legend-galaxy-icon.honest {
+  background: radial-gradient(circle, #ffffff 15%, #00e5ff 60%, rgba(129, 140, 248, 0.2) 85%);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.85);
+}
+
+.legend-galaxy-icon.proposer {
+  background: radial-gradient(circle, #ffffff 20%, #ffd700 65%, rgba(245, 158, 11, 0.3) 90%);
+  box-shadow: 0 0 12px #ffd700, 0 0 20px rgba(255, 215, 0, 0.4);
+  animation: pulse-legend 2s infinite ease-in-out;
+}
+
+.legend-galaxy-icon.inactive {
+  background: radial-gradient(circle, #cbd5e1 15%, #475569 70%, transparent 85%);
+  box-shadow: 0 0 4px #475569;
+  opacity: 0.6;
+}
+
+/* Craggy Asteroid / Meteoroid Icon */
+.legend-asteroid-icon {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  background: #180b0f;
+  border: 1px solid #ff3b30;
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px #ff0055;
+  position: relative;
+}
+
+.legend-asteroid-icon::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: #ff5500;
+  opacity: 0.8;
+}
+
+/* Thick P2P Edge Icon */
+.legend-edge-icon {
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  display: inline-block;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #0ea5e9;
+}
+
+@keyframes pulse-legend {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.15); filter: brightness(1.3); }
+}
+
+.hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: rgba(0, 255, 255, 0.85);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-btn:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: #00ffff;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
+}
+
+.hud-btn.primary {
+  border-color: #00ffff;
+  background: rgba(0, 255, 255, 0.08);
+  color: #00ffff;
+}
+
+.hud-btn.primary:hover {
+  background: #00ffff;
+  color: #020306;
+}
+
+.hud-btn.danger {
+  border-color: rgba(255, 0, 85, 0.4);
+  color: #ff0055;
+}
+
+.hud-btn.danger:hover {
+  background: rgba(255, 0, 85, 0.15);
+  border-color: #ff0055;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .agent-activity-panel {
+    display: none;
+  }
+  .node-inspector-card {
+    width: calc(100vw - 60px);
+  }
+}

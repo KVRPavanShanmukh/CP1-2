@@ -77,9 +77,27 @@ public class SimulationState {
                         sender.getId(), receiver.getId(), config.getTransactionAmount(), currentTick);
                 if (sender.addTransaction(tx)) {
                     transactionsCreatedCount++;
+                    recordEvent(new com.sim.model.EventTelemetry(
+                        sender.getId(), receiver.getId(), "TX_PROPAGATION", tx.getTxId(),
+                        "Tx generated (" + config.getTransactionAmount() + " CHN)"
+                    ));
                 }
             }
         }
+    }
+
+    private final List<com.sim.model.EventTelemetry> currentTickEvents = new ArrayList<>();
+
+    public void recordEvent(com.sim.model.EventTelemetry event) {
+        if (event != null && currentTickEvents.size() < 60) {
+            currentTickEvents.add(event);
+        }
+    }
+
+    public List<com.sim.model.EventTelemetry> consumeTickEvents() {
+        List<com.sim.model.EventTelemetry> copy = new ArrayList<>(currentTickEvents);
+        currentTickEvents.clear();
+        return copy;
     }
 
     public int getCurrentTick() { return currentTick; }

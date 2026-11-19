@@ -1,8 +1,11 @@
 package com.sim.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sim.metrics.MetricsSnapshot;
+import java.util.List;
 import java.util.Objects;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TickUpdate {
     private String simulationId;
     private double currentTick;
@@ -15,6 +18,12 @@ public class TickUpdate {
     private int totalTicks;
     /** Completed fraction of the run in [0, 1]; 0 before the first tick. */
     private double progress;
+    /** Real-time agent state snapshots for 3D visualization. */
+    private List<NodeTelemetry> nodes;
+    /** Topology connection edges. */
+    private List<EdgeTelemetry> edges;
+    /** Key node-to-node interaction events during this tick. */
+    private List<EventTelemetry> events;
 
     public String getSimulationId() { return simulationId; }
     public void setSimulationId(String simulationId) { this.simulationId = simulationId; }
@@ -38,6 +47,15 @@ public class TickUpdate {
     public void setTotalTicks(int totalTicks) { this.totalTicks = totalTicks; }
     public double getProgress() { return progress; }
     public void setProgress(double progress) { this.progress = progress; }
+
+    public List<NodeTelemetry> getNodes() { return nodes; }
+    public void setNodes(List<NodeTelemetry> nodes) { this.nodes = nodes; }
+
+    public List<EdgeTelemetry> getEdges() { return edges; }
+    public void setEdges(List<EdgeTelemetry> edges) { this.edges = edges; }
+
+    public List<EventTelemetry> getEvents() { return events; }
+    public void setEvents(List<EventTelemetry> events) { this.events = events; }
 
     @Override
     public boolean equals(Object o) {

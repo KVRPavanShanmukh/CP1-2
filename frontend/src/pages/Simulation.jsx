@@ -919,8 +919,11 @@ export default function Simulation() {
     try {
       const startedConfig = await simulationApi.start(payload);
       setSimulationId(startedConfig.id);
+      sessionStorage.setItem('activeSimulationId', startedConfig.id);
       connectWebSocket(startedConfig.id);
       startResultPolling(startedConfig.id);
+      // Auto-open 3D AGENT tab as requested in Step 2B
+      navigate(`/agent?simId=${startedConfig.id}`, { state: { simulationId: startedConfig.id, config: payload } });
     } catch (error) {
       setErrorMessage(error.message || 'Failed to start simulation.');
       setLoading(false);
@@ -1109,6 +1112,11 @@ export default function Simulation() {
                           onChange={(e) => setFormData({ ...formData, byzantineRatio: Number(e.target.value) })} />
                       </label>
                       <label className="config-field">
+                        <span className="meta-label">INACTIVE RATIO (0–1)</span>
+                        <input type="number" className="form-control" value={formData.inactiveAgentRatio} min="0" max="1" step="0.05"
+                          onChange={(e) => setFormData({ ...formData, inactiveAgentRatio: Number(e.target.value) })} />
+                      </label>
+                      <label className="config-field config-field-wide">
                         <span className="meta-label">ATTACK MODE</span>
                         <select
                           className="form-control"
@@ -1122,18 +1130,13 @@ export default function Simulation() {
                           <option value="NONE">None (honest)</option>
                         </select>
                       </label>
-                      <label className="config-field">
-                        <span className="meta-label">INACTIVE RATIO (0–1)</span>
-                        <input type="number" className="form-control" value={formData.inactiveAgentRatio} min="0" max="1" step="0.05"
-                          onChange={(e) => setFormData({ ...formData, inactiveAgentRatio: Number(e.target.value) })} />
-                      </label>
 
                       <label className="config-field">
                         <span className="meta-label">PACKET LOSS (0–1)</span>
                         <input type="number" className="form-control" value={formData.packetLossRate} min="0" max="1" step="0.05"
                           onChange={(e) => setFormData({ ...formData, packetLossRate: Number(e.target.value) })} />
                       </label>
-                      <label className="config-field config-field-wide">
+                      <label className="config-field">
                         <span className="meta-label">PARTITION RATIO (0–1)</span>
                         <input type="number" className="form-control" value={formData.partitionRatio} min="0" max="1" step="0.05"
                           onChange={(e) => setFormData({ ...formData, partitionRatio: Number(e.target.value) })} />
@@ -1161,7 +1164,7 @@ export default function Simulation() {
                         <input type="number" className="form-control" value={formData.mempoolCapacity} min="1"
                           onChange={(e) => setFormData({ ...formData, mempoolCapacity: e.target.value === '' ? NaN : Number(e.target.value) })} />
                       </label>
-                      <label className="config-field">
+                      <label className="config-field config-field-wide">
                         <span className="meta-label">MAX TX / BLOCK</span>
                         <input type="number" className="form-control" value={formData.maxTransactionsPerBlock} min="1"
                           onChange={(e) => setFormData({ ...formData, maxTransactionsPerBlock: e.target.value === '' ? NaN : Number(e.target.value) })} />
@@ -1444,7 +1447,7 @@ export default function Simulation() {
 
       {/* FLOATING START SIMULATION BUTTON (OVER WEBGL) */}
       {activeSection === 0 && (
-        <div style={{ position: 'absolute', top: '50%', right: '25%', transform: 'translate(50%, -50%)', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: '50%', right: '12%', transform: 'translate(0, -50%)', zIndex: 10 }}>
           <button 
             onClick={handleStartSimulation} 
             disabled={loading || !user}

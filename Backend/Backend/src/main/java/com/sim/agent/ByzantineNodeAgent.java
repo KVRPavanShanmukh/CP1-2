@@ -108,6 +108,10 @@ public class ByzantineNodeAgent extends BlockchainAgent {
     public boolean proposeInvalidBlock(com.sim.engine.SimulationState state) {
         incrementBlocksProposed();
         maliciousActionsAttempted++;
+        state.recordEvent(new com.sim.model.EventTelemetry(
+                getId(), null, "BYZANTINE_ATTACK", null,
+                "Proposed structurally invalid block to network"
+        ));
         // Construct a structurally invalid block (negative height, invalid parent)
         Block invalidBlock = new Block(
                 state.nextBlockId(),
@@ -158,6 +162,10 @@ public class ByzantineNodeAgent extends BlockchainAgent {
         if (receiveAttestation(att)) {
             conflictingAttestations++;
             maliciousActionsAttempted++;
+            getSimulationState().recordEvent(new com.sim.model.EventTelemetry(
+                    getId(), null, "BYZANTINE_ATTACK", targetBlock.getBlockId(),
+                    "Equivocating attestation on target " + targetBlock.getBlockId()
+            ));
             return att;
         }
         return null;

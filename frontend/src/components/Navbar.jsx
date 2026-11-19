@@ -6,36 +6,16 @@ import './Navbar.css';
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState(getStoredUser());
-  const [landingSection, setLandingSection] = useState(null);
+  const [_user, setUser] = useState(getStoredUser());
 
   useEffect(() => {
     setUser(getStoredUser());
   }, [location.pathname]);
 
-  useEffect(() => {
-    const handleSectionChange = (e) => {
-      if (typeof e.detail === 'number') {
-        setLandingSection(e.detail);
-      }
-    };
-    window.addEventListener('c55-section-changed', handleSectionChange);
-    return () => window.removeEventListener('c55-section-changed', handleSectionChange);
-  }, []);
-
   // Do not render navbar on login page to preserve intro video and full-screen experience
   if (location.pathname === '/login') {
     return null;
   }
-
-  const handleTeamClick = () => {
-    if (location.pathname === '/landing' || location.pathname === '/') {
-      window.dispatchEvent(new CustomEvent('c55-navigate-section', { detail: 4 }));
-      setLandingSection(4);
-    } else {
-      navigate('/landing', { state: { section: 4 } });
-    }
-  };
 
   const handleDashboardClick = () => {
     navigate('/dashboard');
@@ -49,9 +29,13 @@ export default function Navbar() {
     navigate('/learning');
   };
 
-  const handleAgentClick = (e) => {
-    e.preventDefault();
-    // Item is displayed as required, but performs no action
+  const handleAgentClick = () => {
+    const activeSimId = sessionStorage.getItem('activeSimulationId');
+    if (activeSimId) {
+      navigate(`/agent?simId=${activeSimId}`);
+    } else {
+      navigate('/agent');
+    }
   };
 
   const handleProfileClick = () => {
@@ -73,10 +57,10 @@ export default function Navbar() {
     }
   };
 
-  const isTeamActive = (location.pathname === '/landing' || location.pathname === '/') && landingSection === 4;
   const isDashboardActive = location.pathname === '/dashboard';
   const isSimulationActive = location.pathname === '/simulation';
   const isLearningActive = ['/learning', '/manual', '/abstract'].includes(location.pathname);
+  const isAgentActive = location.pathname === '/agent';
   const isProfileActive = location.pathname === '/profile';
   const isBlogActive = location.pathname === '/blog';
 
@@ -90,18 +74,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ITEMS 1 TO 5 IN REQUIRED ORDER */}
+      {/* CORE NAVIGATION TABS */}
       <div className="global-nav-center">
-        {/* 1. TEAM */}
-        <div
-          id="nav-item-team"
-          className={`global-nav-link ${isTeamActive ? 'active' : ''}`}
-          onClick={handleTeamClick}
-        >
-          TEAM
-        </div>
-
-        {/* 2. DASHBOARD */}
+        {/* 1. DASHBOARD */}
         <div
           id="nav-item-dashboard"
           className={`global-nav-link ${isDashboardActive ? 'active' : ''}`}
@@ -110,7 +85,7 @@ export default function Navbar() {
           DASHBOARD
         </div>
 
-        {/* 3. SIMULATION */}
+        {/* 2. SIMULATION */}
         <div
           id="nav-item-simulation"
           className={`global-nav-link ${isSimulationActive ? 'active' : ''}`}
@@ -119,7 +94,7 @@ export default function Navbar() {
           SIMULATION
         </div>
 
-        {/* 4. LEARNING DOCS */}
+        {/* 3. LEARNING DOCS */}
         <div
           id="nav-item-learning"
           className={`global-nav-link ${isLearningActive ? 'active' : ''}`}
@@ -128,12 +103,12 @@ export default function Navbar() {
           LEARN
         </div>
 
-        {/* 5. AGENT (Display item, inert as required) */}
+        {/* 4. AGENT */}
         <div
           id="nav-item-agent"
-          className="global-nav-link inert-agent"
+          className={`global-nav-link ${isAgentActive ? 'active' : ''}`}
           onClick={handleAgentClick}
-          title="Agent Interface [Standby]"
+          title="3D Agent Network Visualization"
         >
           AGENT
         </div>
@@ -157,7 +132,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ITEM 6: LOGOUT AT THE EXTREME RIGHT END */}
+      {/* LOGOUT AT THE EXTREME RIGHT END */}
       <div className="global-nav-right">
         <button
           id="nav-item-logout"

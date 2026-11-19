@@ -5,11 +5,21 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sim.agent.BlockchainAgent;
+import com.sim.agent.ByzantineNodeAgent;
 import com.sim.config.RabbitMQConfig;
 import com.sim.metrics.MetricsSnapshot;
+import com.sim.model.EdgeTelemetry;
+import com.sim.model.EventTelemetry;
+import com.sim.model.NodeTelemetry;
 import com.sim.model.SimulationConfig;
 import com.sim.model.SimulationResult;
 import com.sim.model.TickUpdate;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Component
 public class SimulationWorker {
@@ -64,6 +74,56 @@ public class SimulationWorker {
                 tick.setTotalTicks(ticks);
                 tick.setProgress(ticks == 0 ? 1.0 : Math.min(1.0, (double) i / ticks));
                 tick.setMetrics(snapshot);
+
+                // Collect compact real-time agent telemetry for 3D visualization
+                List<NodeTelemetry> nodeSnapshots = new ArrayList<>();
+                for (BlockchainAgent agent : engine.getState().getAgents()) {
+                    NodeTelemetry node = new NodeTelemetry();
+                    node.setId(agent.getId());
+                    node.setRole(agent instanceof ByzantineNodeAgent ? "BYZANTINE" : agent.isInactive() ? "INACTIVE" : "HONEST");
+                    node.setPartitionId(engine.getState().getNetworkModel().getPartitionMap().getOrDefault(agent.getId(), 0));
+                    node.setStake(agent.getStake());
+                    node.setHashPower(agent.getHashPower());
+                    node.setHeadBlockId(agent.getCanonicalHeadId());
+                    node.setMempoolSize(agent.getMempoolSize());
+                    node.setPeers(agent.getPeers());
+
+                    if (agent.isInactive()) {
+                        node.setCurrentAction("IDLE");
+                        node.setProposer(false);
+                    } else if (agent.getHighestBlock() != null && agent.getId().equals(agent.getHighestBlock().getProducerAgentId())
+                            && agent.getHighestBlock().getTickProduced() == i) {
+                        node.setCurrentAction("PROPOSING");
+                        node.setProposer(true);
+                    } else if (agent instanceof ByzantineNodeAgent byz && byz.getBlocksWithheld() > 0) {
+                        node.setCurrentAction("WITHHOLDING");
+                        node.setProposer(false);
+                    } else if (agent.getAttestationsProduced() > 0) {
+                        node.setCurrentAction("ATTESTING");
+                        node.setProposer(false);
+                    } else {
+                        node.setCurrentAction("VALIDATING");
+                        node.setProposer(false);
+                    }
+                    nodeSnapshots.add(node);
+                }
+
+                List<EdgeTelemetry> edges = new ArrayList<>();
+                Set<String> seenEdges = new HashSet<>();
+                for (BlockchainAgent agent : engine.getState().getAgents()) {
+                    for (String peerId : agent.getPeers()) {
+                        String key = agent.getId().compareTo(peerId) < 0 ? agent.getId() + "--" + peerId : peerId + "--" + agent.getId();
+                        if (seenEdges.add(key)) {
+                            edges.add(new EdgeTelemetry(agent.getId(), peerId));
+                        }
+                    }
+                }
+
+                List<EventTelemetry> events = engine.getState().consumeTickEvents();
+
+                tick.setNodes(nodeSnapshots);
+                tick.setEdges(edges);
+                tick.setEvents(events);
 
                 rabbitTemplate.convertAndSend(
                     RabbitMQConfig.EXCHANGE_NAME,

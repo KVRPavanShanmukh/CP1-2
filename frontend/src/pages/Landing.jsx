@@ -446,6 +446,10 @@ export default function Landing() {
   const [privacyChoice, setPrivacyChoice] = useState(localStorage.getItem('privacy_choice'));
   const totalSections = 7;
 
+  // Lead Creator Spotlight States (Task 3)
+  const [creatorSpotlightOpen, setCreatorSpotlightOpen] = useState(false);
+  const [portfolioCopied, setPortfolioCopied] = useState(false);
+
   // Nexus Team Integration States
   const [currentUser, setCurrentUser] = useState(getStoredUser());
   const [teamData, setTeamData] = useState(null);
@@ -651,15 +655,26 @@ export default function Landing() {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [activeSection, scrollLocked]);
 
-  // Keyboard navigation
+  // Keyboard navigation & modal dismiss
   useEffect(() => {
     const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        setCreatorSpotlightOpen(false);
+      }
       if (e.key === 'ArrowDown' && activeSection < totalSections - 1) setActiveSection(prev => prev + 1);
       if (e.key === 'ArrowUp' && activeSection > 0) setActiveSection(prev => prev - 1);
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [activeSection]);
+  }, [activeSection, totalSections]);
+
+  const handleCopyPortfolio = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText('https://yellow-sea-03eb87200.4.azurestaticapps.net/');
+      setPortfolioCopied(true);
+      setTimeout(() => setPortfolioCopied(false), 3000);
+    }
+  };
 
   // Global navbar section navigation sync
   useEffect(() => {
@@ -703,9 +718,10 @@ export default function Landing() {
                   An agent-based modelling platform for distributed consensus simulation. We model peer-to-peer networks, 
                   block propagation dynamics, and fork resolution in real-time using WebGL and WebSocket telemetry.
                 </p>
-                <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                   <button className="landing-btn accent-cyan" onClick={() => setActiveSection(1)}>EXPLORE PROJECT ↓</button>
                   <button className="landing-btn" onClick={() => navigate('/simulation')}>LAUNCH SIMULATION ↗</button>
+                  <button className="landing-btn" onClick={() => setCreatorSpotlightOpen(true)}>LEAD ARCHITECT ↗</button>
                 </div>
               </div>
             </motion.div>
@@ -785,200 +801,144 @@ export default function Landing() {
             </motion.div>
           )}
 
-          {/* ═══ SECTION 4 — TEAM ═══ */}
+          {/* ═══ SECTION 4 — PROJECT TEAM & CONTRIBUTIONS (TASK 2) ═══ */}
           {activeSection === 4 && (
             <motion.div key="s4" className="landing-section" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
               <div className="section-team-content">
+                {/* LEFT SIDE: INSTITUTION, MENTOR, AND PROJECT RESEARCH SCOPE */}
                 <div className="team-text-side">
                   <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[4].num}</span>
-                  <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[4].cat}</span>
-                  <h1 className="section-title size-medium">THE<br/>TEAM.</h1>
-                  <p className="section-desc">The engineers behind the CHAIN55 distributed consensus simulation platform.</p>
-                  
-                  {actionAlert && (
-                    <div className={`nexus-alert ${actionAlert.type}`} style={{ maxWidth: '340px' }}>
-                      <span>{actionAlert.type === 'error' ? '⚠️ ' : '✓ '}{actionAlert.msg}</span>
+                  <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>RESEARCH & SYSTEM ARCHITECTURE</span>
+                  <h1 className="section-title size-medium">PROJECT<br/>TEAM.</h1>
+                  <p className="section-desc">
+                    KL University • Dept. of Computer Science & Information Technology (Batch 73).<br />
+                    <strong style={{ color: '#00e5ff' }}>CHAIN55:</strong> Agent-Based Modelling of Distributed Ledger Participant Behaviour.
+                  </p>
+
+                  {/* FACULTY MENTOR CARD */}
+                  <div className="faculty-mentor-box">
+                    <div className="faculty-tag">★ FACULTY MENTOR & RESEARCH GUIDE</div>
+                    <div className="faculty-name">K. Nirmala</div>
+                    <div className="faculty-dept">
+                      Assistant Professor, Dept. of CS & IT • Koneru Lakshmaiah Education Foundation (KL University)
                     </div>
-                  )}
-
-                  {teamData?.hasTeam ? (
-                    <div style={{ marginTop: '16px', padding: '14px 18px', background: 'rgba(0, 229, 255, 0.05)', border: '1px solid rgba(0, 229, 255, 0.25)', maxWidth: '360px' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#00e5ff', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-                        AFFILIATED TEAM: {teamData.team.name}
-                      </div>
-                      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                        LEADER: {teamData.team.leaderUsername} ({teamData.team.leaderUid || 'N/A'}) • {teamData.team.members.length} / 4 MEMBERS
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ marginTop: '16px', padding: '14px 18px', background: 'rgba(255, 170, 0, 0.05)', border: '1px solid rgba(255, 170, 0, 0.25)', maxWidth: '360px' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffaa00', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-                        UNASSIGNED IDENTITY: {currentUser?.username || 'CURRENT USER'}
-                      </div>
-                      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                        UID: {currentUser?.uid || 'N/A'} • Establish team or accept invitation to join
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-
-                <div className="team-right-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '72vh', overflowY: 'auto', paddingRight: '12px' }}>
-                  <div className="team-grid">
-                    {(() => {
-                      const hasTeam = teamData?.hasTeam && teamData.team;
-                      const members = hasTeam ? (teamData.team.members || []) : [];
-                      const isLeader = hasTeam ? teamData.isLeader : true; // if no team, current user can be leader of their new team
-                      const canManage = isLeader;
-
-                      // Fill up to 4 card positions
-                      const cards = [];
-                      for (let i = 0; i < 4; i++) {
-                        if (i < members.length) {
-                          cards.push({ type: 'member', data: members[i], index: i });
-                        } else {
-                          cards.push({ type: 'empty', index: i });
-                        }
-                      }
-
-                      const roleColors = {
-                        LEADER: '#ffaa00',
-                        ADMIN: '#e6e6fa',
-                        COMMANDER: '#ff00ff',
-                        MEMBER: currentAccent
-                      };
-
-                      return cards.map((card, idx) => {
-                        if (card.type === 'member') {
-                          const m = card.data;
-                          const roleColor = roleColors[m.role] || currentAccent;
-                          const isMemberLeader = m.role === 'LEADER' || (hasTeam && m.userId === teamData.team.leaderId);
-
-                          return (
-                            <div key={`member-${m.userId || idx}`} className="team-card" style={{ borderColor: isMemberLeader ? 'rgba(255, 170, 0, 0.4)' : 'rgba(0, 229, 255, 0.25)' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                <div className="team-card-name">{m.username}</div>
-                                <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', padding: '2px 6px', border: `1px solid ${roleColor}`, color: roleColor, letterSpacing: '1px' }}>
-                                  {m.role}
-                                </span>
-                              </div>
-                              <div className="team-card-role" style={{ color: roleColor }}>
-                                {m.title || m.role}
-                              </div>
-                              <div className="team-card-desc">
-                                UID: <strong style={{ color: '#fff' }}>{m.uid || 'N/A'}</strong>
-                              </div>
-
-
-                              {/* ROLE CONTROLS (VISIBLE ONLY TO AUTHORIZED TEAM LEADER FOR OTHER MEMBERS) */}
-                              {canManage && !isMemberLeader && hasTeam && (
-                                <div style={{ display: 'flex', gap: '6px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
-                                  {m.role !== 'ADMIN' && (
-                                    <button
-                                      className="action-btn"
-                                      onClick={() => handleUpdateMemberRole(m.userId, m.username, 'ADMIN')}
-                                    >
-                                      SET ADMIN
-                                    </button>
-                                  )}
-                                  {m.role !== 'COMMANDER' && (
-                                    <button
-                                      className="action-btn"
-                                      onClick={() => handleUpdateMemberRole(m.userId, m.username, 'COMMANDER')}
-                                    >
-                                      SET COMMANDER
-                                    </button>
-                                  )}
-                                  {m.role !== 'MEMBER' && (
-                                    <button
-                                      className="action-btn"
-                                      onClick={() => handleUpdateMemberRole(m.userId, m.username, 'MEMBER')}
-                                    >
-                                      DEMOTE
-                                    </button>
-                                  )}
-                                  <button
-                                    className="action-btn danger"
-                                    onClick={() => handleRemoveTeamMember(m.userId, m.username)}
-                                  >
-                                    REMOVE
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        } else {
-                          // EMPTY SLOT (Positions 2-4 or 1-4)
-                          return (
-                            <div key={`empty-${idx}`} className="team-card empty-slot">
-                              {hasTeam ? (
-                                isLeader ? (
-                                  <div>
-                                    <button
-                                      className="empty-slot-btn"
-                                      onClick={() => { setAddMemberModalOpen(true); setValidatedUser(null); setAddMemberInput(''); }}
-                                    >
-                                      + ADD MEMBER
-                                    </button>
-                                    <div className="empty-slot-hint">Add a registered user by User ID</div>
-                                  </div>
-                                ) : (
-                                  <div style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1px' }}>
-                                    EMPTY POSITION {idx + 1}
-                                  </div>
-                                )
-                              ) : (
-                                <div>
-                                  {idx === 0 ? (
-                                    <div>
-                                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', marginBottom: '4px' }}>
-                                        {currentUser?.username || 'FOUNDER'}
-                                      </div>
-                                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#ffaa00', letterSpacing: '1.5px', marginBottom: '8px' }}>
-                                        ★ PROSPECTIVE TEAM LEADER
-                                      </div>
-                                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
-                                        UID: {currentUser?.uid || 'N/A'}
-                                      </div>
-                                      <button
-                                        className="empty-slot-btn"
-                                        style={{ color: '#ffaa00', borderColor: 'rgba(255,170,0,0.5)' }}
-                                        onClick={() => { setCreateTeamModalOpen(true); setCreateTeamName(''); }}
-                                      >
-                                        ESTABLISH TEAM ↗
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <div>
-                                      <button
-                                        className="empty-slot-btn"
-                                        onClick={() => { setCreateTeamModalOpen(true); setCreateTeamName(''); }}
-                                      >
-                                        + ADD MEMBER
-                                      </button>
-                                      <div className="empty-slot-hint">Establish team to recruit members</div>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-                      });
-                    })()}
                   </div>
 
-                  {/* CONTROLS IMMEDIATELY BELOW THE CARDS */}
-                  <div style={{ marginTop: '22px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    {/* NEXUS TEAM PORTAL BUTTON */}
+                  {/* PROJECT TECHNICAL SUMMARY */}
+                  <div className="project-summary-box">
+                    <div className="summary-title">TECHNICAL ARCHITECTURE SCOPE</div>
+                    <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.55' }}>
+                      Full-stack Complex Adaptive Systems (CAS) consensus laboratory modelling micro-agent interactions and macro emergent ledger phenomena.
+                    </div>
+                    <div className="project-summary-chips">
+                      <span className="summary-chip">AGENT-BASED CAS</span>
+                      <span className="summary-chip">5 CONSENSUS PROTOCOLS</span>
+                      <span className="summary-chip">3 P2P TOPOLOGIES</span>
+                      <span className="summary-chip">BYZANTINE ATTACK INJECTION</span>
+                      <span className="summary-chip">3D WEBGL VISUALIZER</span>
+                      <span className="summary-chip">STATISTICAL RESEARCH ENGINE</span>
+                    </div>
+                  </div>
+
+                  {/* CREATOR SPOTLIGHT & NEXUS ACTIONS */}
+                  <div style={{ marginTop: '18px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button
+                      className="landing-btn accent-cyan"
+                      onClick={() => setCreatorSpotlightOpen(true)}
+                    >
+                      MEET LEAD DEVELOPER ↗
+                    </button>
                     <button
                       className="landing-btn"
-                      id="nexus-portal-landing-btn"
                       onClick={() => setNexusModalOpen(true)}
-                      style={{ pointerEvents: 'auto' }}
                     >
-                      NEXUS TEAM PORTAL ↗
+                      NEXUS DIRECTORY ↗
                     </button>
+                  </div>
+                </div>
+
+                {/* RIGHT SIDE: ALL 5 PROJECT MEMBERS */}
+                <div className="team-right-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '72vh', overflowY: 'auto', paddingRight: '12px' }}>
+                  <div className="team-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+
+                    {/* MEMBER 1: K.V.R. SAI PAVAN SHANMUKH (LEAD ARCHITECT) */}
+                    <div className="team-member-card lead-highlight">
+                      <div className="member-header">
+                        <div className="member-name">K.V.R. Sai Pavan Shanmukh</div>
+                        <span className="member-role-badge lead">LEAD ARCHITECT</span>
+                      </div>
+                      <div className="member-role-title">Lead Architect, Full-Stack & Simulation Engine Developer</div>
+                      <div className="member-contributions">
+                        Designed end-to-end architecture, Spring Boot Complex Adaptive Systems (CAS) engine (Phases 1–13 empirical experiments), RabbitMQ message broker, WebSocket sub-second streaming, and React + Three.js 3D cosmic visualizer.
+                      </div>
+                      <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                        <button
+                          className="action-btn"
+                          style={{ borderColor: '#ffd700', color: '#ffd700', background: 'rgba(255, 215, 0, 0.1)', padding: '5px 10px', fontSize: '9px' }}
+                          onClick={() => setCreatorSpotlightOpen(true)}
+                        >
+                          SPOTLIGHT ↗
+                        </button>
+                        <a
+                          href="https://yellow-sea-03eb87200.4.azurestaticapps.net/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="action-btn"
+                          style={{ padding: '5px 10px', fontSize: '9px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+                        >
+                          PORTFOLIO ↗
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* MEMBER 2: JUPALLI PRAVALLIKA */}
+                    <div className="team-member-card">
+                      <div className="member-header">
+                        <div className="member-name">Jupalli Pravallika</div>
+                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
+                      </div>
+                      <div className="member-role-title">Consensus Protocols & Empirical Research</div>
+                      <div className="member-contributions">
+                        Formulated verification pipelines for PoW and PoS consensus dynamics against Kraner et al. (2023) and Wei et al. (2020), LMD GHOST fork choice rule research, and mempool validation.
+                      </div>
+                    </div>
+
+                    {/* MEMBER 3: V SAI GANESH */}
+                    <div className="team-member-card">
+                      <div className="member-header">
+                        <div className="member-name">V Sai Ganesh</div>
+                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
+                      </div>
+                      <div className="member-role-title">P2P Network Topologies & Latency Dynamics</div>
+                      <div className="member-contributions">
+                        Implemented Erdős–Rényi random graphs, Watts–Strogatz small-world, and Barabási–Albert scale-free graph generators with heterogeneous propagation delays and distance-based gossip dissemination.
+                      </div>
+                    </div>
+
+                    {/* MEMBER 4: JANGA SATHVIK REDDY */}
+                    <div className="team-member-card">
+                      <div className="member-header">
+                        <div className="member-name">Janga Sathvik Reddy</div>
+                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
+                      </div>
+                      <div className="member-role-title">Byzantine Adversary & Fault Injection Modelling</div>
+                      <div className="member-contributions">
+                        Designed Byzantine adversary agent models (equivocation, double-spending, selfish mining) and partition disruption routines validated across Phase 10 & 11 test suites.
+                      </div>
+                    </div>
+
+                    {/* MEMBER 5: JALADI ROHAN KUMAR */}
+                    <div className="team-member-card">
+                      <div className="member-header">
+                        <div className="member-name">Jaladi Rohan Kumar</div>
+                        <span className="member-role-badge contributor">CORE CONTRIBUTOR</span>
+                      </div>
+                      <div className="member-role-title">Gossip Dissemination & Telemetry Metrics</div>
+                      <div className="member-contributions">
+                        Validated P2P block and attestation gossip layers with stochastic packet loss, telemetry schema models, and statistical calculation of mainchain rate ($\mu$), branching ratio ($F$), and Gini coefficient.
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -1334,6 +1294,105 @@ export default function Landing() {
               <button className="action-btn danger" style={{ padding: '10px 20px', fontSize: '11px' }} onClick={confirmDialog.onConfirm}>
                 CONFIRM ACTION ↗
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEDICATED LEAD CREATOR SPOTLIGHT MODAL (TASK 3) */}
+      {creatorSpotlightOpen && (
+        <div className="creator-modal-overlay" onClick={() => setCreatorSpotlightOpen(false)}>
+          <div className="creator-modal-card" onClick={(e) => e.stopPropagation()}>
+            {/* MODAL HEADER */}
+            <div className="creator-modal-header">
+              <span className="creator-badge">★ LEAD DEVELOPER & SYSTEM ARCHITECT</span>
+              <button
+                className="creator-close-btn"
+                onClick={() => setCreatorSpotlightOpen(false)}
+                title="Close modal (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* MODAL BODY */}
+            <div className="creator-modal-body">
+              <div className="creator-hero">
+                <div className="creator-name">K.V.R. Sai Pavan Shanmukh</div>
+                <div className="creator-institution">
+                  KL UNIVERSITY • DEPT. OF COMPUTER SCIENCE & INFORMATION TECHNOLOGY (BATCH 73)
+                </div>
+                <div className="creator-role">
+                  Lead System Architect, Full-Stack & Simulation Engine Developer
+                </div>
+              </div>
+
+              <div className="creator-section-title">CORE TECHNICAL OWNERSHIP & CONTRIBUTIONS</div>
+              <div className="creator-feature-list">
+                <div className="creator-feature-item">
+                  <span className="creator-bullet">✦</span>
+                  <div>
+                    <strong style={{ color: '#00e5ff' }}>End-to-End System Architecture:</strong> Designed and implemented the complete CHAIN55 distributed consensus simulation platform spanning React 19 WebGL frontend, Spring Boot backend, RabbitMQ broker, and MongoDB persistence.
+                  </div>
+                </div>
+
+                <div className="creator-feature-item">
+                  <span className="creator-bullet">✦</span>
+                  <div>
+                    <strong style={{ color: '#ffd700' }}>Spring Boot CAS Simulation Engine:</strong> Engineered all 13 research simulation phases (149 passing empirical tests) with autonomous stateful agents, local blocktrees, solidification pipelines, and LMD GHOST fork choice.
+                  </div>
+                </div>
+
+                <div className="creator-feature-item">
+                  <span className="creator-bullet">✦</span>
+                  <div>
+                    <strong style={{ color: '#00e5ff' }}>High-Throughput Telemetry Pipeline:</strong> Integrated asynchronous RabbitMQ exchange-to-queue pipelines streaming sub-second STOMP/WebSocket updates of per-tick agent states, dynamic P2P links, and gossip packets.
+                  </div>
+                </div>
+
+                <div className="creator-feature-item">
+                  <span className="creator-bullet">✦</span>
+                  <div>
+                    <strong style={{ color: '#ffd700' }}>Cosmic 3D WebGL Visualizer:</strong> Built the 60 FPS Three.js agent spectacle featuring procedural swirling spiral particle galaxies, glowing golden quasars, and volcanic craggy meteoroids with thick glowing P2P connections.
+                  </div>
+                </div>
+
+                <div className="creator-feature-item">
+                  <span className="creator-bullet">✦</span>
+                  <div>
+                    <strong style={{ color: '#00e5ff' }}>Statistical Research Verification:</strong> Implemented empirical verification against premier distributed systems literature (Kraner et al. 2023, Wei et al. 2020, Mueller-Bloch et al. 2022, Lin et al. 2023).
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS & EXTERNAL PORTFOLIO LINK */}
+              <div className="creator-actions">
+                <a
+                  href="https://yellow-sea-03eb87200.4.azurestaticapps.net/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="creator-cta-btn primary"
+                  id="creator-portfolio-external-link"
+                >
+                  VISIT MY PORTFOLIO ↗
+                </a>
+
+                <button
+                  type="button"
+                  className="creator-cta-btn secondary"
+                  onClick={handleCopyPortfolio}
+                >
+                  {portfolioCopied ? '✓ COPIED TO CLIPBOARD' : 'COPY PORTFOLIO LINK ⎘'}
+                </button>
+
+                <button
+                  type="button"
+                  className="creator-cta-btn dim"
+                  onClick={() => setCreatorSpotlightOpen(false)}
+                >
+                  CLOSE
+                </button>
+              </div>
             </div>
           </div>
         </div>

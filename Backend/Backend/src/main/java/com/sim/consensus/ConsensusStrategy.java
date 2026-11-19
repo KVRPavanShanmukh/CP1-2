@@ -46,8 +46,17 @@ public abstract class ConsensusStrategy {
         agent.removeIncludedTransactions(transactions);
         agent.incrementBlocksProduced();
 
+        state.recordEvent(new com.sim.model.EventTelemetry(
+                agent.getId(), null, "BLOCK_PROPOSAL", block.getBlockId(),
+                "Forged Block #" + block.getHeight()
+        ));
+
         if (agent.shouldWithholdBlock(block)) {
             agent.onBlockWithheld(block);
+            state.recordEvent(new com.sim.model.EventTelemetry(
+                    agent.getId(), null, "BYZANTINE_ATTACK", block.getBlockId(),
+                    "Withheld Block #" + block.getHeight() + " from peers"
+            ));
         } else {
             state.getNetworkModel().broadcastMessage(agent.getId(),
                     com.sim.network.NetworkMessage.MessageType.BLOCK, block);

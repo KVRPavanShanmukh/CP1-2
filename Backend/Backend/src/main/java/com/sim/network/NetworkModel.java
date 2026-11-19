@@ -202,6 +202,10 @@ public class NetworkModel {
         // 1. Partition isolation check
         if (isPartitionActive() && isCrossPartition(senderId, receiverId)) {
             messagesDropped++;
+            state.recordEvent(new com.sim.model.EventTelemetry(
+                    senderId, receiverId, "PACKET_DROPPED", null,
+                    "Dropped: cross-partition (" + senderId + " -> " + receiverId + ")"
+            ));
             return;
         }
 
@@ -209,6 +213,10 @@ public class NetworkModel {
         double packetLossRate = state.getConfig().getPacketLossRate();
         if (packetLossRate > 0.0 && state.getRng().nextDouble() < packetLossRate) {
             messagesDropped++;
+            state.recordEvent(new com.sim.model.EventTelemetry(
+                    senderId, receiverId, "PACKET_DROPPED", null,
+                    "Dropped: packet loss draw (" + senderId + " -> " + receiverId + ")"
+            ));
             return;
         }
 
@@ -216,6 +224,15 @@ public class NetworkModel {
         int maxJitter = state.getConfig().getNetworkLatencyJitter();
         int jitter = maxJitter > 0 ? state.getRng().nextInt(maxJitter + 1) : 0;
         int deliveryTick = state.getCurrentTick() + latencyTicks + jitter;
+
+        String eventType = type == NetworkMessage.MessageType.BLOCK ? "BLOCK_GOSSIP" :
+                           type == NetworkMessage.MessageType.ATTESTATION ? "ATTESTATION" : "TX_PROPAGATION";
+        String blockId = payload instanceof com.sim.blockchain.Block b ? b.getBlockId() :
+                         payload instanceof com.sim.blockchain.Attestation a ? a.getBlockId() : null;
+        state.recordEvent(new com.sim.model.EventTelemetry(
+                senderId, receiverId, eventType, blockId,
+                type.name() + " -> " + receiverId
+        ));
 
         NetworkMessage msg = new NetworkMessage(
             UUID.randomUUID().toString(),
