@@ -34,21 +34,18 @@
   height: 36px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  color: #ffffff;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px;
+  box-sizing: border-box;
   transition: all 0.3s ease;
+  display: block;
 }
 
 .global-nav-left:hover .global-nav-logo {
   border-color: #00e5ff;
   box-shadow: 0 0 14px rgba(0, 229, 255, 0.25);
-  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.1);
 }
 
 .global-nav-identity {

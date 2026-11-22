@@ -68,7 +68,7 @@ export default function Navbar() {
     <nav className="global-c55-navbar" id="global-c55-navbar">
       {/* BRAND LOGO ON THE LEFT */}
       <div className="global-nav-left" onClick={() => navigate('/landing')}>
-        <div className="global-nav-logo">C55</div>
+        <img className="global-nav-logo" src="/assets/logo.png" alt="CHAIN55 logo" title="CHAIN55" />
         <div className="global-nav-identity">
           <strong>CHAIN55</strong> / CONSENSUS ENGINE
         </div>
