@@ -1,9 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const AUTO_PDF_STORAGE_PREFIX = 'c55_pdf_auto_';
-const downloadedInMemory = new Set();
-
 function fmtNum(value, digits = 3) {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return 'N/A';
   return Number(value).toFixed(digits);
@@ -232,32 +229,6 @@ export function downloadSimulationPdfReport({ result, config = {}, runMeta = {} 
   const conclusion = buildStabilityConclusion(result, metrics) || 'Simulation completed with recorded metrics above.';
   doc.text(doc.splitTextToSize(conclusion, contentWidth), marginX, y);
 
-  const safeId = String(runId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 12) || 'run';
-  const safeConsensus = String(consensus).replace(/[^a-zA-Z0-9_-]/g, '');
-  doc.save(`chain55-simulation-${safeId}-${safeConsensus}.pdf`);
+  doc.save('CHAIN55_Simulation.pdf');
   return true;
-}
-
-/**
- * Triggers automatic PDF download at most once per completed simulation run.
- */
-export function triggerAutoPdfDownloadOnce({ result, config, runMeta }) {
-  if (!result) return false;
-  const status = String(result.status || 'COMPLETED').toUpperCase();
-  if (status !== 'COMPLETED') return false;
-
-  const runId = result.configId || config?.id || runMeta?.id || result.id;
-  if (!runId) return false;
-
-  const storageKey = `${AUTO_PDF_STORAGE_PREFIX}${runId}`;
-  if (downloadedInMemory.has(runId)) return false;
-  try {
-    if (sessionStorage.getItem(storageKey) === '1') return false;
-    downloadedInMemory.add(runId);
-    sessionStorage.setItem(storageKey, '1');
-  } catch {
-    downloadedInMemory.add(runId);
-  }
-
-  return downloadSimulationPdfReport({ result, config, runMeta });
 }

@@ -13,10 +13,7 @@ import {
   WS_BASE,
   DEFAULT_SIMULATION_CONFIG
 } from '../services/api';
-import {
-  downloadSimulationPdfReport,
-  triggerAutoPdfDownloadOnce
-} from '../utils/simulationPdfReport';
+import { downloadSimulationPdfReport } from '../utils/simulationPdfReport';
 
 // --- GENERATIVE WEBGL ENGINE ---
 function NetworkVisualization({ stateIndex }) {
@@ -831,7 +828,7 @@ export default function Simulation() {
     }
   };
 
-  const applyResult = (result, { autoDownload = true, configOverride = null } = {}) => {
+  const applyResult = (result, { configOverride = null } = {}) => {
     const resolvedConfig = configOverride || activeRunConfigRef.current || formData;
     setResults(result);
     setResultConfig(resolvedConfig);
@@ -839,9 +836,6 @@ export default function Simulation() {
     setLoading(false);
     setWsStatus('closed');
     stopResultPolling();
-    if (autoDownload) {
-      triggerAutoPdfDownloadOnce({ result, config: resolvedConfig });
-    }
   };
 
   // Fallback when the STOMP result frame is missed (e.g. a reconnect during the run):
@@ -955,7 +949,6 @@ export default function Simulation() {
       setResultConfig(runConfigWithId);
       setSimulationId(startedConfig.id);
       sessionStorage.setItem('activeSimulationId', startedConfig.id);
-      sessionStorage.setItem('autoPdfPendingRunId', startedConfig.id);
       connectWebSocket(startedConfig.id);
       startResultPolling(startedConfig.id);
       // Auto-open 3D AGENT tab as requested in Step 2B
@@ -974,7 +967,7 @@ export default function Simulation() {
       const payload = await simulationApi.get(id);
       if (payload?.result) {
         setSimulationId(id);
-        applyResult(payload.result, { autoDownload: false, configOverride: payload.configuration || null });
+        applyResult(payload.result, { configOverride: payload.configuration || null });
         return;
       }
       setSimulationId(id);
