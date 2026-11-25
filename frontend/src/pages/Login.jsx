@@ -26,7 +26,6 @@ const Login = () => {
   });
 
   const [assignedUid, setAssignedUid] = useState(null);
-  const [assignedId, setAssignedId] = useState(null);
 
   // Custom Chain Cursor Logic
   const NUM_LINKS = 6;
@@ -151,20 +150,23 @@ const Login = () => {
       await new Promise(resolve => setTimeout(resolve, 800));
 
       const endpoint = isSignupMode ? '/auth/signup' : '/auth/login';
+      const payload = isSignupMode
+        ? { username: formData.username, password: formData.password }
+        : { username: formData.username, password: formData.password, uid: formData.uid };
       const response = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       
       const data = await response.json().catch(() => ({}));
+      const backendError = (data.error || data.message || '').trim();
       
       if (response.ok) {
         setAuthStatus('success');
         if (isSignupMode) {
             setAssignedUid(data.assignedUid || data.uid);
-            setAssignedId(data.id || data.userId);
             setSuccessMessage('REGISTRATION SUCCESSFUL');
             setTimeout(() => {
                 setIsSignupMode(false);
@@ -172,32 +174,47 @@ const Login = () => {
                 setFormData({ ...formData, password: '', uid: data.assignedUid || data.uid || '' });
             }, 6000);
         } else {
+            const mustChange = data.mustChangePassword === true;
             if (data.user) {
               setStoredUser(data.user);
             }
-            setSuccessMessage('CREDENTIALS VERIFIED');
-            setTimeout(() => {
+            if (mustChange) {
+              setSuccessMessage('PASSWORD CHANGE REQUIRED');
+              setTimeout(() => navigate('/change-password'), 800);
+            } else {
+              setSuccessMessage('CREDENTIALS VERIFIED');
+              setTimeout(() => {
                 setSuccessMessage('ACCESS GRANTED');
                 setTimeout(() => navigate('/landing'), 800);
-            }, 1000);
+              }, 1000);
+            }
         }
       } else if (response.status === 429) {
         setAuthStatus('error');
         setErrorMessage('RATE LIMIT EXCEEDED');
+      } else if (response.status >= 500) {
+        setAuthStatus('error');
+        setErrorMessage(backendError ? `AUTHENTICATION SERVER ERROR: ${backendError.toUpperCase()}` : 'AUTHENTICATION SERVER ERROR');
       } else {
         setAuthStatus('error');
-        if (isSignupMode && data.error) {
-          setErrorMessage(`REGISTRATION FAILED: ${data.error.toUpperCase()}`);
+        if (isSignupMode) {
+          if (backendError) {
+            setErrorMessage(`REGISTRATION FAILED: ${backendError.toUpperCase()}`);
+          } else if (response.status === 404) {
+            setErrorMessage('REGISTRATION ENDPOINT NOT FOUND');
+          } else {
+            setErrorMessage(`REGISTRATION FAILED: REQUEST REJECTED (${response.status})`);
+          }
+        } else if (backendError) {
+          setErrorMessage(backendError.toUpperCase());
         } else if (response.status === 401) {
           setErrorMessage('AUTHENTICATION FAILED: INVALID CREDENTIALS');
         } else if (response.status === 403) {
           setErrorMessage('ACCESS FORBIDDEN');
         } else if (response.status === 404) {
           setErrorMessage('LOGIN ENDPOINT NOT FOUND');
-        } else if (response.status >= 500) {
-          setErrorMessage('AUTHENTICATION SERVER ERROR');
         } else {
-          setErrorMessage(data.error || `AUTHENTICATION FAILED: REQUEST REJECTED (${response.status})`);
+          setErrorMessage(`AUTHENTICATION FAILED: REQUEST REJECTED (${response.status})`);
         }
       }
     } catch (err) {
@@ -322,12 +339,6 @@ const Login = () => {
                     REGISTRATION SUCCESSFUL<br/><br/>
                     <span style={{ color: '#fff' }}>YOUR ASSIGNED UID:</span><br/>
                     <strong style={{ fontSize: '16px', letterSpacing: '3px', color: '#00e5ff' }}>{assignedUid}</strong><br/><br/>
-                    {assignedId && (
-                      <>
-                        <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px' }}>DATABASE USER ID:</span><br/>
-                        <strong style={{ fontSize: '11px', fontFamily: '"Courier New", monospace', letterSpacing: '1px', color: '#fff', wordBreak: 'break-all' }}>{assignedId}</strong><br/><br/>
-                      </>
-                    )}
                     <span style={{ fontSize: '9px', opacity: 0.7 }}>Saved to shared database. UID and password required for login.</span>
                 </div>
               )}

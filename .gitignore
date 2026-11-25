@@ -36,6 +36,10 @@ credentials/
 *credentials*.json
 *service-account*.json
 
+# Seeder credentials (injected via environment, never committed)
+# Used by DataSeeder when running with spring.profiles.active=dev|seed
+# Set these in your shell/CI: SEED_ADMIN_PASSWORD, SEED_OWNER_PASSWORD, SPRING_DATA_MONGODB_URI, MONGODB_URI
+
 # Private keys and certificates
 *.pem
 *.key
@@ -116,6 +120,14 @@ pnpm-debug.log*
 *.dump
 *.bson
 *.archive
+
+# ==============================
+# Supabase / PostgreSQL migration
+# ==============================
+
+.supabase/
+supabase/
+supabase-config.toml
 
 # ==============================
 # Local Docker overrides

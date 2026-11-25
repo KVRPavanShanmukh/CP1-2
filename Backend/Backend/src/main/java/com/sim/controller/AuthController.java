@@ -90,13 +90,7 @@ public class AuthController {
         signupResp.put("userId", newUser.getId());
         signupResp.put("assignedUid", newUser.getUid());
         signupResp.put("uid", newUser.getUid());
-        signupResp.put("user", Map.of(
-            "id", newUser.getId(),
-            "userId", newUser.getId(),
-            "username", newUser.getUsername(),
-            "uid", newUser.getUid(),
-            "role", newUser.getRole()
-        ));
+        signupResp.put("user", buildUserPayload(newUser));
 
         return ResponseEntity.ok(signupResp);
     }
@@ -132,6 +126,10 @@ public class AuthController {
             return genericAuthError();
         }
 
+        if (!user.isActive()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Account is deactivated."));
+        }
+
         // Success
         attempts.remove(ip);
         user.setLastLoginAt(Instant.now());
@@ -146,13 +144,8 @@ public class AuthController {
         resp.put("id", user.getId());
         resp.put("userId", user.getId());
         resp.put("uid", user.getUid());
-        resp.put("user", Map.of(
-            "id", user.getId(),
-            "userId", user.getId(),
-            "username", user.getUsername(),
-            "uid", user.getUid(),
-            "role", user.getRole()
-        ));
+        resp.put("mustChangePassword", user.isMustChangePassword());
+        resp.put("user", buildUserPayload(user));
         
         return ResponseEntity.ok(resp);
     }
@@ -162,22 +155,27 @@ public class AuthController {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("USER_ID") != null) {
             String userId = (String) session.getAttribute("USER_ID");
-            Optional<User> userOpt = userRepository.findById(userId);
+            Optional<User> userOpt = userRepository.findById(userId).filter(User::isActive);
             if(userOpt.isPresent()) {
                 User user = userOpt.get();
                 return ResponseEntity.ok(Map.of(
                     "authenticated", true,
-                    "user", Map.of(
-                        "id", user.getId(),
-                        "userId", user.getId(),
-                        "username", user.getUsername(),
-                        "uid", user.getUid(),
-                        "role", user.getRole()
-                    )
+                    "user", buildUserPayload(user)
                 ));
             }
         }
         return ResponseEntity.ok(Map.of("authenticated", false));
+    }
+
+    private Map<String, Object> buildUserPayload(User user) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", user.getId());
+        payload.put("userId", user.getId());
+        payload.put("username", user.getUsername());
+        payload.put("uid", user.getUid());
+        payload.put("role", user.getRole() != null ? user.getRole().name() : Role.USER.name());
+        payload.put("mustChangePassword", user.isMustChangePassword());
+        return payload;
     }
     
     @PostMapping("/logout")

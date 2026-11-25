@@ -29,9 +29,19 @@ server:
 # CORS_ALLOWED_ORIGINS: comma-separated list of allowed frontend origins.
 # Example: CORS_ALLOWED_ORIGINS=http://192.168.1.50:5173,http://localhost:5173
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:4173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:4173}
 
 research:
   # Archived exp1-exp6 JSON datasets served by /api/simulations/research.
   # Empty means "probe docs/research-results relative to the working directory".
   results-dir: ${RESEARCH_RESULTS_DIR:}
+
+# Seeder credentials — injected from environment only. No hardcoded defaults.
+app:
+  seed:
+    admin:
+      username: ${SEED_ADMIN_USERNAME:admin}
+      password: ${SEED_ADMIN_PASSWORD:}
+    owner:
+      username: ${SEED_OWNER_USERNAME:owner}
+      password: ${SEED_OWNER_PASSWORD:}

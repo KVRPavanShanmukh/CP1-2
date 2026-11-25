@@ -102,6 +102,12 @@ export const authApi = {
     } finally {
       setStoredUser(null);
     }
+  },
+  changePassword: async (currentPassword, newPassword) => {
+    return request('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
   }
 };
 

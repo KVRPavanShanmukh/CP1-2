@@ -441,7 +441,7 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                               {searchTargetUser.user.username}
                             </div>
                             <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>
-                              DATABASE ID: <strong style={{ color: '#00e5ff' }}>{searchTargetUser.user.id}</strong> • UID: <strong style={{ color: '#00e5ff' }}>{searchTargetUser.user.uid}</strong> • ROLE: {searchTargetUser.user.role}
+                              UID: <strong style={{ color: '#00e5ff' }}>{searchTargetUser.user.uid}</strong> • ROLE: {searchTargetUser.user.role}
                             </div>
                             {searchTargetUser.alreadyInTeam ? (
                               <div style={{ color: '#ff0055', fontSize: '11px', marginTop: '6px' }}>
@@ -548,10 +548,7 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                                           <strong style={{ fontSize: '13px', color: '#fff' }}>{u.username}</strong>
                                           <span style={{ fontSize: '9px', fontFamily: 'Courier New', color: '#ffaa00' }}>{u.role}</span>
                                         </div>
-                                        <div style={{ fontFamily: 'Courier New', fontSize: '9px', color: 'rgba(255,255,255,0.6)', marginTop: '4px', wordBreak: 'break-all' }}>
-                                          DB ID: <span style={{ color: '#00e5ff' }}>{u.id}</span>
-                                        </div>
-                                        <div style={{ fontFamily: 'Courier New', fontSize: '9px', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>
+                                        <div style={{ fontFamily: 'Courier New', fontSize: '9px', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
                                           UID: <span style={{ color: '#fff' }}>{u.uid}</span>
                                         </div>
                                         {isMember && (
@@ -833,7 +830,7 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                         <div>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{usr.username}</div>
                           <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: 'rgba(255,255,255,0.7)', marginTop: '2px', wordBreak: 'break-all' }}>
-                            DB ID: <strong style={{ color: '#00e5ff' }}>{usr.id}</strong> • UID: <strong>{usr.uid}</strong> {usr.teamName && `• TEAM: ${usr.teamName}`}
+                            UID: <strong>{usr.uid}</strong> {usr.teamName && `• TEAM: ${usr.teamName}`}
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -945,9 +942,6 @@ export default function NexusTeamModal({ isOpen, onClose, initialTab = 'roster',
                       <div key={friend.id} className="member-box">
                         <div>
                           <div className="member-name">{friend.username}</div>
-                          <div className="member-uid" style={{ wordBreak: 'break-all' }}>
-                            DB ID: <span style={{ color: '#00e5ff' }}>{friend.id || friend.userId}</span>
-                          </div>
                           <div className="member-uid">UID: {friend.uid}</div>
                           <div style={{ fontFamily: 'Courier New', fontSize: '10px', color: '#00e5ff', marginTop: '6px' }}>
                             TEAM: {friend.teamName || 'NO TEAM AFFILIATION'}

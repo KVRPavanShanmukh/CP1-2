@@ -101,15 +101,6 @@ export default function Profile() {
                   CHAIN55 Consensus Laboratory
                 </div>
               </div>
-
-              <div>
-                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono, monospace)', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>
-                  DATABASE RECORD ID
-                </div>
-                <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono, monospace)', color: 'rgba(255,255,255,0.7)', marginTop: '6px', wordBreak: 'break-all' }}>
-                  {user.id || 'N/A'}
-                </div>
-              </div>
             </div>
 
             {/* ACTION BUTTONS */}

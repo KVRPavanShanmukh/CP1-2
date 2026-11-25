@@ -24,6 +24,7 @@ public class User {
     private Role role;
     
     private boolean isActive;
+    private boolean mustChangePassword;
     private Instant createdAt;
     private Instant lastLoginAt;
 
@@ -42,6 +43,8 @@ public class User {
     public void setRole(Role role) { this.role = role; }
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
+    public boolean isMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getLastLoginAt() { return lastLoginAt; }

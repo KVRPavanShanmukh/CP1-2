@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import SimulationCursor from './components/SimulationCursor';
 import Login from './pages/Login';
+import ChangePassword from './pages/ChangePassword';
 import Landing from './pages/Landing';
 import Simulation from './pages/Simulation';
 import Dashboard from './pages/Dashboard';
@@ -21,6 +22,7 @@ function AppContent() {
       <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/landing" element={<Landing />} />
         <Route path="/simulation" element={<Simulation />} />
