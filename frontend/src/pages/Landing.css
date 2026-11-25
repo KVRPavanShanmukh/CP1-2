@@ -216,9 +216,10 @@
   top: 0; left: 0;
   width: 100vw;
   height: 100vh;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 100px 80px 80px;
+  padding: 96px 80px 56px;
   overflow: hidden;
 }
 
@@ -252,17 +253,17 @@
   margin-bottom: 28px;
 }
 
-.section-title.size-hero { font-size: clamp(4rem, 9vw, 8rem); }
-.section-title.size-large { font-size: clamp(3.5rem, 7vw, 6.5rem); }
+.section-title.size-hero { font-size: clamp(3.2rem, 7.5vw, 6.8rem); }
+.section-title.size-large { font-size: clamp(2.8rem, 6.2vw, 5.6rem); }
 .section-title.size-medium { font-size: clamp(2.5rem, 5vw, 4.5rem); }
 
 .section-desc {
   font-size: 14px;
   font-weight: 300;
-  line-height: 1.9;
-  color: var(--text-dim);
-  max-width: 380px;
-  margin-bottom: 36px;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 420px;
+  margin-bottom: 30px;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -365,10 +366,14 @@
   width: 100%;
   z-index: 80;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 0 50px;
   height: 55px;
+  pointer-events: none;
+}
+
+.bottom-privacy {
   pointer-events: auto;
 }
 
@@ -436,9 +441,9 @@
 
 .webgl-layer {
   position: fixed;
-  top: 0; left: 0;
+  top: 68px; left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - 68px);
   z-index: 0;
   pointer-events: none;
 }
@@ -454,12 +459,17 @@
   z-index: 10;
 }
 
-/* Section 1 — Abstract: Left text, right visual */
+/* Section 1 — Abstract: Right text, left visual */
 .section-abstract-content {
+  margin-left: auto;
   width: 42%;
-  max-width: 480px;
+  max-width: 500px;
   text-align: left;
   z-index: 10;
+}
+
+.section-abstract-content .section-desc {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Section 2 — Architecture: Left text */

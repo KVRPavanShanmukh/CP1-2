@@ -106,7 +106,7 @@ function NexusSphereVisual({ active }) {
       const v = Math.random();
       const theta = 2 * Math.PI * u;
       const phi = Math.acos(2 * v - 1);
-      const r = 4.8 + Math.random() * 0.3;
+      const r = 4.2 + Math.random() * 0.28;
       p[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       p[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.85;
       p[i * 3 + 2] = r * Math.cos(phi);
@@ -127,7 +127,7 @@ function NexusSphereVisual({ active }) {
   });
 
   return (
-    <group ref={groupRef} position={[3.5, 0.5, 0]}>
+    <group ref={groupRef} position={[-3.8, 0, 0]}>
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={numParticles} array={positions} itemSize={3} />
@@ -466,16 +466,6 @@ export default function Landing() {
   const sectionAccents = ['#ffffff', '#00e5ff', '#e6e6fa', '#ffaa00', '#00bfa5', '#ffffff', '#ff00ff'];
   const currentAccent = sectionAccents[activeSection];
 
-  const sectionMeta = [
-    { num: '//00', cat: 'PROJECT INTRODUCTION', techTags: ['SPRING BOOT', 'REACT', 'THREE.JS', 'WEBSOCKET'] },
-    { num: '//01', cat: 'DISTRIBUTED SYSTEMS / ABSTRACT', techTags: ['AGENT-BASED MODELLING', 'CONSENSUS', 'P2P'] },
-    { num: '//02', cat: 'SYSTEM ARCHITECTURE', techTags: ['MICROSERVICES', 'RABBITMQ', 'STOMP', 'REST'] },
-    { num: '//03', cat: 'DESIGN / DEVELOPMENT', techTags: ['WEBGL', 'FRAMER MOTION', 'LENIS', 'VITE'] },
-    { num: '//04', cat: 'TEAM / CONTRIBUTORS', techTags: ['FULL-STACK', 'SIMULATION', 'FRONTEND', 'BACKEND'] },
-    { num: '//05', cat: 'LIVE SIMULATION ENGINE', techTags: ['PROOF OF WORK', 'PROOF OF STAKE', 'GINI', 'FORKS'] },
-    { num: '//06', cat: 'PROJECT VISION / CONTACT', techTags: ['CHAIN55', 'DISTRIBUTED CONSENSUS', '2026'] },
-  ];
-
   // Smooth scroll navigation
   useEffect(() => {
     const handleWheel = (e) => {
@@ -550,12 +540,11 @@ export default function Landing() {
           {activeSection === 0 && (
             <motion.div key="s0" className="landing-section" initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
               <div className="section-hero-content">
-                <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[0].num}</span>
-                <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[0].cat}</span>
                 <h1 className="section-title size-hero">CONSENSUS<br/>ENGINE.</h1>
                 <p className="section-desc">
-                  An agent-based modelling platform for distributed consensus simulation. We model peer-to-peer networks, 
-                  block propagation dynamics, and fork resolution in real-time using WebGL and WebSocket telemetry.
+                  An Agent-Based Modelling (ABM) laboratory for distributed ledger participant behaviour. 
+                  CHAIN55 simulates honest, inactive, and Byzantine nodes across P2P topologies and five consensus protocols 
+                  to evaluate ledger security, scalability, and reliability before deployment.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                   <button className="landing-btn accent-cyan" onClick={() => setActiveSection(1)}>EXPLORE PROJECT ↓</button>
@@ -570,15 +559,12 @@ export default function Landing() {
           {activeSection === 1 && (
             <motion.div key="s1" className="landing-section" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
               <div className="section-abstract-content">
-                <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[1].num}</span>
-                <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[1].cat}</span>
-                <h1 className="section-title size-large">THE<br/>NETWORK.</h1>
+                <h1 className="section-title size-large">RESEARCH<br/>ABSTRACT.</h1>
                 <p className="section-desc">
-                  Each node in our simulation operates as an autonomous agent with its own blockchain state, 
-                  mempool, and consensus logic. Together they form a unified nexus — a distributed intelligence 
-                  that converges on canonical truth through gossip propagation.
+                  Conventional blockchain models assume every participant behaves identically—an assumption that breaks down when real nodes turn malicious, inactive, or unpredictable. 
+                  CHAIN55 models each node as an autonomous agent with a distinct behavioral profile, capturing transaction validation, block creation, consensus achievement, and ledger reliability.
                 </p>
-                <button className="landing-btn" onClick={() => setActiveSection(2)}>VIEW ARCHITECTURE ↗</button>
+                <button className="landing-btn" onClick={() => setActiveSection(2)}>SYSTEM MODEL ↗</button>
               </div>
             </motion.div>
           )}
@@ -587,29 +573,26 @@ export default function Landing() {
           {activeSection === 2 && (
             <motion.div key="s2" className="landing-section" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
               <div className="section-arch-content">
-                <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[2].num}</span>
-                <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[2].cat}</span>
                 <h1 className="section-title size-large">SYSTEM<br/>DEPTH.</h1>
                 <p className="section-desc">
-                  Spring Boot orchestrates the simulation engine with concurrent agent threads. 
-                  STOMP over WebSocket delivers sub-second tick updates to the React frontend. 
-                  Network topology follows Erdős–Rényi random graph generation with configurable edge probability.
+                  Each participant operates as a stateful agent maintaining its own local blocktree, transaction mempool, and LMD-GHOST fork-choice view. 
+                  Messages propagate across Erdős–Rényi, Small-World, or Scale-Free peer graphs under configurable gossip latency, packet loss, and network partitions.
                 </p>
                 <div style={{ display: 'flex', gap: '40px', marginBottom: '28px' }}>
                   <div>
                     <div className="sim-stat-label">PROTOCOLS</div>
-                    <div className="sim-stat-value" style={{ fontSize: '18px', color: currentAccent }}>PoW / PoS</div>
+                    <div className="sim-stat-value" style={{ fontSize: '18px', color: currentAccent }}>5 MODELS</div>
                   </div>
                   <div>
-                    <div className="sim-stat-label">TRANSPORT</div>
-                    <div className="sim-stat-value" style={{ fontSize: '18px' }}>STOMP/WS</div>
+                    <div className="sim-stat-label">FORK CHOICE</div>
+                    <div className="sim-stat-value" style={{ fontSize: '18px' }}>LMD-GHOST</div>
                   </div>
                   <div>
-                    <div className="sim-stat-label">TOPOLOGY</div>
-                    <div className="sim-stat-value" style={{ fontSize: '18px' }}>ERDŐS–RÉNYI</div>
+                    <div className="sim-stat-label">TOPOLOGIES</div>
+                    <div className="sim-stat-value" style={{ fontSize: '18px' }}>3 GRAPHS</div>
                   </div>
                 </div>
-                <button className="landing-btn" onClick={() => setActiveSection(3)}>DEVELOPMENT PROCESS ↗</button>
+                <button className="landing-btn" onClick={() => setActiveSection(3)}>RESEARCH PROCESS ↗</button>
               </div>
             </motion.div>
           )}
@@ -618,16 +601,14 @@ export default function Landing() {
           {activeSection === 3 && (
             <motion.div key="s3" className="landing-section" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
               <div className="section-process-content">
-                <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[3].num}</span>
-                <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[3].cat}</span>
-                <h1 className="section-title size-large" style={{ color: '#ffaa00' }}>DESIGN<br/>PROCESS.</h1>
+                <h1 className="section-title size-large" style={{ color: '#ffaa00' }}>RESEARCH<br/>PROCESS.</h1>
                 <p className="section-desc">
-                  The platform was built end-to-end: architecture design, Spring Boot backend with H2/SQL persistence, 
-                  React + Three.js immersive frontend, WebSocket real-time data pipeline, 
-                  and agent-based simulation engine with configurable consensus strategies.
+                  Every experiment runs in a repeatable, seed-controlled pipeline: configure network topology and consensus rules, 
+                  assign honest, inactive, or Byzantine behavioral profiles, inject latency, packet loss, or partitions, 
+                  and measure emergent chain stability and decentralization.
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '28px', maxWidth: '340px' }}>
-                  {['CONCEPT', 'ARCHITECTURE', 'FRONTEND', 'BACKEND', 'SIMULATION', 'REAL-TIME', 'AUTH', 'TESTING'].map(item => (
+                  {['AGENT PROFILES', 'P2P TOPOLOGY', 'TX MEMPOOL', 'BLOCK GOSSIP', 'FORK CHOICE', 'FAULT INJECTION', 'SEED CONTROL', 'METRIC AUDIT'].map(item => (
                     <div key={item} style={{ padding: '10px 14px', border: '1px solid var(--border-subtle)', fontSize: '9px', fontFamily: 'var(--font-mono)', letterSpacing: '2px', color: 'var(--text-dim)', transition: 'border-color 0.3s' }}>
                       {item}
                     </div>
@@ -646,8 +627,6 @@ export default function Landing() {
               <div className="section-team-content">
                 {/* LEFT SIDE: INSTITUTION, MENTOR, AND PROJECT RESEARCH SCOPE */}
                 <div className="team-text-side">
-                  <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[4].num}</span>
-                  <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>RESEARCH & SYSTEM ARCHITECTURE</span>
                   <h1 className="section-title size-medium">PROJECT<br/>TEAM.</h1>
                   <p className="section-desc" style={{ color: '#f1f5f9' }}>
                     <strong style={{ color: '#ffffff' }}>KL University • Dept. of Computer Science & Information Technology (Batch 73).</strong><br />
@@ -800,22 +779,20 @@ export default function Landing() {
           {activeSection === 5 && (
             <motion.div key="s5" className="landing-section" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
               <div className="section-sim-content">
-                <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[5].num}</span>
-                <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[5].cat}</span>
                 <h1 className="section-title size-large">LIVE<br/>ENGINE.</h1>
                 <p className="section-desc">
-                  Configure node count, consensus type, and network latency. 
-                  The simulation engine instantiates autonomous blockchain agents, 
-                  propagates blocks across the gossip layer, and streams real-time metrics via WebSocket.
+                  Simulate up to 1,000 autonomous agents across PoW, PoS, DPoS, PoA, and PoL consensus. 
+                  Observe transaction inclusion, Byzantine equivocation and block withholding, 
+                  mainchain stability, fork branching, and Gini wealth distribution in real time.
                 </p>
                 <div className="sim-stat-row">
                   <div className="sim-stat">
                     <span className="sim-stat-label">CONSENSUS</span>
-                    <span className="sim-stat-value">PoW / PoS</span>
+                    <span className="sim-stat-value">PoW–PoL (5)</span>
                   </div>
                   <div className="sim-stat">
                     <span className="sim-stat-label">MAX NODES</span>
-                    <span className="sim-stat-value">100+</span>
+                    <span className="sim-stat-value">UP TO 1000</span>
                   </div>
                   <div className="sim-stat">
                     <span className="sim-stat-label">METRICS</span>
@@ -833,13 +810,9 @@ export default function Landing() {
           {activeSection === 6 && (
             <motion.div key="s6" className="landing-section" initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
               <div className="section-contact-content">
-                <span className="section-number" style={{ color: currentAccent }}>{sectionMeta[6].num}</span>
-                <span className="section-category" style={{ color: 'var(--text-dimmer)' }}>{sectionMeta[6].cat}</span>
                 <h1 className="section-title size-hero" style={{ textAlign: 'center' }}>CHAIN55<br/>PROJECT.</h1>
                 <p className="section-desc">
-                  A complete distributed consensus simulation platform. 
-                  From agent-based modelling to real-time WebGL visualization — 
-                  built end-to-end with Spring Boot, React, and Three.js.
+                  A low-cost, repeatable test environment for evaluating blockchain behaviour before real-world deployment—helping researchers understand how participant conduct shapes security, scalability, and reliability to build sturdier distributed ledger systems.
                 </p>
                 <div className="contact-actions">
                   <button className="landing-btn accent-cyan" onClick={() => navigate('/simulation')}>LAUNCH SIMULATION ↗</button>
@@ -864,21 +837,16 @@ export default function Landing() {
         ))}
       </div>
 
-      {/* BOTTOM METADATA BAR */}
-      <div className="landing-bottom">
-        <div className="bottom-tech-tags">
-          {sectionMeta[activeSection].techTags.map((tag, i) => (
-            <span key={i} style={{ color: i === 0 ? currentAccent : 'var(--text-dimmer)' }}>{tag}</span>
-          ))}
-        </div>
-        {!privacyChoice && (
+      {/* BOTTOM PRIVACY BAR */}
+      {!privacyChoice && (
+        <div className="landing-bottom">
           <div className="bottom-privacy">
             <div className="bottom-privacy-text"><span className="accent">// PRIVACY</span> Optional analytics help improve this platform. <u style={{ cursor: 'pointer' }}>Details</u></div>
             <button className="privacy-btn" onClick={() => { localStorage.setItem('privacy_choice', 'declined'); setPrivacyChoice('declined'); }}>DECLINE</button>
             <button className="privacy-btn filled" onClick={() => { localStorage.setItem('privacy_choice', 'accepted'); setPrivacyChoice('accepted'); }}>ACCEPT</button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* DEDICATED LEAD CREATOR SPOTLIGHT MODAL (TASK 3) */}
       {creatorSpotlightOpen && (

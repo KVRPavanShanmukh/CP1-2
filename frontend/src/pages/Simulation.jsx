@@ -704,7 +704,6 @@ function ResearchPanel({ onClose }) {
 export default function Simulation() {
   const [activeSection, setActiveSection] = useState(0); 
   const [scrollLocked, setScrollLocked] = useState(false);
-  const [simulationStarted, setSimulationStarted] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -765,21 +764,12 @@ export default function Simulation() {
     return () => { cancelled = true; };
   }, []);
 
-  // Wheel Scroll Navigation
+  // Wheel Scroll Navigation (disabled on configuration stage so full-page scroll works naturally)
   useEffect(() => {
     const handleWheel = (e) => {
       if (scrollLocked) return;
+      if (activeSection === 0) return;
       if (e.target && typeof e.target.closest === 'function' && e.target.closest('.experiment-panel')) return;
-      
-      if (!simulationStarted) {
-        if (e.deltaY > 50) {
-          setScrollLocked(true);
-          // Return to Network Architecture
-          navigate('/dashboard'); 
-          setTimeout(() => setScrollLocked(false), 1000);
-        }
-        return;
-      }
 
       // Block manual scroll during auto simulation
       if (activeSection > 0 && activeSection < 5) return;
@@ -796,7 +786,7 @@ export default function Simulation() {
     };
     window.addEventListener('wheel', handleWheel);
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [activeSection, scrollLocked, simulationStarted, navigate]);
+  }, [activeSection, scrollLocked]);
 
   const stopResultPolling = () => {
     if (pollTimerRef.current) {
@@ -910,7 +900,6 @@ export default function Simulation() {
     }
 
     setErrorMessage('');
-    setSimulationStarted(true);
     setLoading(true);
     setLiveTicks([]);
     setResults(null);
@@ -927,7 +916,6 @@ export default function Simulation() {
     } catch (error) {
       setErrorMessage(error.message || 'Failed to start simulation.');
       setLoading(false);
-      setSimulationStarted(false);
       setActiveSection(0);
     }
   };
@@ -973,9 +961,12 @@ export default function Simulation() {
 
 
   return (
-    <div className="immersive-shell" style={{ '--dynamic-accent': currentAccent }}>
+    <div
+      className={`immersive-shell ${activeSection === 0 ? 'sim-config-scroll' : ''}`}
+      style={{ '--dynamic-accent': currentAccent }}
+    >
       {/* 3D WEBGL ENGINE */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1, pointerEvents: 'none' }}>
         <Canvas camera={{ position: [0, 0, 15], fov: 50 }} dpr={[1, 2]}>
           <color attach="background" args={['#020204']} />
           <ambientLight intensity={0.5} />
@@ -1011,7 +1002,7 @@ export default function Simulation() {
                 {activeSection === 5 && <>SIMULATION<br/>COMPLETE.</>}
               </h1>
               
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#D8D8D8', marginBottom: '24px', maxWidth: '520px', lineHeight: '1.6' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#E2E8F0', marginBottom: '24px', maxWidth: '560px', lineHeight: '1.65' }}>
                 {sections[activeSection].desc}
               </p>
 
@@ -1184,7 +1175,12 @@ export default function Simulation() {
                     </div>
 
                     <div className="config-actions">
-                      <button type="submit" className="exp-btn exp-btn-primary" disabled={loading || !user}>
+                      <button
+                        type="submit"
+                        className="exp-btn exp-btn-primary sim-start-cta"
+                        disabled={loading || !user}
+                        title={!user ? 'Sign in required' : 'Start a real simulation run'}
+                      >
                         {loading ? 'RUNNING…' : 'START SIMULATION ↗'}
                       </button>
                       <button type="button" className="exp-btn" onClick={() => setDrawer('history')}>RUN HISTORY</button>
@@ -1421,7 +1417,7 @@ export default function Simulation() {
                     </>}
                   </div>
                   {liveTicks.length > 0 && <TrendChart ticks={liveTicks} />}
-                  <button onClick={() => { setActiveSection(0); setSimulationStarted(false); setLiveTicks([]); setResults(null); setSimulationId(null); setWsStatus('idle'); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
+                  <button onClick={() => { setActiveSection(0); setLiveTicks([]); setResults(null); setSimulationId(null); setWsStatus('idle'); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
                     NEW SEQUENCE ↺
                   </button>
                 </div>
@@ -1444,49 +1440,6 @@ export default function Simulation() {
           ))}
         </div>
       </main>
-
-      {/* FLOATING START SIMULATION BUTTON (OVER WEBGL) */}
-      {activeSection === 0 && (
-        <div style={{ position: 'absolute', top: '50%', right: '12%', transform: 'translate(0, -50%)', zIndex: 10 }}>
-          <button 
-            onClick={handleStartSimulation} 
-            disabled={loading || !user}
-            title={!user ? 'Sign in required' : 'Start a real simulation run'}
-            style={{
-              background: '#0a0a0c',
-              border: '1px solid #00ffff',
-              color: '#00ffff',
-              padding: '1.25rem 2.5rem',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              boxShadow: '0 0 20px rgba(0,255,255,0.2), inset 0 0 10px rgba(0,255,255,0.1)',
-              cursor: loading || !user ? 'not-allowed' : 'pointer',
-              opacity: loading || !user ? 0.45 : 1,
-              transition: 'all 0.3s ease',
-              borderRadius: '4px',
-              fontFamily: 'var(--font-mono)'
-            }}
-            onMouseOver={(e) => { 
-              e.currentTarget.style.boxShadow = '0 0 30px rgba(0,255,255,0.4), inset 0 0 15px rgba(0,255,255,0.2)'; 
-              e.currentTarget.style.transform = 'scale(1.02) translateY(-2px)'; 
-              e.currentTarget.style.color = '#ffffff';
-              e.currentTarget.style.borderColor = '#ffffff';
-            }}
-            onMouseOut={(e) => { 
-              e.currentTarget.style.boxShadow = '0 0 20px rgba(0,255,255,0.2), inset 0 0 10px rgba(0,255,255,0.1)'; 
-              e.currentTarget.style.transform = 'scale(1) translateY(0)'; 
-              e.currentTarget.style.color = '#00ffff';
-              e.currentTarget.style.borderColor = '#00ffff';
-            }}
-          >
-            START SIMULATION ↗
-          </button>
-        </div>
-      )}
-
-
 
       {/* ARCHIVE / HISTORY OVERLAYS */}
       {drawer === 'history' && (

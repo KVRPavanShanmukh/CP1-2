@@ -292,6 +292,48 @@ const Learning = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* MODULE 6: PLATFORM ARCHITECTURE & TECHNOLOGY STACK */}
+        <motion.div className="col-span-12 kott-card" variants={itemVariants} style={{ marginTop: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(0, 229, 255, 0.2)', paddingBottom: '0.8rem' }}>
+            <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00e5ff', margin: 0, fontSize: '1.05rem' }}>
+              06 • Platform Architecture &amp; Technology Stack
+            </h3>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#f1f5f9', letterSpacing: '1px' }}>
+              IMPLEMENTATION &amp; RUNTIME STACK
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '18px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <h4 style={{ color: '#ffffff', fontSize: '0.95rem', marginBottom: '8px' }}>Spring Boot CAS Engine</h4>
+              <p style={{ color: '#e2e8f0', fontSize: '0.86rem', lineHeight: '1.7' }}>
+                Java 17 &amp; Spring Boot orchestrate the simulation engine, REST APIs, Spring Security authentication, and multi-seed statistical experiment runners verified by automated JUnit 5 tests.
+              </p>
+            </div>
+
+            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '18px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <h4 style={{ color: '#ffffff', fontSize: '0.95rem', marginBottom: '8px' }}>MongoDB Persistence</h4>
+              <p style={{ color: '#e2e8f0', fontSize: '0.86rem', lineHeight: '1.7' }}>
+                Spring Data MongoDB persists simulation configurations, execution history, final metrics, BCrypt user accounts, teams, and research blog posts.
+              </p>
+            </div>
+
+            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '18px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <h4 style={{ color: '#ffffff', fontSize: '0.95rem', marginBottom: '8px' }}>RabbitMQ &amp; STOMP WebSocket</h4>
+              <p style={{ color: '#e2e8f0', fontSize: '0.86rem', lineHeight: '1.7' }}>
+                RabbitMQ decouples simulation job queuing from background worker execution, while STOMP over WebSocket (SockJS) streams live tick updates and telemetry to clients.
+              </p>
+            </div>
+
+            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '18px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <h4 style={{ color: '#ffffff', fontSize: '0.95rem', marginBottom: '8px' }}>React 19, Vite &amp; Three.js WebGL</h4>
+              <p style={{ color: '#e2e8f0', fontSize: '0.86rem', lineHeight: '1.7' }}>
+                React 19, Vite, Framer Motion, and Three.js / React Three Fiber deliver the interactive parameter studio, live SVG telemetry charts, and 3D cosmic agent network visualizer.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   );

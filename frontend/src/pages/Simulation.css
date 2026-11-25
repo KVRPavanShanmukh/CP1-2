@@ -11,6 +11,59 @@
   position: relative;
 }
 
+.immersive-shell.sim-config-scroll {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.25);
+}
+
+.immersive-shell.sim-config-scroll .main-content {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+  max-width: 920px;
+  padding: 104px 60px 36px;
+  margin: 0;
+  box-sizing: border-box;
+  overflow: visible !important;
+  flex: 1 0 auto;
+}
+
+.immersive-shell.sim-config-scroll .left-panel {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.immersive-shell.sim-config-scroll .experiment-panel {
+  max-height: none;
+  overflow-y: visible;
+}
+
+.immersive-shell.sim-config-scroll .right-panel {
+  position: fixed;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+}
+
+.immersive-shell.sim-config-scroll .bottom-bar {
+  margin-top: auto;
+  width: 100%;
+}
+
 /* Simulation Top Navbar */
 .sim-navbar {
   position: absolute;
@@ -107,7 +160,7 @@
 .desc-text {
   font-size: 14px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 20px;
   max-width: 400px;
   font-weight: 300;
@@ -231,15 +284,15 @@
   pointer-events: auto;
   margin-top: 26px;
   padding: 14px 16px 18px;
-  border: 1px solid rgba(0, 255, 255, 0.22);
-  background: rgba(3, 6, 10, 0.78);
+  border: 1px solid rgba(0, 255, 255, 0.28);
+  background: rgba(5, 9, 15, 0.86);
   backdrop-filter: blur(8px);
   max-height: 46vh;
   overflow-y: auto;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.62rem;
+  font-size: 0.64rem;
   letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.78);
+  color: #f1f5f9;
   scrollbar-width: thin;
 }
 
@@ -249,25 +302,25 @@
   gap: 4px;
   padding-bottom: 10px;
   margin-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .exp-label {
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--dynamic-accent);
+  color: #67e8f9;
   margin: 10px 0 6px;
 }
 
 .exp-note {
-  font-size: 0.56rem;
+  font-size: 0.62rem;
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(226, 232, 240, 0.84);
 }
 
 .exp-warn {
-  color: #ffb347;
+  color: #fcd34d;
 }
 
 .exp-error {
@@ -304,30 +357,49 @@
 }
 
 .exp-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  color: rgba(255, 255, 255, 0.75);
+  background: rgba(6, 12, 20, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  color: #f1f5f9;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.55rem;
+  font-size: 0.62rem;
   letter-spacing: 0.12em;
-  padding: 6px 10px;
+  padding: 8px 14px;
   cursor: pointer;
   transition: border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .exp-btn:hover:not(:disabled) {
-  border-color: rgba(0, 255, 255, 0.7);
+  border-color: rgba(0, 255, 255, 0.75);
   color: #fff;
 }
 
 .exp-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .exp-btn-primary {
-  border-color: rgba(0, 255, 255, 0.55);
+  border-color: rgba(0, 255, 255, 0.65);
   color: #00ffff;
+}
+
+.exp-btn-primary.sim-start-cta {
+  background: rgba(0, 255, 255, 0.12);
+  border-color: #00ffff;
+  color: #00ffff;
+  padding: 12px 24px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.exp-btn-primary.sim-start-cta:hover:not(:disabled) {
+  background: rgba(0, 255, 255, 0.2);
+  color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 26px rgba(0, 255, 255, 0.38);
 }
 
 .exp-btn-primary:hover:not(:disabled) {
@@ -365,9 +437,9 @@
 }
 
 .exp-config {
-  font-size: 0.54rem;
+  font-size: 0.58rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(226, 232, 240, 0.72);
   word-break: break-word;
 }
 
@@ -525,13 +597,13 @@
 .config-section-title {
   grid-column: 1 / -1;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.16em;
-  color: rgba(0, 255, 255, 0.75);
-  padding-top: 14px;
+  color: #00ffff;
+  padding-top: 16px;
   padding-bottom: 6px;
-  border-top: 1px solid rgba(0, 255, 255, 0.18);
+  border-top: 1px solid rgba(0, 255, 255, 0.28);
   margin-top: 8px;
   text-transform: uppercase;
   display: flex;
@@ -549,10 +621,10 @@
 
 .config-field .meta-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.64rem;
-  font-weight: 500;
+  font-size: 0.68rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--dynamic-accent, #00ffff);
+  color: #67e8f9;
   margin-bottom: 2px;
   display: block;
   text-transform: uppercase;
@@ -565,16 +637,20 @@
 .config-field .form-control {
   width: 100%;
   max-width: 100%;
-  background: rgba(6, 10, 16, 0.85);
-  border: 1px solid rgba(0, 255, 255, 0.22);
+  background: rgba(8, 14, 24, 0.92);
+  border: 1px solid rgba(0, 255, 255, 0.35);
   border-radius: 3px;
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-family: 'JetBrains Mono', monospace;
-  padding: 7px 11px;
+  padding: 8px 11px;
   transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   box-sizing: border-box;
   min-width: 0;
+}
+
+.config-field .form-control::placeholder {
+  color: rgba(226, 232, 240, 0.55);
 }
 
 .config-field .form-control:focus {
@@ -790,9 +866,11 @@
 }
 
 @media (max-width: 768px) {
-  .main-content {
+  .main-content,
+  .immersive-shell.sim-config-scroll .main-content {
     left: 20px;
     width: calc(100vw - 40px);
+    padding: 90px 20px 28px;
   }
 
   .config-grid {
