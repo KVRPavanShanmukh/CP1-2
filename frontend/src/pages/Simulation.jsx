@@ -1041,8 +1041,6 @@ export default function Simulation() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="meta-label">{sections[activeSection].title}</span>
-              
               <h1 className="huge-title">
                 {activeSection === 0 && <>NETWORK<br/>DYNAMICS.</>}
                 {activeSection === 1 && <>TOPOLOGY<br/>MATRIX.</>}

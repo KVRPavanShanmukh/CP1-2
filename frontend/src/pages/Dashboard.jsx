@@ -251,7 +251,7 @@ export default function Dashboard() {
         setScrollLocked(true);
         setActiveSection(prev => prev + 1);
         setTimeout(() => setScrollLocked(false), 1200);
-      } else if (e.deltaY < -50 && activeSection > 0) {
+      } else if (e.deltaY < -50 && activeSection > 0 && (activeSection !== 4 || window.scrollY <= 5)) {
         setScrollLocked(true);
         setActiveSection(prev => prev - 1);
         setTimeout(() => setScrollLocked(false), 1200);
@@ -261,11 +261,15 @@ export default function Dashboard() {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [activeSection, scrollLocked]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeSection]);
+
   return (
-    <div className="immersive-shell" style={{ '--dynamic-accent': currentAccent }}>
+    <div className={`immersive-shell ${activeSection === 4 ? 'dashboard-overview-scroll' : ''}`} style={{ '--dynamic-accent': currentAccent }}>
       
       {/* 3D WEBGL ENGINE */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'none' }}>
         <Canvas camera={{ position: [0, 0, 15], fov: 50 }} dpr={[1, 2]}>
           <color attach="background" args={['#050508']} />
           <ambientLight intensity={0.5} />
@@ -287,10 +291,6 @@ export default function Dashboard() {
             exit={{ opacity: 0, x: sections[activeSection].alignRight ? -30 : 30 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="meta-label">
-              {sections[activeSection].title.replace('\n', ' ')}
-            </span>
-            
             <h1 className="huge-title" style={{ whiteSpace: 'pre-line' }}>
               {sections[activeSection].title}
             </h1>
@@ -300,7 +300,7 @@ export default function Dashboard() {
             </p>
 
             {activeSection === 4 ? (
-              <div style={{ marginTop: '2rem' }}>
+              <div style={{ marginTop: '2rem', paddingBottom: '64px' }}>
                 {!user && (
                   <div className="exp-note exp-warn" style={{ marginBottom: '1.5rem' }}>
                     Session not detected.{' '}
@@ -404,11 +404,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* BOTTOM METADATA BAR */}
-      <div className="bottom-left-meta" style={{ display: 'flex', gap: '2rem' }}>
-        <span>IDENTITY / SYSTEM STORY / ABSTRACT VISUALS</span>
-        <span style={{ color: '#FFFFFF', cursor: 'pointer' }} onClick={() => navigate('/simulation')}>LAUNCH TOOL ↗</span>
-      </div>
+      {/* BOTTOM PRIVACY BAR */}
 
       {/* PRIVACY CONSENT BANNER */}
       {!privacyChoice && (
