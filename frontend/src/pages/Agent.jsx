@@ -5,6 +5,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { simulationApi, WS_BASE } from '../services/api';
+import {
+  downloadSimulationPdfReport,
+  triggerAutoPdfDownloadOnce
+} from '../utils/simulationPdfReport';
 import './Agent.css';
 
 // ═══════════════════════════════════════════════════════════════
@@ -104,6 +108,7 @@ export default function Agent() {
   const [simulationId, setSimulationId] = useState(initialSimId);
   const [simulationStatus, setSimulationStatus] = useState('IDLE');
   const [simulationConfig, setSimulationConfig] = useState(location.state?.config || null);
+  const [finalResult, setFinalResult] = useState(null);
   const [latestTick, setLatestTick] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [activityLogs, setActivityLogs] = useState([]);
@@ -136,6 +141,7 @@ export default function Agent() {
             setSimulationConfig(data.configuration);
             setSimulationStatus(data.status || 'RUNNING');
             if (data.result) {
+              setFinalResult(data.result);
               setLatestTick({
                 currentTick: data.result.simulationTicks,
                 totalTicks: data.result.simulationTicks,
@@ -144,6 +150,12 @@ export default function Agent() {
                 mainchainRate: data.result.mainchainRate,
                 instantGini: data.result.finalGiniCoefficient
               });
+              if (sessionStorage.getItem('autoPdfPendingRunId') === simulationId) {
+                triggerAutoPdfDownloadOnce({
+                  result: data.result,
+                  config: data.configuration || simulationConfig
+                });
+              }
             }
           }
         } catch (e) {
@@ -226,6 +238,7 @@ export default function Agent() {
         try {
           const result = JSON.parse(message.body);
           if (result) {
+            setFinalResult(result);
             setSimulationStatus(result.status || 'COMPLETED');
             setLatestTick((prev) => ({
               ...(prev || {}),
@@ -233,6 +246,12 @@ export default function Agent() {
               mainchainRate: result.mainchainRate,
               instantGini: result.finalGiniCoefficient
             }));
+            if (sessionStorage.getItem('autoPdfPendingRunId') === simulationId) {
+              triggerAutoPdfDownloadOnce({
+                result,
+                config: simulationConfig
+              });
+            }
           }
         } catch (err) {
           console.warn('Result parsing error:', err);
@@ -1314,6 +1333,20 @@ export default function Agent() {
           >
             ← SIMULATION
           </button>
+
+          {finalResult && simulationStatus === 'COMPLETED' && (
+            <button
+              className="hud-btn"
+              onClick={() => downloadSimulationPdfReport({
+                result: finalResult,
+                config: simulationConfig,
+                runMeta: { id: simulationId }
+              })}
+              title="Download detailed PDF report for this simulation"
+            >
+              PDF REPORT ↓
+            </button>
+          )}
 
           <button
             className="hud-btn primary"

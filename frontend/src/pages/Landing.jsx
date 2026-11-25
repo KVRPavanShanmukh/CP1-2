@@ -621,155 +621,146 @@ export default function Landing() {
             </motion.div>
           )}
 
-          {/* ═══ SECTION 4 — PROJECT TEAM & CONTRIBUTIONS (TASK 2) ═══ */}
+          {/* ═══ SECTION 4 — PROJECT TEAM & CONTRIBUTIONS (HEXAGONAL FORMATION) ═══ */}
           {activeSection === 4 && (
-            <motion.div key="s4" className="landing-section" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
-              <div className="section-team-content">
-                {/* LEFT SIDE: INSTITUTION, MENTOR, AND PROJECT RESEARCH SCOPE */}
-                <div className="team-text-side">
-                  <h1 className="section-title size-medium">PROJECT<br/>TEAM.</h1>
-                  <p className="section-desc" style={{ color: '#f1f5f9' }}>
-                    <strong style={{ color: '#ffffff' }}>KL University • Dept. of Computer Science & Information Technology (Batch 73).</strong><br />
-                    <strong style={{ color: '#00e5ff' }}>CHAIN55:</strong> <span style={{ color: '#ffffff' }}>Agent-Based Modelling of Distributed Ledger Participant Behaviour.</span>
+            <motion.div key="s4" className="landing-section landing-section-team" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
+              <div className="section-team-content team-hex-layout">
+                {/* CENTERED HEADER ABOVE HEXAGON (ZERO CARD OVERLAP) */}
+                <div className="team-hex-header">
+                  <h1 className="section-title size-medium">PROJECT TEAM.</h1>
+                  <p className="team-hex-subtitle">
+                    <strong style={{ color: '#ffffff' }}>KL University • Dept. of Computer Science &amp; Information Technology (Batch 73)</strong>
+                    {' — '}
+                    <strong style={{ color: '#00e5ff' }}>CHAIN55:</strong> Agent-Based Modelling of Distributed Ledger Participant Behaviour.
                   </p>
-
-                  {/* FACULTY MENTOR CARD */}
-                  <div className="faculty-mentor-box">
-                    <div className="faculty-tag">★ FACULTY GUIDE & RESEARCH MENTOR</div>
-                    <div className="faculty-name" style={{ color: '#ffffff' }}>K. Nirmala</div>
-                    <div className="faculty-dept" style={{ color: '#e2e8f0' }}>
-                      Faculty Guide, Dept. of Computer Science & Information Technology, KL University
-                    </div>
-                  </div>
-
-                  {/* PROJECT TECHNICAL SUMMARY */}
-                  <div className="project-summary-box">
-                    <div className="summary-title">TECHNICAL ARCHITECTURE SCOPE</div>
-                    <div style={{ fontSize: '10.5px', color: '#f1f5f9', lineHeight: '1.55' }}>
-                      Full-stack Complex Adaptive Systems (CAS) consensus laboratory modelling micro-agent interactions and macro emergent ledger phenomena.
-                    </div>
-                    <div className="project-summary-chips">
-                      <span className="summary-chip">AGENT-BASED CAS</span>
-                      <span className="summary-chip">5 CONSENSUS PROTOCOLS</span>
-                      <span className="summary-chip">3 P2P TOPOLOGIES</span>
-                      <span className="summary-chip">BYZANTINE ATTACK INJECTION</span>
-                      <span className="summary-chip">3D WEBGL VISUALIZER</span>
-                      <span className="summary-chip">STATISTICAL RESEARCH ENGINE</span>
-                    </div>
-                    <div style={{ marginTop: '14px' }}>
-                      <a
-                        href="/architecture"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="landing-btn accent-cyan"
-                        style={{ fontSize: '9px', padding: '6px 12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
-                      >
-                        TECHNICAL ARCHITECTURE SPEC ↗
-                      </a>
-                    </div>
-                  </div>
                 </div>
 
-                {/* RIGHT SIDE: 2-COLUMN TEAM ROSTER + QUICK ACTIONS PANEL */}
-                <div className="team-right-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '72vh', overflowY: 'auto', paddingRight: '12px' }}>
-                  <div className="team-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                {/* 6-MEMBER HEXAGONAL FORMATION */}
+                <div className="team-hex-formation">
+                  {/* TOP EDGE (2 VERTICES) */}
+                  <div className="team-hex-row hex-edge">
+                    {/* VERTEX 1: K. NIRMALA (FACULTY GUIDE & MENTOR) */}
+                    <div className="team-member-card mentor-highlight">
+                      <div className="member-header">
+                        <div className="member-name">K. Nirmala</div>
+                        <span className="member-role-badge mentor">FACULTY GUIDE</span>
+                      </div>
+                      <div className="member-role-title" style={{ color: '#ffaa00' }}>Faculty Guide &amp; Research Mentor</div>
+                      <div className="member-contributions">
+                        Faculty Guide, Dept. of Computer Science &amp; Information Technology, KL University — research mentorship and academic supervision.
+                      </div>
+                    </div>
 
-                    {/* CARD 1: JUPALLI PRAVALLIKA (OFFICIAL TEAM LEADER) */}
+                    {/* VERTEX 2: JUPALLI PRAVALLIKA (TEAM LEADER) */}
                     <div className="team-member-card">
                       <div className="member-header">
-                        <div className="member-name" style={{ color: '#ffffff' }}>Jupalli Pravallika</div>
+                        <div className="member-name">Jupalli Pravallika</div>
                         <span className="member-role-badge leader">TEAM LEADER</span>
                       </div>
                       <div className="member-role-title">Team Leader</div>
-                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
+                      <div className="member-contributions">
                         Project leadership, team coordination, literature survey, research documentation, and consensus algorithm comparison summary.
                       </div>
                     </div>
+                  </div>
 
-                    {/* CARD 2: K.V.R. SAI PAVAN SHANMUKH (FEATURED CORE BACKEND & LEAD ARCHITECT) */}
+                  {/* MIDDLE WIDE VERTICES + CENTRAL HEX CREST */}
+                  <div className="team-hex-row hex-middle">
+                    {/* VERTEX 3: JANGA SATHVIK REDDY */}
+                    <div className="team-member-card">
+                      <div className="member-header">
+                        <div className="member-name">Janga Sathvik Reddy</div>
+                        <span className="member-role-badge contributor">DATABASE</span>
+                      </div>
+                      <div className="member-role-title">Database Management (MongoDB)</div>
+                      <div className="member-contributions">
+                        MongoDB database schema configuration, document collections, and persistent storage management.
+                      </div>
+                    </div>
+
+                    {/* CENTRAL GEOMETRIC HEXAGON EMBLEM */}
+                    <div className="team-hex-core" aria-hidden="true">
+                      <svg viewBox="0 0 120 120" className="team-hex-svg">
+                        <polygon
+                          points="60,6 110,33 110,87 60,114 10,87 10,33"
+                          fill="rgba(0, 229, 255, 0.04)"
+                          stroke="rgba(0, 229, 255, 0.38)"
+                          strokeWidth="1.5"
+                        />
+                        <polygon
+                          points="60,16 101,39 101,81 60,104 19,81 19,39"
+                          fill="none"
+                          stroke="rgba(0, 191, 165, 0.25)"
+                          strokeWidth="1"
+                          strokeDasharray="4 3"
+                        />
+                      </svg>
+                      <div className="team-hex-core-label">
+                        <span>CHAIN55</span>
+                        <small>BATCH 73</small>
+                      </div>
+                    </div>
+
+                    {/* VERTEX 4: K.V.R. SAI PAVAN SHANMUKH (LEAD ARCHITECT) */}
                     <div className="team-member-card lead-highlight">
                       <div className="member-header">
-                        <div className="member-name" style={{ color: '#ffffff' }}>K.V.R. Sai Pavan Shanmukh</div>
-                        <span className="member-role-badge lead">CORE BACKEND & LEAD ARCHITECT</span>
+                        <div className="member-name">K.V.R. Sai Pavan Shanmukh</div>
+                        <span className="member-role-badge lead">LEAD ARCHITECT</span>
                       </div>
-                      <div className="member-role-title">Lead Backend & Full-Stack System Architect</div>
-                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
-                        Engineered the core Java Spring Boot backend & Agent-Based Simulation Engine (Phases 1–13 empirical experiments), all 5 consensus mechanisms (PoW, PoS, DPoS, PoA, PoL), P2P network topologies, RabbitMQ + WebSocket telemetry, and statistical research engine — alongside building the React 19 + Vite frontend, Three.js 3D Cosmic Agent Visualizer, and complete full-stack integration.
+                      <div className="member-role-title">Core Backend &amp; Full-Stack System Architect</div>
+                      <div className="member-contributions">
+                        Engineered the Java Spring Boot CAS engine (Phases 1–13), 5 consensus protocols (PoW, PoS, DPoS, PoA, PoL), P2P topologies, RabbitMQ + WebSocket telemetry, React 19 frontend, and Three.js 3D Cosmic Visualizer.
                       </div>
-                      <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
                         <button
                           className="action-btn"
-                          style={{ borderColor: '#ffd700', color: '#ffd700', background: 'rgba(255, 215, 0, 0.1)', padding: '6px 14px', fontSize: '10px' }}
+                          style={{ borderColor: '#ffd700', color: '#ffd700', background: 'rgba(255, 215, 0, 0.1)', padding: '4px 10px', fontSize: '9px' }}
                           onClick={() => setCreatorSpotlightOpen(true)}
                         >
                           SPOTLIGHT ↗
                         </button>
                       </div>
                     </div>
+                  </div>
 
-                    {/* CARD 3: JANGA SATHVIK REDDY */}
+                  {/* BOTTOM EDGE (2 VERTICES) */}
+                  <div className="team-hex-row hex-edge">
+                    {/* VERTEX 5: V SAI GANESH */}
                     <div className="team-member-card">
                       <div className="member-header">
-                        <div className="member-name" style={{ color: '#ffffff' }}>Janga Sathvik Reddy</div>
-                        <span className="member-role-badge contributor">DATABASE</span>
-                      </div>
-                      <div className="member-role-title">Database Management (MongoDB)</div>
-                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
-                        MongoDB database schema configuration, document collections, and persistent storage management.
-                      </div>
-                    </div>
-
-                    {/* CARD 4: V SAI GANESH */}
-                    <div className="team-member-card">
-                      <div className="member-header">
-                        <div className="member-name" style={{ color: '#ffffff' }}>V Sai Ganesh</div>
+                        <div className="member-name">V Sai Ganesh</div>
                         <span className="member-role-badge contributor">QA / TESTING</span>
                       </div>
-                      <div className="member-role-title">Testing & Quality Assurance</div>
-                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
+                      <div className="member-role-title">Testing &amp; Quality Assurance</div>
+                      <div className="member-contributions">
                         Test case validation, quality assurance workflows, and consensus scenario verification.
                       </div>
                     </div>
 
-                    {/* CARD 5: JALADI ROHAN KUMAR */}
+                    {/* VERTEX 6: JALADI ROHAN KUMAR */}
                     <div className="team-member-card">
                       <div className="member-header">
-                        <div className="member-name" style={{ color: '#ffffff' }}>Jaladi Rohan Kumar</div>
+                        <div className="member-name">Jaladi Rohan Kumar</div>
                         <span className="member-role-badge contributor">QA / TESTING</span>
                       </div>
-                      <div className="member-role-title">Testing & Quality Assurance</div>
-                      <div className="member-contributions" style={{ color: '#f1f5f9' }}>
+                      <div className="member-role-title">Testing &amp; Quality Assurance</div>
+                      <div className="member-contributions">
                         Simulation testing execution, scenario verification, and metric output validation.
                       </div>
                     </div>
-
-                    {/* CARD 6: RELOCATED ACTION PANEL (MEET LEAD DEVELOPER & TECHNICAL ARCHITECTURE) */}
-                    <div className="team-member-card team-actions-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '12px', position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'rgba(6, 12, 20, 0.75)', border: '1px solid rgba(0, 229, 255, 0.25)', padding: '16px 14px' }}>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '1.5px', color: 'rgba(0, 229, 255, 0.85)', textTransform: 'uppercase' }}>
-                        // QUICK ACCESS & ARCHITECTURE
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '240px' }}>
-                        <button
-                          type="button"
-                          className="landing-btn accent-cyan"
-                          style={{ width: '100%', justifyContent: 'center', fontSize: '10px', padding: '9px 12px' }}
-                          onClick={() => setCreatorSpotlightOpen(true)}
-                        >
-                          MEET LEAD DEVELOPER ↗
-                        </button>
-                        <a
-                          href="/architecture"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="landing-btn"
-                          style={{ width: '100%', justifyContent: 'center', fontSize: '10px', padding: '9px 12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
-                        >
-                          TECHNICAL ARCHITECTURE ↗
-                        </a>
-                      </div>
-                    </div>
-
                   </div>
+                </div>
+
+                {/* STANDALONE TECHNICAL ARCHITECTURE BUTTON */}
+                <div className="team-standalone-action">
+                  <a
+                    href="/architecture"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="landing-btn accent-cyan"
+                  >
+                    TECHNICAL ARCHITECTURE ↗
+                  </a>
                 </div>
               </div>
             </motion.div>

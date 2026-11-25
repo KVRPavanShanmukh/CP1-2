@@ -42,7 +42,7 @@ const Learning = () => {
         <motion.div className="col-span-12 kott-card" variants={itemVariants} style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(0, 229, 255, 0.2)', paddingBottom: '0.8rem' }}>
             <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00e5ff', margin: 0, fontSize: '1.05rem' }}>
-              01 • Complex Adaptive Systems (CAS) & Agent-Based Modeling (ABM)
+              Complex Adaptive Systems (CAS) & Agent-Based Modeling (ABM)
             </h3>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#f1f5f9', letterSpacing: '1px' }}>
               MICRO-RULES → MACRO-EMERGENCE
@@ -73,7 +73,7 @@ const Learning = () => {
         <motion.div className="col-span-12 kott-card" variants={itemVariants} style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(0, 229, 255, 0.2)', paddingBottom: '0.8rem' }}>
             <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00e5ff', margin: 0, fontSize: '1.05rem' }}>
-              02 • Consensus Paradigms & LMD-GHOST Fork Choice
+              Consensus Paradigms & LMD-GHOST Fork Choice
             </h3>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#f1f5f9', letterSpacing: '1px' }}>
               5 PROTOCOLS + WEIGHT-ACCUMULATION
@@ -147,7 +147,7 @@ const Learning = () => {
         <motion.div className="col-span-12 kott-card" variants={itemVariants} style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(0, 229, 255, 0.2)', paddingBottom: '0.8rem' }}>
             <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00e5ff', margin: 0, fontSize: '1.05rem' }}>
-              03 • Network Topologies & The Phase Transition Criterion
+              Network Topologies & The Phase Transition Criterion
             </h3>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#f1f5f9', letterSpacing: '1px' }}>
               PROPAGATION LATENCY & TOPOLOGICAL DIAMETER
@@ -194,7 +194,7 @@ const Learning = () => {
         <motion.div className="col-span-12 kott-card" variants={itemVariants} style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(0, 229, 255, 0.2)', paddingBottom: '0.8rem' }}>
             <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00e5ff', margin: 0, fontSize: '1.05rem' }}>
-              04 • Adversarial Strategies & Network Fault Scenarios
+              Adversarial Strategies & Network Fault Scenarios
             </h3>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#f1f5f9', letterSpacing: '1px' }}>
               BYZANTINE ATTACKS & PHYSICAL DEFECTS
@@ -243,7 +243,7 @@ const Learning = () => {
         <motion.div className="col-span-12 kott-card" variants={itemVariants}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(0, 229, 255, 0.2)', paddingBottom: '0.8rem' }}>
             <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00e5ff', margin: 0, fontSize: '1.05rem' }}>
-              05 • Reading & Interpreting CHAIN55 Research Metrics
+              Reading & Interpreting CHAIN55 Research Metrics
             </h3>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#f1f5f9', letterSpacing: '1px' }}>
               ACADEMIC VERIFICATION BENCHMARKS
@@ -297,7 +297,7 @@ const Learning = () => {
         <motion.div className="col-span-12 kott-card" variants={itemVariants} style={{ marginTop: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(0, 229, 255, 0.2)', paddingBottom: '0.8rem' }}>
             <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00e5ff', margin: 0, fontSize: '1.05rem' }}>
-              06 • Platform Architecture &amp; Technology Stack
+              Platform Architecture &amp; Technology Stack
             </h3>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#f1f5f9', letterSpacing: '1px' }}>
               IMPLEMENTATION &amp; RUNTIME STACK

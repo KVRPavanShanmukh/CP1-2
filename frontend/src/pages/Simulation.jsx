@@ -13,6 +13,10 @@ import {
   WS_BASE,
   DEFAULT_SIMULATION_CONFIG
 } from '../services/api';
+import {
+  downloadSimulationPdfReport,
+  triggerAutoPdfDownloadOnce
+} from '../utils/simulationPdfReport';
 
 // --- GENERATIVE WEBGL ENGINE ---
 function NetworkVisualization({ stateIndex }) {
@@ -573,6 +577,7 @@ function HistoryPanel({ onClose, onOpenRun }) {
   const [rows, setRows] = useState([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -583,11 +588,32 @@ function HistoryPanel({ onClose, onOpenRun }) {
     return () => { cancelled = true; };
   }, []);
 
+  const handleDownloadPdf = async (row) => {
+    setError('');
+    setDownloadingId(row.id);
+    try {
+      const payload = await simulationApi.get(row.id);
+      if (!payload?.result) {
+        setError('No stored result is available yet for this run.');
+        return;
+      }
+      downloadSimulationPdfReport({
+        result: payload.result,
+        config: payload.configuration || row,
+        runMeta: row
+      });
+    } catch (downloadError) {
+      setError(downloadError.message || 'Could not generate PDF report for this run.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <div className="data-drawer" role="dialog" aria-label="Simulation history">
       <div className="drawer-head">
         <div>
-          <span className="meta-label" style={{ marginBottom: 0 }}>SIMULATION HISTORY</span>
+          <span className="meta-label" style={{ marginBottom: 0 }}>PREVIOUS RUNS &amp; SIMULATION HISTORY</span>
           <div className="exp-note">Persisted runs from MongoDB, newest first</div>
         </div>
         <button type="button" className="drawer-close" onClick={onClose}>CLOSE ✕</button>
@@ -620,8 +646,16 @@ function HistoryPanel({ onClose, onOpenRun }) {
                   <td>{row.simulationTicks ?? '—'}</td>
                   <td>{row.randomSeed ?? '—'}</td>
                   <td className="exp-note">{formatTimestamp(row.createdAt)}</td>
-                  <td>
+                  <td style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button type="button" className="exp-btn" onClick={() => onOpenRun(row.id)}>OPEN</button>
+                    <button
+                      type="button"
+                      className="exp-btn exp-btn-primary"
+                      disabled={row.status !== 'COMPLETED' || downloadingId === row.id}
+                      onClick={() => handleDownloadPdf(row)}
+                    >
+                      {downloadingId === row.id ? 'GENERATING…' : 'DOWNLOAD PDF REPORT'}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -732,6 +766,7 @@ export default function Simulation() {
   const [loading, setLoading] = useState(false);
   const [liveTicks, setLiveTicks] = useState([]);
   const [results, setResults] = useState(null);
+  const [resultConfig, setResultConfig] = useState(null);
   const [simulationId, setSimulationId] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [validationErrors, setValidationErrors] = useState([]);
@@ -740,6 +775,7 @@ export default function Simulation() {
   const [user, setUser] = useState(getStoredUser());
   const stompClientRef = useRef(null);
   const pollTimerRef = useRef(null);
+  const activeRunConfigRef = useRef(null);
 
   // Deep link from the dashboard: /simulation with state.openDrawer === 'history'.
   useEffect(() => {
@@ -764,11 +800,11 @@ export default function Simulation() {
     return () => { cancelled = true; };
   }, []);
 
-  // Wheel Scroll Navigation (disabled on configuration stage so full-page scroll works naturally)
+  // Wheel Scroll Navigation (disabled on scrollable config/complete views and open drawers)
   useEffect(() => {
     const handleWheel = (e) => {
       if (scrollLocked) return;
-      if (activeSection === 0) return;
+      if (drawer || activeSection === 0 || activeSection === 5) return;
       if (e.target && typeof e.target.closest === 'function' && e.target.closest('.experiment-panel')) return;
 
       // Block manual scroll during auto simulation
@@ -786,7 +822,7 @@ export default function Simulation() {
     };
     window.addEventListener('wheel', handleWheel);
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [activeSection, scrollLocked]);
+  }, [activeSection, scrollLocked, drawer]);
 
   const stopResultPolling = () => {
     if (pollTimerRef.current) {
@@ -795,12 +831,17 @@ export default function Simulation() {
     }
   };
 
-  const applyResult = (result) => {
+  const applyResult = (result, { autoDownload = true, configOverride = null } = {}) => {
+    const resolvedConfig = configOverride || activeRunConfigRef.current || formData;
     setResults(result);
+    setResultConfig(resolvedConfig);
     setActiveSection(5);
     setLoading(false);
     setWsStatus('closed');
     stopResultPolling();
+    if (autoDownload) {
+      triggerAutoPdfDownloadOnce({ result, config: resolvedConfig });
+    }
   };
 
   // Fallback when the STOMP result frame is missed (e.g. a reconnect during the run):
@@ -903,16 +944,22 @@ export default function Simulation() {
     setLoading(true);
     setLiveTicks([]);
     setResults(null);
+    setResultConfig(payload);
+    activeRunConfigRef.current = payload;
     setActiveSection(1);
 
     try {
       const startedConfig = await simulationApi.start(payload);
+      const runConfigWithId = { ...payload, id: startedConfig.id };
+      activeRunConfigRef.current = runConfigWithId;
+      setResultConfig(runConfigWithId);
       setSimulationId(startedConfig.id);
       sessionStorage.setItem('activeSimulationId', startedConfig.id);
+      sessionStorage.setItem('autoPdfPendingRunId', startedConfig.id);
       connectWebSocket(startedConfig.id);
       startResultPolling(startedConfig.id);
       // Auto-open 3D AGENT tab as requested in Step 2B
-      navigate(`/agent?simId=${startedConfig.id}`, { state: { simulationId: startedConfig.id, config: payload } });
+      navigate(`/agent?simId=${startedConfig.id}`, { state: { simulationId: startedConfig.id, config: runConfigWithId } });
     } catch (error) {
       setErrorMessage(error.message || 'Failed to start simulation.');
       setLoading(false);
@@ -927,10 +974,11 @@ export default function Simulation() {
       const payload = await simulationApi.get(id);
       if (payload?.result) {
         setSimulationId(id);
-        applyResult(payload.result);
+        applyResult(payload.result, { autoDownload: false, configOverride: payload.configuration || null });
         return;
       }
       setSimulationId(id);
+      setResultConfig(payload?.configuration || null);
       setResults({
         configId: id,
         status: payload?.status || 'UNKNOWN',
@@ -960,9 +1008,11 @@ export default function Simulation() {
 
 
 
+  const isScrollableStage = activeSection === 0 || activeSection === 5;
+
   return (
     <div
-      className={`immersive-shell ${activeSection === 0 ? 'sim-config-scroll' : ''}`}
+      className={`immersive-shell ${isScrollableStage ? 'sim-config-scroll' : ''}`}
       style={{ '--dynamic-accent': currentAccent }}
     >
       {/* 3D WEBGL ENGINE */}
@@ -986,12 +1036,12 @@ export default function Simulation() {
           <AnimatePresence mode="wait">
             <motion.div 
               key={activeSection}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="meta-label">/0{activeSection} {sections[activeSection].title}</span>
+              <span className="meta-label">{sections[activeSection].title}</span>
               
               <h1 className="huge-title">
                 {activeSection === 0 && <>NETWORK<br/>DYNAMICS.</>}
@@ -1155,7 +1205,7 @@ export default function Simulation() {
                         <input type="number" className="form-control" value={formData.mempoolCapacity} min="1"
                           onChange={(e) => setFormData({ ...formData, mempoolCapacity: e.target.value === '' ? NaN : Number(e.target.value) })} />
                       </label>
-                      <label className="config-field config-field-wide">
+                      <label className="config-field">
                         <span className="meta-label">MAX TX / BLOCK</span>
                         <input type="number" className="form-control" value={formData.maxTransactionsPerBlock} min="1"
                           onChange={(e) => setFormData({ ...formData, maxTransactionsPerBlock: e.target.value === '' ? NaN : Number(e.target.value) })} />
@@ -1166,7 +1216,7 @@ export default function Simulation() {
                           onChange={(e) => setFormData({ ...formData, transactionAmount: Number(e.target.value) })} />
                       </label>
 
-                      <label className="config-field config-field-wide">
+                      <label className="config-field config-field-span2">
                         <span className="meta-label">AUTHORITY AGENT IDS (PoA, comma separated)</span>
                         <input type="text" className="form-control" value={authorityIdsText}
                           placeholder="e.g. Agent-0, Agent-1"
@@ -1417,9 +1467,31 @@ export default function Simulation() {
                     </>}
                   </div>
                   {liveTicks.length > 0 && <TrendChart ticks={liveTicks} />}
-                  <button onClick={() => { setActiveSection(0); setLiveTicks([]); setResults(null); setSimulationId(null); setWsStatus('idle'); }} className="primary-btn" style={{ marginTop: '3rem', opacity: 1, padding: '16px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}>
-                    NEW SEQUENCE ↺
-                  </button>
+                  <div className="config-actions" style={{ justifyContent: 'flex-start', marginTop: '2.25rem' }}>
+                    <button
+                      type="button"
+                      className="exp-btn exp-btn-primary sim-start-cta"
+                      disabled={!results.metrics && results.status !== 'COMPLETED'}
+                      onClick={() => downloadSimulationPdfReport({
+                        result: results,
+                        config: resultConfig || buildPayload(),
+                        runMeta: { id: simulationId }
+                      })}
+                    >
+                      DOWNLOAD PDF REPORT ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setActiveSection(0); setLiveTicks([]); setResults(null); setResultConfig(null); setSimulationId(null); setWsStatus('idle'); }}
+                      className="primary-btn"
+                      style={{ opacity: 1, padding: '14px 24px', background: 'transparent', border: '1px solid #ff00ff', color: '#ff00ff', cursor: 'pointer' }}
+                    >
+                      NEW SEQUENCE ↺
+                    </button>
+                    <button type="button" className="exp-btn" onClick={() => setDrawer('history')}>
+                      PREVIOUS RUNS
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1433,7 +1505,7 @@ export default function Simulation() {
             <div 
               key={sec.id}
               className={`nav-indicator ${activeSection === sec.id ? 'active' : ''}`} 
-              data-label={`/0${sec.id}`}
+              data-label={sec.title}
               onClick={() => setActiveSection(sec.id)}
               style={{ cursor: 'pointer' }}
             ></div>

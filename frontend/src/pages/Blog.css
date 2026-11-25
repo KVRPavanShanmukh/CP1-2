@@ -3,28 +3,12 @@
    ============================================================ */
 
 .c55-blog-page {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
   background: var(--bg-color, #030304);
-  overflow-y: auto;
   padding-top: 90px;
   padding-bottom: 40px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 229, 255, 0.3) transparent;
-}
-
-.c55-blog-page::-webkit-scrollbar {
-  width: 6px;
-}
-.c55-blog-page::-webkit-scrollbar-track {
-  background: transparent;
-}
-.c55-blog-page::-webkit-scrollbar-thumb {
-  background: rgba(0, 229, 255, 0.25);
-  border-radius: 3px;
 }
 
 /* ---- Ambient particle canvas ---- */
@@ -380,8 +364,6 @@
   max-height: 85vh;
   overflow-y: auto;
   animation: c55-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 229, 255, 0.2) transparent;
 }
 
 @keyframes c55-slide-up {

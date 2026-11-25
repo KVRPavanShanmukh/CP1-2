@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getStoredUser } from '../services/api';
-import SimulationCursor from '../components/SimulationCursor';
+import { authApi, getStoredUser, setStoredUser } from '../services/api';
 import '../components/NexusTeam.css';
 
 export default function Profile() {
@@ -10,15 +9,26 @@ export default function Profile() {
   const [user, setUser] = useState(getStoredUser());
 
   useEffect(() => {
+    let cancelled = false;
     const u = getStoredUser();
-    setUser(u);
     if (!u) {
       navigate('/login', { replace: true });
-      return;
+      return undefined;
     }
+    authApi.getMe()
+      .then((res) => {
+        if (!cancelled && res?.authenticated && res.user) {
+          setUser(res.user);
+          setStoredUser(res.user);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, [navigate]);
 
   if (!user) return null;
+
+  const isAdminOrOwner = ['ADMIN', 'OWNER'].includes(String(user.role || '').toUpperCase());
 
   return (
     <div className="landing-shell">
@@ -37,7 +47,7 @@ export default function Profile() {
         >
           {/* TOP BREADCRUMB */}
           <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '11px', letterSpacing: '3px', color: '#00e5ff', marginBottom: '8px' }}>
-            //05 IDENTITY & ACCESS
+            IDENTITY &amp; ACCESS
           </div>
           <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 100, letterSpacing: '-0.02em', textTransform: 'uppercase', marginBottom: '32px' }}>
             OPERATOR<br/>PROFILE.
@@ -105,12 +115,14 @@ export default function Profile() {
 
             {/* ACTION BUTTONS */}
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '24px' }}>
-              <button
-                className="nexus-btn-primary"
-                onClick={() => navigate('/landing?section=team', { state: { section: 4 } })}
-              >
-                OUR PROJECT TEAM ↗
-              </button>
+              {isAdminOrOwner && (
+                <button
+                  className="nexus-btn-primary"
+                  onClick={() => navigate('/landing?section=team', { state: { section: 4 } })}
+                >
+                  OUR PROJECT TEAM ↗
+                </button>
+              )}
               <button
                 className="nexus-btn-secondary"
                 onClick={() => navigate('/dashboard')}

@@ -288,7 +288,7 @@ export default function Dashboard() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             <span className="meta-label">
-              //{String(activeSection + 1).padStart(2, '0')} {sections[activeSection].title.replace('\n', ' ')}
+              {sections[activeSection].title.replace('\n', ' ')}
             </span>
             
             <h1 className="huge-title" style={{ whiteSpace: 'pre-line' }}>

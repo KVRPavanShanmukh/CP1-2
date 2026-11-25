@@ -17,6 +17,14 @@
   padding: 0;
   box-sizing: border-box;
   cursor: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Ensure text inputs, editable elements, and selects retain clear browser text carets */
@@ -31,14 +39,27 @@ input, textarea, select, [contenteditable="true"] {
   }
 }
 
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
 
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-color);
   color: var(--text-primary);
-  overflow: hidden; /* Full viewport experience */
+  overflow-x: hidden;
+  overflow-y: auto;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 

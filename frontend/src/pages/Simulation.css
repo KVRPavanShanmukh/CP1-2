@@ -12,17 +12,15 @@
 }
 
 .immersive-shell.sim-config-scroll {
-  position: fixed;
-  inset: 0;
-  height: 100vh;
-  width: 100vw;
-  overflow-y: auto;
+  position: relative;
+  min-height: 100vh;
+  height: auto;
+  width: 100%;
   overflow-x: hidden;
+  overflow-y: visible;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.25);
 }
 
 .immersive-shell.sim-config-scroll .main-content {
@@ -30,9 +28,9 @@
   top: auto;
   left: auto;
   width: 100%;
-  max-width: 920px;
-  padding: 104px 60px 36px;
-  margin: 0;
+  max-width: 1360px;
+  padding: 100px 56px 40px;
+  margin: 0 auto;
   box-sizing: border-box;
   overflow: visible !important;
   flex: 1 0 auto;
@@ -44,6 +42,7 @@
   max-height: none;
   overflow: visible;
   padding: 0;
+  background: none;
 }
 
 .immersive-shell.sim-config-scroll .experiment-panel {
@@ -53,7 +52,7 @@
 
 .immersive-shell.sim-config-scroll .right-panel {
   position: fixed;
-  right: 50px;
+  right: 26px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 30;
@@ -283,17 +282,14 @@
 .experiment-panel {
   pointer-events: auto;
   margin-top: 26px;
-  padding: 14px 16px 18px;
+  padding: 16px 20px 20px;
   border: 1px solid rgba(0, 255, 255, 0.28);
   background: rgba(5, 9, 15, 0.86);
   backdrop-filter: blur(8px);
-  max-height: 46vh;
-  overflow-y: auto;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.64rem;
   letter-spacing: 0.04em;
   color: #f1f5f9;
-  scrollbar-width: thin;
 }
 
 .exp-head {
@@ -498,10 +494,8 @@
 
 .exp-table-wrap {
   margin-top: 8px;
-  max-height: 240px;
-  overflow: auto;
+  overflow-x: auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  scrollbar-width: thin;
 }
 
 .exp-table {
@@ -556,42 +550,19 @@
   pointer-events: auto;
   width: 100% !important;
   max-width: 100% !important;
-  max-height: calc(100vh - 175px);
-  overflow-y: auto;
-  overflow-x: hidden !important;
-  padding-right: 20px;
-  padding-bottom: 70px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 255, 255, 0.4) rgba(0, 0, 0, 0.25);
+  overflow: visible;
+  padding-right: 0;
+  padding-bottom: 32px;
   box-sizing: border-box;
-}
-
-.left-panel::-webkit-scrollbar {
-  width: 5px;
-}
-
-.left-panel::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 3px;
-}
-
-.left-panel::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 255, 0.4);
-  border-radius: 3px;
-}
-
-.left-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 255, 0.7);
 }
 
 .config-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(240px, 1fr));
-  gap: 14px 22px;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 16px 24px;
   margin-top: 14px;
   width: 100%;
   box-sizing: border-box;
-  overflow-x: hidden;
 }
 
 .config-section-title {
@@ -676,6 +647,10 @@
   grid-column: 1 / -1;
 }
 
+.config-field-span2 {
+  grid-column: span 2;
+}
+
 .config-check {
   display: flex;
   align-items: center;
@@ -704,8 +679,10 @@
 .config-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 18px 0 6px;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 26px 0 8px;
 }
 
 .validation-list {
@@ -800,7 +777,6 @@
   flex: 1;
   overflow-y: auto;
   padding: 18px 22px 26px;
-  scrollbar-width: thin;
 }
 
 .history-table {
@@ -862,6 +838,14 @@
 @media (max-width: 1100px) {
   .data-drawer {
     inset: 4vh 3vw;
+  }
+
+  .config-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .config-field-span2 {
+    grid-column: 1 / -1;
   }
 }
 
